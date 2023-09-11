@@ -9,5 +9,12 @@ class Student(models.Model):
     image = models.ImageField
 
     def __str__(self): 
-            return self.stu_name  
-    
+            return self.adm_num  
+
+class result(models.Model):
+      subjects = models.IntegerField()
+      total_marks = models.IntegerField()
+      adm_num = models.ForeignKey(Student, on_delete=models.CASCADE)
+
+      def __str__(self): 
+            return self.total_marks  
