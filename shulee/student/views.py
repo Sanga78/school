@@ -7,22 +7,20 @@ from django.contrib import messages
 
 def register(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        email = request.POST['email']
+        fname = request.POST['firstname']
+        lname = request.POST['lastname']
+        adm_num = request.POST['adm_num']
         image = request.POST['image']
         dob = request.POST['dob']
         password = request.POST['password']
         password2 = request.POST['password2']
     
         if password == password2:
-            if User.objects.filter(email=email).exists():
-                messages.info(request,'Email Already Exists')
-                return redirect('register')
-            elif User.objects.filter(username=username).exists():
-                messages.info(request,'Username Already Exists')
+            if User.objects.filter(adm_num=adm_num).exists():
+                messages.info(request,'Account Already Exists')
                 return redirect('register')
             else:
-                user = User.objects.create_user(username=username,email=email,password=password)
+                user = User.objects.create_user(adm_num=adm_num,password=password)
                 user.save()
                 print('user created')
                 return redirect('login')
@@ -34,10 +32,10 @@ def register(request):
 
 def login(request):
     if request.method == 'POST':
-        username = request.POST['username']
+        adm_num = request.POST['adm_num']
         password = request.POST['password']
         
-        user = auth.authenticate(username=username,password=password)
+        user = auth.authenticate(adm_num=adm_num,password=password)
         
         if user is not None:
             auth.login(request, user)
