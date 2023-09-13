@@ -28,7 +28,7 @@ def register(request):
             messages.info(request,'Password Not The Same')
             return redirect('register')
     else:
-        return render(request,'index.html')
+        return render(request,'register.html')
 
 def login(request):
     if request.method == 'POST':
@@ -44,4 +44,4 @@ def login(request):
             messages.info(request,'Invalid Credentials')
             return redirect('login')
     else:
-        return render(request,'student.html') 
+        return render(request,'login.html') 
