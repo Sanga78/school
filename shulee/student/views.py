@@ -3,7 +3,8 @@ from django.shortcuts import render,redirect
 # Create your views here.
 from django.contrib.auth.models import User,auth
 from django.contrib import messages
-
+from django.contrib.auth import login, authenticate, logout 
+from .models import Student
 
 def register(request):
     if request.method == 'POST':
@@ -39,9 +40,21 @@ def login(request):
         
         if user is not None:
             auth.login(request, user)
-            return redirect('services')
+            return redirect('/student/{{student.id}}/')
         else:
             messages.info(request,'Invalid Credentials')
             return redirect('login')
     else:
         return render(request,'login.html') 
+    
+def logout_request(request):
+    logout(request)
+    messages.info(request,"Logged out successfully!")
+    return redirect('/')
+
+def stude(request,pk):
+    student = User.objects.get(pk=id)
+    context ={
+        "student" : student
+    }
+    return render(request,'students.html',context)
