@@ -1,24 +1,29 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'style.css' %}">\
+    <script src="{% static 'script.js' %}"></script>
     <title>school</title>
 </head>
 <body>
     <section class="head">
         <h1>School Portal</h1>
         <div class="nav">
-            <div class="logo"></div>
+            <!-- <div class="logo"></div> -->
             <div class="navbar">
                 <ul>
                     <li>Notices</li>
-                    <li>About us</li>
                     <div class="dropdown">
-                        <a href="">Vision</a>
-                        <a href="">Mission</a>
-                        <a href="">Motto</a>
-                    </div>
+                        <li onclick="myFunction()" class="dropbtn">About Us</li>
+                        <div id="myDropdown" class="dropdown-content">
+                          <a href="#mission">Mission</a>
+                          <a href="#vision">Vision</a>
+                          <a href="#motto">Motto</a>
+                        </div>
+                      </div>
                     <li>Fees structure</li>
                     <li>Accomodation</li>
                     <li>KCPE results</li>
@@ -26,8 +31,15 @@
             </div>
             <div class="sign">
                 <ul>
-                    <li>login</li>
-                    <li>logout</li>
+                    {% if request.user.is_authenticated %}
+                        <li><a href="{% url 'signup' %}">Signup</a></li>
+                    {% endif %}
+                    {% if request.user.is_authenticated %}
+                    Logged in as: {{ request.user.username }}
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -41,15 +53,15 @@
         </div>
         <!-- about us -->
         <div class="attributes">
-            <h3 id="mission">Our Mission</h3>
+            <h3 id="Mission">Our Mission</h3>
             <p>Lorem ipsum dolor sit amet consectetur.</p>
         </div>
         <div class="attributes">
-            <h3 id="mission">Our Vision</h3>
+            <h3 id="vision">Our Vision</h3>
             <p>Lorem ipsum dolor sit amet consectetur.</p>
         </div>
        <div class="attributes">
-        <h3 id="mission">Our Mission</h3>
+        <h3 id="motto">Our Motto</h3>
         <p>Lorem ipsum dolor sit amet consectetur.</p>
        </div>  
        <!-- history -->
