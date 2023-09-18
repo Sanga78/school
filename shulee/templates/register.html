@@ -1,8 +1,5 @@
 {% load static %}
-{% load crispy_forms_tags %}
-{% load bootstrap5 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,7 +7,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Continental Banking Site</title>
+    <title>register</title>
     <link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
 	<link rel="stylesheet" href="/static/styles/navbar.css">
 </head>
@@ -27,7 +24,7 @@
                         <h2 class="error">{{message}}</h2>
                     {% endfor %}
                 {% endif %}
-                <input id="adm_num" name="adm_num" type="email" placeholder="Admission number">
+                <input id="adm_num" name="adm_num" type="text" placeholder="Admission number">
                 <input id="fname" name="fname" type="text" placeholder="First name">
                 <input id="sname" name="sname" type="text" placeholder="Second name">
                 <input id="img" name="img" type="image" placeholder="Your image">
@@ -37,7 +34,7 @@
                 <center><a id="return_btn" href="{% url 'login' %}">Already have an account</a></center>
             </form>
         </div>
-    </div>div>	
+    </div>	
     </div> 
    
 </body>
