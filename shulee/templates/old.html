@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'style.css' %}">\
+    <script src="{% static 'script.js' %}"></script>
+    <title>school</title>
+</head>
+<body>
+    <section class="head">
+        <h1>School Portal</h1>
+        <div class="nav">
+            <!-- <div class="logo"></div> -->
+            <div class="navbar">
+                <ul>
+                    <li>Notices</li>
+                    <div class="dropdown">
+                        <li onclick="myFunction()" class="dropbtn">About Us</li>
+                        <div id="myDropdown" class="dropdown-content">
+                          <a href="#mission">Mission</a>
+                          <a href="#vision">Vision</a>
+                          <a href="#motto">Motto</a>
+                        </div>
+                      </div>
+                    <li>Fees structure</li>
+                    <li>Accomodation</li>
+                    <li>KCPE results</li>
+                </ul>
+            </div>
+            <div class="sign">
+                <ul>
+                    {% if request.user.is_authenticated %}
+                        <li><a href="{% url 'signup' %}">Signup</a></li>
+                    {% endif %}
+                    {% if request.user.is_authenticated %}
+                    Logged in as: {{ request.user.username }}
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </section>
+    <hr>
+
+    <!-- body starts here -->
+    <section class="body">
+        <div class="head">
+            welcome to Lorem ipsum dolor sit, amet consectetur adipisicing.
+        </div>
+        <!-- about us -->
+        <div class="attributes">
+            <h3 id="Mission">Our Mission</h3>
+            <p>Lorem ipsum dolor sit amet consectetur.</p>
+        </div>
+        <div class="attributes">
+            <h3 id="vision">Our Vision</h3>
+            <p>Lorem ipsum dolor sit amet consectetur.</p>
+        </div>
+       <div class="attributes">
+        <h3 id="motto">Our Motto</h3>
+        <p>Lorem ipsum dolor sit amet consectetur.</p>
+       </div>  
+       <!-- history -->
+       <h3>background information</h3>
+       <div class="history">
+            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                 Iusto vel placeat esse corrupti non perferendis eveniet nemo, 
+                 reiciendis provident? Rerum vitae vel repudiandae quo tempora 
+                 eveniet perferendis commodi! Hic, ipsam.
+                </p>
+       </div>
+       <!-- notices -->
+       <div class="notices">
+        <h3>notices</h3>
+        <div class="latest">
+            <p> Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
+                Reprehenderit modi quas nihil aliquid fugit. 
+                Itaque nemo natus officiis officia laboriosam.
+            </p>
+        </div>
+       </div>
+    </section>
+   <!-- footer -->
+
+</body>
+</html>
