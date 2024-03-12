@@ -1,0 +1,6 @@
+school/
+shulee/__pycache__/
+student/migrations/__pycache__/
+student/__pycache__/
+index/__pycache__/
+index/migrations/__pycache__/
