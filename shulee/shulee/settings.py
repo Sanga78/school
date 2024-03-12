@@ -139,4 +139,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "index.CustomUser"
-LOGIN_REDIRECT_URL = "studen/student/<pk>/"
+AUTHENTICATION_BACKEND=["index.EmailBackEnd.EmailBackEnd"]
