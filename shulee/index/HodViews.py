@@ -46,7 +46,8 @@ def add_course_save(request):
             return HttpResponseRedirect("/add_course")
         
 def add_student(request):
-    return render(request,"hod_templates/add_student.html")
+    courses= Courses.objects.all()
+    return render(request,"hod_templates/add_student.html",{"courses":courses})
 
 def add_student_save(request):
     if request.method != "POST":
@@ -58,13 +59,23 @@ def add_student_save(request):
         email = request.POST.get("email") 
         password = request.POST.get("password")
         address = request.POST.get("address")
+        session_start = request.POST.get("session_start")
+        session_end = request.POST.get("session_end")
+        course_id = request.POST.get("course")
+        sex = request.POST.get("sex")
         try:
-            user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=2)
-            user.staffs.address = address
+            user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
+            user.students.address = address
+            course_obj = Courses.objects.get(id=course_id)
+            user.students.course_id = course_obj
+            user.students.session_start_year = session_start
+            user.students.session_end_year = session_end
+            user.students.gender = sex
+            user.students.profile_pic = ""
             user.save()
-            messages.success(request,"Successfully added staff")
-            return HttpResponseRedirect("/add_staff")
+            messages.success(request,"Successfully added student")
+            return HttpResponseRedirect("/add_student")
         except:
-            messages.error(request,"Failed to Add staff")
-            return HttpResponseRedirect("/add_staff")
+            messages.error(request,"Failed to Add student")
+            return HttpResponseRedirect("/add_student")
     
