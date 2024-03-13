@@ -3,7 +3,7 @@ from django.http import HttpResponse,HttpResponseRedirect
 from django.contrib.auth import login,logout
 from django.contrib.auth import authenticate
 from index.EmailBackEnd import EmailBackEnd
-
+from django.contrib import  messages
 # Create your views here.
 def index(request):
     return render(request,'index.html')
@@ -18,9 +18,10 @@ def Login(request):
         user = EmailBackEnd.authenticate(request,username=request.POST.get("email"),password=request.POST.get("password"))
         if user != None:
             login(request,user)
-            return HttpResponse("Email : " +request.POST.get("email")+ "Password : "+request.POST.get("password"))
+            return HttpResponseRedirect("/admin_home")
         else:
-            return HttpResponse("Invalid Login")
+            messages.error(request,"Invalid Login Details")
+            return HttpResponseRedirect("/")
         
 def GetUserDetails(request):
     if request.user != None:
