@@ -14,7 +14,7 @@ class AdminHOD(models.Model):
     updated_at = models.DateTimeField(auto_now_add=True)
     objects = models.Manager()
 
-class Staff(models.Model):
+class Staffs(models.Model):
     id = models.AutoField(primary_key=True)
     admin = models.OneToOneField(CustomUser,on_delete=models.CASCADE)
     address = models.TextField()
@@ -33,7 +33,7 @@ class Subjects(models.Model):
     id = models.AutoField(primary_key=True)
     subject_name = models.CharField(max_length=255)
     course_id = models.ForeignKey(Courses,on_delete=models.CASCADE,default=1)
-    staff_id = models.ForeignKey(Staff,on_delete=models.CASCADE)
+    staff_id = models.ForeignKey(Staffs,on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
     objects = models.Manager()
@@ -80,7 +80,7 @@ class LeaveReportStudent(models.Model):
 
 class LeaveReportStaff(models.Model):
     id = models.AutoField(primary_key=True)
-    staff_id = models.ForeignKey(Staff,on_delete=models.CASCADE)
+    staff_id = models.ForeignKey(Staffs,on_delete=models.CASCADE)
     leave_date = models.CharField(max_length=255)
     leave_message = models.TextField()
     leave_status = models.BooleanField(default=False)
@@ -99,7 +99,7 @@ class FeedbackStudent(models.Model):
 
 class FeedbackStaff(models.Model):
     id = models.AutoField(primary_key=True)
-    staff_id = models.ForeignKey(Staff,on_delete=models.CASCADE)
+    staff_id = models.ForeignKey(Staffs,on_delete=models.CASCADE)
     feedback = models.TextField()
     feedback_reply = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -116,7 +116,7 @@ class NotificaionStudent(models.Model):
 
 class NotificaionStudent(models.Model):
     id = models.AutoField(primary_key=True)
-    staff_id = models.ForeignKey(Staff,on_delete=models.CASCADE)
+    staff_id = models.ForeignKey(Staffs,on_delete=models.CASCADE)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
@@ -129,9 +129,9 @@ def create_user_profile(sender,instance,created,**kwargs):
         if instance.user_type==1:
             AdminHOD.objects.create(admin=instance)
         if instance.user_type==2:
-            Staff.objects.create(admin=instance,address="")    
+            Staffs.objects.create(admin=instance,address="")    
         if instance.user_type==3:
-            Students.objects.create(admin=instance,course_id=Courses.objects.get(id=1),session_start_year="2024-01-01",session_end_year="2026-01-01",profile_pic="",gender="",address="")
+            Students.objects.create(admin=instance,course_id=Courses.objects.get(id=1),session_start_year="2024-01-01",session_end_year="2026-01-01",address="",profile_pic="",gender="")
 
 @receiver(post_save,sender=CustomUser)
 def save_user_profile(sender,instance,created,**kwargs):
