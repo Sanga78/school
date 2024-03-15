@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse,HttpResponseRedirect
-from index.models import CustomUser,Courses,Subjects
+from index.models import CustomUser,Courses,Subjects,Staffs,Students
 from django.contrib import messages
 def admin_home(request):
     return render(request, "hod_templates/home.html")
@@ -103,3 +103,18 @@ def add_subject_save(request):
             messages.error(request,"Failed to Add Subject")
             return HttpResponseRedirect("/add_subject")
  
+def manage_staff(request):
+    staffs=Staffs.objects.all()
+    return render(request,"hod_templates/manage_staff.html",{"staffs":staffs})
+
+def manage_student(request):
+    students=Students.objects.all()
+    return render(request,"hod_templates/manage_student.html",{"students":students})
+
+def manage_course(request):
+    courses=Courses.objects.all()
+    return render(request,"hod_templates/manage_course.html",{"courses":courses})
+
+def manage_subject(request):
+    subjects=Subjects.objects.all()
+    return render(request,"hod_templates/manage_subjects.html",{"subjects":subjects})
