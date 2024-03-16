@@ -258,4 +258,9 @@ def edit_subject_save(request):
         except:
             messages.error(request,"Failed to Edit Subject")
             return HttpResponseRedirect("/edit_subject/"+subject_id)
- 
+
+def staff_home(request):
+    return render(request, "hod_templates/home.html")
+
+def student_home(request):
+    return render(request, "hod_templates/home.html")
