@@ -18,11 +18,11 @@ def Login(request):
         if user != None:
             login(request,user)
             if user.user_type == "1":
-                return HttpResponseRedirect("/admin_home")
+                return HttpResponseRedirect(reverse("admin_home"))
             elif user.user_type == "2":
-                return HttpResponse("Staff Login")
+                return HttpResponseRedirect(reverse("staff_home"))
             else:
-                return HttpResponse("Student Login")
+                return HttpResponseRedirect(reverse("student_home"))
         else:
             messages.error(request,"Invalid Login Details")
             return HttpResponseRedirect("/")
