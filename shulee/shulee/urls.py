@@ -17,13 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls.static import static
-from index import views,HodViews
+from index import views,HodViews,StaffViews,StudentViews
 from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('index/',views.index),
-    path('',views.loginPage),
-    path('login',views.Login,name="login"),
+    path('',views.loginPage,name="show_login"),
+    path('login',views.Login,name="do_login"),
     path('get_user_details',views.GetUserDetails),
     path('logout',views.Logout,name="logout"),
     path('admin_home',HodViews.admin_home,name="admin_home"),
@@ -47,6 +47,8 @@ urlpatterns = [
     path('edit_course_save',HodViews.edit_course_save,name="edit_course_save"),
     path('edit_subject/<str:subject_id>',HodViews.edit_subject,name="edit_subject"),
     path('edit_subject_save',HodViews.edit_subject_save,name="edit_subject_save"),
-    path('staff_home',HodViews.staff_home,name="staff_home"),
-    path('student_home',HodViews.student_home,name="student_home"),
+    #Staff urls
+    path('staff_home',StaffViews.staff_home,name="staff_home"),
+    #student urls
+    path('student_home',StudentViews.student_home,name="student_home"),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
