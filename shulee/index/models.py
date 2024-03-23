@@ -3,6 +3,11 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 # Create your models here.
+class SessionYearModel(models.Model):
+    id=models.AutoField(primary_key=True)
+    session_start_year = models.DateField()
+    session_end_year = models.DateField()    
+
 class CustomUser(AbstractUser):
     user_type_data = ((1,"HOD"),(2,"Staff"),(3,"Student"))
     user_type = models.CharField(default=1,choices=user_type_data,max_length=10)
@@ -45,8 +50,7 @@ class Students(models.Model):
     profile_pic = models.FileField()
     address = models.TextField()
     course_id = models.ForeignKey(Courses,on_delete=models.DO_NOTHING)
-    session_start_year = models.DateField()
-    session_end_year = models.DateField()
+    session_year_id = models.ForeignKey(SessionYearModel,on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
     objects= models.Manager()
@@ -54,6 +58,7 @@ class Students(models.Model):
 class Attendance(models.Model):
     id = models.AutoField(primary_key=True)
     subject_id = models.ForeignKey(Subjects,on_delete=models.DO_NOTHING)
+    session_year_id = models.ForeignKey(SessionYearModel,on_delete=models.CASCADE) 
     attendance_date = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
