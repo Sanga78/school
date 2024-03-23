@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse,HttpResponseRedirect
-from index.models import CustomUser,Courses,Subjects,Staffs,Students
+from index.models import CustomUser,Courses,Subjects,Staffs,Students,SessionYearModel
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from .forms import AddStudentForm,EditStudentForm
@@ -283,3 +283,21 @@ def edit_subject_save(request):
             messages.error(request,"Failed to Edit Subject")
             return HttpResponseRedirect(reverse("edit_subject",kwargs={"subject_id":subject_id}))
 
+def manage_session(request):
+   return render(request,"hod_templates/manage_session.html")
+
+def add_session_save(request):
+    if request.method != 'POST':
+        return HttpResponseRedirect(reverse("manage_session"))
+    else:
+        session_start_year = request.POST.get["session_start"]
+        session_end_year = request.POST.get["session_end"]
+
+        try:
+            sesionyear = SessionYearModel.objects.all(session_start_year=session_start_year,session_end_year=session_end_year)
+            sesionyear.save()
+            messages.success(request,"Successfully Added Session")
+            return HttpResponseRedirect(reverse("manage_session"))
+        except:
+            messages.error(request,"Failed to Add session")
+            return HttpResponseRedirect(reverse("manage_sessio"))
