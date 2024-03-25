@@ -58,16 +58,15 @@ def add_student_save(request):
     else:
         form = AddStudentForm(request.POST,request.FILES)
         if form.is_valid():
-            first_name = form.cleaned_data("first_name")
-            last_name = form.cleaned_data("last_name")
-            username = form.cleaned_data("username")
-            email = form.cleaned_data("email") 
-            password = form.cleaned_data("password")
-            address = form.cleaned_data("address")
-            session_start = form.cleaned_data("session_start")
-            session_end = form.cleaned_data("session_end")
-            course_id = form.cleaned_data("course")
-            sex = form.cleaned_data("sex")
+            first_name = form.cleaned_data["first_name"]
+            last_name = form.cleaned_data["last_name"]
+            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"] 
+            password = form.cleaned_data["password"]
+            address = form.cleaned_data["address"]
+            session_year_id = form.cleaned_data["session_year_id"]
+            course_id = form.cleaned_data["course"]
+            sex = form.cleaned_data["sex"]
 
             profile_pic = request.FILES['profile_pic']
             fs = FileSystemStorage()
@@ -79,8 +78,8 @@ def add_student_save(request):
                 user.students.address = address
                 course_obj = Courses.objects.get(id=course_id)
                 user.students.course_id = course_obj
-                user.students.session_start_year = session_start
-                user.students.session_end_year = session_end
+                session_year =SessionYearModel.object.get(id=session_year_id)
+                user.students.session_year_id = session_year
                 user.students.gender = sex
                 user.students.profile_pic = profile_pic_url
                 user.save()
@@ -90,7 +89,7 @@ def add_student_save(request):
                 messages.error(request,"Failed to Add student")
                 return HttpResponseRedirect(reverse("add_student"))
         else:
-            form=AddStudentForm(request.POS)
+            form=AddStudentForm(request.POST)
             return render(request,"hod_templates/add_student.html",{"form":form})
 
 def add_subject(request):
@@ -174,8 +173,7 @@ def edit_student(request,student_id):
     form.fields['address'].initial=student.address
     form.fields['course'].initial=student.course_id.id
     form.fields['sex'].initial=student.gender
-    form.fields['session_start'].initial=student.session_start_year
-    form.fields['session_end'].initial=student.session_end_year
+    form.fields['session_year_id'].initial=student.session_year_id.id
     return render(request,"hod_templates/edit_student.html",{"form":form,"id":student_id,"username":student.admin.username})
 
 def edit_student_save(request):
@@ -187,18 +185,17 @@ def edit_student_save(request):
             return HttpResponseRedirect(reverse("manage_student"))
         form = EditStudentForm(request.POST,request.FILES)
         if form.is_valid():
-            first_name = form.cleaned_data("first_name")
-            last_name = form.cleaned_data("last_name")
-            username = form.cleaned_data("username")
-            email = form.cleaned_data("email") 
-            address = form.cleaned_data("address")
-            session_start = form.cleaned_data("session_start")
-            session_end = form.cleaned_data("session_end")
-            course_id = form.cleaned_data("course")
-            sex = form.cleaned_data("sex")
+            first_name = form.cleaned_data["first_name"]
+            last_name = form.cleaned_data["last_name"]
+            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"] 
+            address = form.cleaned_data["address"]
+            session_year_id = form.cleaned_data["session_year_id"]
+            course_id = form.cleaned_data["course"]
+            sex = form.cleaned_data["sex"]
 
-            if request.FILES.get['profile_pic',False]:
-                profile_pic = request.FILES['profile_pic']
+            if request.FILES.get('profile_pic',False):
+                profile_pic = request.FILES('profile_pic')
                 fs = FileSystemStorage()
                 filename = fs.save(profile_pic.name,profile_pic)
                 profile_pic_url = fs.url(filename)
@@ -215,10 +212,9 @@ def edit_student_save(request):
 
                 student = Students.objects.get(admin=student_id)
                 student.address=address
-                student.session_start_year=session_start
-                student.session_end_year=session_end
+                session_year =SessionYearModel.object.get(id=session_year_id)
+                student.session_year_id = session_year
                 student.gender=sex
-
                 course = Courses.objects.get(id=course_id)
                 student.course_id = course
                 if profile_pic_url != None:
@@ -290,14 +286,14 @@ def add_session_save(request):
     if request.method != 'POST':
         return HttpResponseRedirect(reverse("manage_session"))
     else:
-        session_start_year = request.POST.get["session_start"]
-        session_end_year = request.POST.get["session_end"]
+        session_start_year = request.POST.get("session_start")
+        session_end_year = request.POST.get("session_end")
 
         try:
-            sesionyear = SessionYearModel.objects.all(session_start_year=session_start_year,session_end_year=session_end_year)
-            sesionyear.save()
+            sessionyear = SessionYearModel(session_start_year=session_start_year,session_end_year=session_end_year)
+            sessionyear.save()
             messages.success(request,"Successfully Added Session")
             return HttpResponseRedirect(reverse("manage_session"))
         except:
             messages.error(request,"Failed to Add session")
-            return HttpResponseRedirect(reverse("manage_sessio"))
+            return HttpResponseRedirect(reverse("manage_session"))
