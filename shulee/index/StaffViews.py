@@ -21,7 +21,6 @@ def get_students(request):
     subject = Subjects.objects.get(id=subject_id)
     session_model = SessionYearModel.object.get(id=session_year)
     students = Students.objects.filter(course_id=subject.course_id,session_year_id=session_model)
-    student_data=serializers.serialize("python",students)
     list_data=[]
 
     for student in students:
@@ -35,7 +34,6 @@ def save_attendance_data(request):
     subject_id = request.POST.get("subject_id")
     session_year_id = request.POST.get("session_year_id")
     attendance_date = request.POST.get("attendance_date")
-    
     subject_model = Subjects.objects.get(id=subject_id)
     session_model = SessionYearModel.object.get(id=session_year_id)
     json_sstudent=json.loads(student_ids)
@@ -51,3 +49,22 @@ def save_attendance_data(request):
         return HttpResponse("Ok")
     except:
         return HttpResponse("Error")
+    
+def staff_update_attendance(request):
+    subjects = Subjects.objects.filter(staff_id=request.user.id)
+    session_year_id = SessionYearModel.object.all()
+    return render(request,"staff_template/attendance_update.html",{"subjects":subjects,"session_year_id":session_year_id})
+
+@csrf_exempt
+def get_attendance_dates(request):
+    subject = request.POST.get("subject")
+    session_year_id = request.POST.get("session_year_id")
+    subject_obj = Subjects.objects.get(id=subject)
+    session_year_obj = SessionYearModel.object.get(id=session_year_id)
+    attendance = Attendance.objects.filter(subject_id=subject_obj,session_year_id=session_year_obj)
+    attendance_obj=[]
+    for attendance_single in attendance:
+        data={"id":attendance_single.id,"attendance_date":str(attendance_single.attendance_date),"session_year_id":attendance_single.session_year_id.id}
+        attendance_obj.append(data)
+
+    return JsonResponse(json.dumps(attendance_obj),safe=False)
