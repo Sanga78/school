@@ -91,38 +91,39 @@ Take attendance
       })
 
       $(document).on("click","#save_attendance",function() {
-        // $this.attr("disabled","disabled")
-        // $this.text("Saving Attendance Data...")
+        
+        $(this).attr("disabled","disabled")
+        $(this).text("Saving Attendance Data...")
         var student_data=$("input[name='student_data[]']").map(function(){ 
-          if($(this).is(":checked")){
-            return {"id":$(this).val(),"status":1};
-          }else{
-            return {"id":$(this).val(),"status":0};
-          }
+            if($(this).is(":checked")){
+              return {"id":$(this).val(),"status":1};
+            }else{
+              return {"id":$(this).val(),"status":0};
+            }
         }).get()
         var attendance_date=$("#attendance_date").val();
         var subject_id=$("#subject").val();
         var session_year_id=$("#session_year").val();
         console.log(student_data)
-        student_data=JSON.stringify
+        // console.log(attendance_date)
+        student_data=JSON.stringify(student_data)
 
         $.ajax({
-        url:"{% url 'save_attendance_data' %}",
-        type:"POST",
-        data:{student_ids:student_data,attendance_date:attendance_date,subject_id:subject_id,session_year_id:session_year_id},
-      })
-      .done(function(response) {
-        if (response=="OK") {
-          alert("Attendance Save")
-        }
-        else{
-          alert("Error in saving Data")
-        }
-        location.reload()
-      })
-      .fail(function() {
-        alert("Error in Saving student")
-      })
+            url:"{% url 'save_attendance_data' %}",
+            type:"POST",
+            data:{student_ids:student_data,attendance_date:attendance_date,subject_id:subject_id,session_year_id:session_year_id},
+          })
+          .done(function(response) {
+            if (response=="OK") {
+              alert("Attendance Saved")
+              }else{
+              alert("Error in saving Data")
+            }
+              location.reload()
+          })
+          .fail(function() {
+            alert("Error in Saving student")
+          })
       })
     })
   })
