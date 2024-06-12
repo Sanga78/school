@@ -58,6 +58,10 @@ urlpatterns = [
     path('get_students',StaffViews.get_students,name="get_students"),
     path('save_attendance_data',StaffViews.save_attendance_data,name="save_attendance_data"),
     path('save_updateattendance_data',StaffViews.save_updateattendance_data,name="save_updateattendance_data"),
-    #student urls
+    path('staff_feedback',StaffViews.staff_feedback,name="staff_feedback"),
+    path('staff_feedback_save',StaffViews.staff_feedback_save,name="staff_feedback_save"),
+    path('staff_apply_leave',StaffViews.staff_apply_leave,name="staff_apply_leave"),
+    path('staff_apply_leave_save',StaffViews.staff_apply_leave_save,name="staff_apply_leave_save"),
+   #student urls
     path('student_home',StudentViews.student_home,name="student_home"),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
