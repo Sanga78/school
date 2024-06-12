@@ -36,19 +36,21 @@ def save_attendance_data(request):
     attendance_date = request.POST.get("attendance_date")
     subject_model = Subjects.objects.get(id=subject_id)
     session_model = SessionYearModel.object.get(id=session_year_id)
+
     json_sstudent=json.loads(student_ids)
-    # print(data[0]['id'])
+    # print(json_sstudent[0]['id'])
+
     try:
         attendance = Attendance(subject_id=subject_model,attendance_date=attendance_date,session_year_id=session_model)
         attendance.save()
 
         for stud in json_sstudent:
             student = Students.objects.get(admin=stud['id'])
-            attendance_report=AttendanceReport(student_id=student,attendance_id=attendance,status=[stud['status']])
+            attendance_report=AttendanceReport(student_id=student,attendance_id=attendance,status=stud['status'])
             attendance_report.save()
-        return HttpResponse("Ok")
+        return HttpResponse("OK")
     except:
-        return HttpResponse("Error")
+        return HttpResponse("ERROR")
     
 def staff_update_attendance(request):
     subjects = Subjects.objects.filter(staff_id=request.user.id)
@@ -68,3 +70,35 @@ def get_attendance_dates(request):
         attendance_obj.append(data)
 
     return JsonResponse(json.dumps(attendance_obj),safe=False)
+
+@csrf_exempt
+def get_attendance_student(request):
+    attendance_date = request.POST.get("attendance_date")
+    attendace = Attendance.objects.get(id=attendance_date)
+
+    attendance_data = AttendanceReport.objects.filter(attendance_id=attendace)
+
+    list_data=[]
+
+    for student in attendance_data:
+        data_small = {"id":student.student_id.admin.id,"name":student.student_id.admin.first_name+" "+student.student_id.admin.last_name,"status":student.status}
+        list_data.append(data_small)
+    return JsonResponse(json.dumps(list_data),content_type="application/json",safe=False)
+
+@csrf_exempt
+def save_updateattendance_data(request):
+    student_ids = request.POST.get("student_ids")
+    attendance_date = request.POST.get("attendance_date")
+    attendance = Attendance.objects.get(id=attendance_date)
+
+    json_sstudent=json.loads(student_ids)
+
+    try:
+        for stud in json_sstudent:
+            student = Students.objects.get(admin=stud['id'])
+            attendance_report=AttendanceReport.objects.get(student_id=student,attendance_id=attendance)
+            attendance_report.status=stud['status']
+            attendance_report.save()
+        return HttpResponse("OK")
+    except:
+        return HttpResponse("ERROR")
