@@ -15,13 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 from django.conf.urls.static import static
 from index import views,HodViews,StaffViews,StudentViews
 from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('index/',views.index),
+    path('accounts/',include('django.contrib.auth.urls')),
     path('',views.loginPage,name="show_login"),
     path('login',views.Login,name="do_login"),
     path('get_user_details',views.GetUserDetails),
@@ -62,6 +63,15 @@ urlpatterns = [
     path('staff_feedback_save',StaffViews.staff_feedback_save,name="staff_feedback_save"),
     path('staff_apply_leave',StaffViews.staff_apply_leave,name="staff_apply_leave"),
     path('staff_apply_leave_save',StaffViews.staff_apply_leave_save,name="staff_apply_leave_save"),
+
+
    #student urls
     path('student_home',StudentViews.student_home,name="student_home"),
+    path('student_view_attendance',StudentViews.student_view_attendance,name="student_view_attendance"),
+    path('student_view_attendance_post',StudentViews.student_view_attendance_post,name="student_view_attendance_post"),
+    path('student_feedback',StudentViews.student_feedback,name="student_feedback"),
+    path('student_feedback_save',StudentViews.student_feedback_save,name="student_feedback_save"),
+    path('student_apply_leave',StudentViews.student_apply_leave,name="student_apply_leave"),
+    path('student_apply_leave_save',StudentViews.student_apply_leave_save,name="student_apply_leave_save"),
+
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
