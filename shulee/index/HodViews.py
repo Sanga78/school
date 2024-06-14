@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse,HttpResponseRedirect
-from index.models import CustomUser,Courses,Subjects,Staffs,Students,SessionYearModel
+from index.models import CustomUser,Courses, FeedbackStaff, FeedbackStudent,Subjects,Staffs,Students,SessionYearModel
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from .forms import AddStudentForm,EditStudentForm
@@ -316,3 +316,43 @@ def check_username_exist(request):
         return HttpResponse(True)
     else:
         return HttpResponse(False)
+    
+def staff_feedback_message(request):
+    feedbacks=FeedbackStaff.objects.all()
+    return render(request,"hod_templates/staff_feedback.html",{"feedbacks":feedbacks})
+
+@csrf_exempt
+def staff_feedback_message_replied(request):
+    feedback_id = request.POST.get("id")
+    feedback_message = request.POST.get("message")
+    
+    try:
+        feedback = FeedbackStaff.objects.get(id=feedback_id)
+        feedback.feedback_reply = feedback_message
+        feedback.save()
+        return HttpResponse("True")
+    except:
+        return HttpResponse("False")
+    
+def student_feedback_message(request):
+    feedbacks=FeedbackStudent.objects.all()
+    return render(request,"hod_templates/student_feedback.html",{"feedbacks":feedbacks})
+
+@csrf_exempt
+def student_feedback_message_replied(request):
+    feedback_id = request.POST.get("id")
+    feedback_message = request.POST.get("message")
+    
+    try:
+        feedback = FeedbackStudent.objects.get(id=feedback_id)
+        feedback.feedback_reply = feedback_message
+        feedback.save()
+        return HttpResponse("True")
+    except:
+        return HttpResponse("False")
+    
+def student_leave_view(request):
+    return render(request,"hod_templates/student_leave_view.html")
+
+def staff_leave_view(request):
+    pass
