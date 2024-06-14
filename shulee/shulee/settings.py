@@ -142,12 +142,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "index.CustomUser"
 AUTHENTICATION_BACKEND=["index.EmailBackEnd.EmailBackEnd"]
 
-# EMAIL_BACKEND="django.core.mail.backends.filebased.EmailBackend"
-# EMAIL_FILE_PATH=os.path.join(BASE_DIR,"sent_mails")
+EMAIL_BACKEND="django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH=os.path.join(BASE_DIR,"sent_mails")
 
-EMAIL_HOST="smtp.gmail.com"
-EMAIL_PORT=587
-EMAIL_HOST_USER='sangakelvin026@gmail.com'
-EMAIL_HOST_PASSWORD='gvtv knhf fdsk gguj'
-EMAIL_USE_TLS=True
-DEFAULT_FROM_EMAIL="Student management System <sangakelvin026@gmail.com>"
+# EMAIL_HOST="smtp.gmail.com"
+# EMAIL_PORT=587
+# EMAIL_HOST_USER=''
+# EMAIL_HOST_PASSWORD=''
+# EMAIL_USE_TLS=True
+# DEFAULT_FROM_EMAIL="Student management System <>"
