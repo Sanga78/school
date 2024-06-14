@@ -50,6 +50,9 @@ urlpatterns = [
     path('edit_subject_save',HodViews.edit_subject_save,name="edit_subject_save"),
     path('manage_session',HodViews.manage_session,name="manage_session"),
     path('add_session_save',HodViews.add_session_save,name="add_session_save"),
+    path('check_email_exist',HodViews.check_email_exist,name="check_email_exist"),
+    path('check_username_exist',HodViews.check_username_exist,name="check_username_exist"),
+
     #Staff urls
     path('staff_home',StaffViews.staff_home,name="staff_home"),
     path('staff_take_attendance',StaffViews.staff_take_attendance,name="staff_take_attendance"),
