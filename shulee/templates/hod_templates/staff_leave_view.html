@@ -1,6 +1,6 @@
 {% extends 'hod_templates/base.html' %}
 {% block page_title %}
-Student Apply For Leave
+Staff Apply For Leave
 {% endblock page_title %}
 {% load static %}
 {% block main_content %}
@@ -12,15 +12,15 @@ Student Apply For Leave
                 <!-- general form elements -->
                 <div class="card card-primary">
                   <div class="card-header">
-                    <h3 class="card-title">Student Apply For Leave</h3>
+                    <h3 class="card-title">Staff Apply For Leave</h3>
                   </div>
                   <!-- /.card-header -->
                     <div class="table">
                     <table class="table">
                         <tr>
                             <th>ID</th>
-                            <th>Student ID</th>
-                            <th>Student Name</th>
+                            <th>Staff ID</th>
+                            <th>Staff Name</th>
                             <th>Leave Date</th>
                             <th>Leave Message</th>
                             <th>Applied On</th>
@@ -29,15 +29,15 @@ Student Apply For Leave
                         {% for leave in leaves %}
                         <tr>
                             <td>{{ leave.id }}</td>
-                            <td>{{ leave.student_id.admin.id }}</td>
-                            <td>{{ leave.student_id.admin.first_name }} {{ leave.student_id.admin.last_name }}</td>
+                            <td>{{ leave.staff_id.admin.id }}</td>
+                            <td>{{ leave.staff_id.admin.first_name }} {{ leave.staff_id.admin.last_name }}</td>
                             <td>{{ leave.leave_date }}</td>
                             <td>{{ leave.leave_message }}</td>
                             <td>{{ leave.created_at }}</td>
                             <td>
                                 {% if leave.leave_status == 0 %}
-                                <a href="{% url 'student_approve_leave' leave_id=leave.id %}" class="btn btn-success" >Approve</a>
-                                <a href="{% url 'student_disapprove_leave' leave_id=leave.id %}" class="btn btn-danger" >Disapprove</a>
+                                <a href="{% url 'staff_approve_leave' leave_id=leave.id %}" class="btn btn-success" >Approve</a>
+                                <a href="{% url 'staff_disapprove_leave' leave_id=leave.id %}" class="btn btn-danger" >Disapprove</a>
                                 {% elif leave.leave_status == 1 %}
                                 <button class="btn btn-warning" disabled="disabled" >Approved</button>
                                 {% else %}

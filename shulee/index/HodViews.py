@@ -1,6 +1,7 @@
+import json
 from django.shortcuts import render
-from django.http import HttpResponse,HttpResponseRedirect
-from index.models import CustomUser,Courses, FeedbackStaff, FeedbackStudent,Subjects,Staffs,Students,SessionYearModel
+from django.http import HttpResponse,HttpResponseRedirect, JsonResponse
+from index.models import Attendance, AttendanceReport, CustomUser,Courses, FeedbackStaff, FeedbackStudent, LeaveReportStaff, LeaveReportStudent,Subjects,Staffs,Students,SessionYearModel
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from .forms import AddStudentForm,EditStudentForm
@@ -352,7 +353,93 @@ def student_feedback_message_replied(request):
         return HttpResponse("False")
     
 def student_leave_view(request):
-    return render(request,"hod_templates/student_leave_view.html")
+    leaves = LeaveReportStudent.objects.all()
+    return render(request,"hod_templates/student_leave_view.html",{"leaves":leaves})
+
+def student_approve_leave(request,leave_id):
+    leave=LeaveReportStudent.objects.get(id=leave_id)
+    leave.leave_status=1
+    leave.save()
+    return HttpResponseRedirect(reverse("student_leave_view"))
+
+def student_disapprove_leave(request,leave_id):
+    leave=LeaveReportStudent.objects.get(id=leave_id)
+    leave.leave_status=2
+    leave.save()
+    return HttpResponseRedirect(reverse("student_leave_view"))
 
 def staff_leave_view(request):
-    pass
+    leaves = LeaveReportStaff.objects.all()
+    return render(request,"hod_templates/staff_leave_view.html",{"leaves":leaves})
+
+def staff_approve_leave(request,leave_id):
+    leave=LeaveReportStaff.objects.get(id=leave_id)
+    leave.leave_status=1
+    leave.save()
+    return HttpResponseRedirect(reverse("staff_leave_view"))
+
+def staff_disapprove_leave(request,leave_id):
+    leave=LeaveReportStaff.objects.get(id=leave_id)
+    leave.leave_status=2
+    leave.save()    
+    return HttpResponseRedirect(reverse("staff_leave_view"))
+
+def admin_view_atendance(request):
+    subjects = Subjects.objects.all()
+    session_year_id = SessionYearModel.object.all()
+    return render(request,"hod_templates/admin_view_attendance.html",{"subjects":subjects,"session_year_id":session_year_id})
+
+
+@csrf_exempt
+def admin_get_attendance_dates(request):
+    subject = request.POST.get("subject")
+    session_year_id = request.POST.get("session_year_id")
+    subject_obj = Subjects.objects.get(id=subject)
+    session_year_obj = SessionYearModel.object.get(id=session_year_id)
+    attendance = Attendance.objects.filter(subject_id=subject_obj,session_year_id=session_year_obj)
+    attendance_obj=[]
+    for attendance_single in attendance:
+        data={"id":attendance_single.id,"attendance_date":str(attendance_single.attendance_date),"session_year_id":attendance_single.session_year_id.id}
+        attendance_obj.append(data)
+
+    return JsonResponse(json.dumps(attendance_obj),safe=False)
+
+@csrf_exempt
+def admin_get_attendance_student(request):
+    attendance_date = request.POST.get("attendance_date")
+    attendace = Attendance.objects.get(id=attendance_date)
+
+    attendance_data = AttendanceReport.objects.filter(attendance_id=attendace)
+
+    list_data=[]
+
+    for student in attendance_data:
+        data_small = {"id":student.student_id.admin.id,"name":student.student_id.admin.first_name+" "+student.student_id.admin.last_name,"status":student.status}
+        list_data.append(data_small)
+    return JsonResponse(json.dumps(list_data),content_type="application/json",safe=False)
+
+def admin_profile(request):
+    user = CustomUser.objects.get(id=request.user.id)
+    return render(request,"hod_templates/admin_profile.html",{"user":user})
+
+def admin_profile_save(request):
+    if request.method != "POST":
+        return HttpResponseRedirect(reverse("admin_profile"))
+    else:
+        first_name=request.POST.get("first_name")
+        last_name=request.POST.get("last_name")
+        password=request.POST.get("password")
+        try:
+            customuser=CustomUser.objects.get(id=request.user.id)
+            customuser.first_name=first_name
+            customuser.last_name=last_name
+            if password!=None and password!="":
+                customuser.set_password(password)
+            customuser.save()
+            messages.success(request,"Successfully Updated Profile")
+            return HttpResponseRedirect(reverse("admin_profile"))
+        except:
+            messages.error(request,"Failed to Update Profile")
+            return HttpResponseRedirect(reverse("admin_profile"))
+
+        
