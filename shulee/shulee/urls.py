@@ -83,6 +83,7 @@ urlpatterns = [
     path('staff_apply_leave_save',StaffViews.staff_apply_leave_save,name="staff_apply_leave_save"),
     path('staff_profile',StaffViews.staff_profile,name="staff_profile"),
     path('staff_profile_save',StaffViews.staff_profile_save,name="staff_profile_save"),
+    path('staff_fcmtoken_save',StaffViews.staff_fcmtoken_save,name="student_fcmtoken_save"),
 
    #student urls
     path('student_home',StudentViews.student_home,name="student_home"),
@@ -94,5 +95,6 @@ urlpatterns = [
     path('student_apply_leave_save',StudentViews.student_apply_leave_save,name="student_apply_leave_save"),
     path('student_profile',StudentViews.student_profile,name="student_profile"),
     path('student_profile_save',StudentViews.student_profile_save,name="student_profile_save"),
+    path('student_fcmtoken_save',StudentViews.student_fcmtoken_save,name="student_fcmtoken_save"),
 
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

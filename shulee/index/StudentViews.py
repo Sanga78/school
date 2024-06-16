@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-
+from django.views.decorators.csrf import csrf_exempt
 from .models import Attendance, AttendanceReport, Courses, CustomUser, FeedbackStudent, LeaveReportStudent, Students, Subjects
 
 def student_home(request):
@@ -123,3 +123,7 @@ def student_profile_save(request):
         except:
             messages.error(request,"Failed to Update Profile")
             return HttpResponseRedirect(reverse("student_profile"))
+
+@csrf_exempt        
+def student_fcmtoken_save(request):
+    pass
