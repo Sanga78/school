@@ -126,4 +126,11 @@ def student_profile_save(request):
 
 @csrf_exempt        
 def student_fcmtoken_save(request):
-    pass
+    token = request.POST.get("token")
+    try:
+        student=Students.objects.get(admin=request.user.id)
+        student.fcm_token=token
+        student.save()
+        return HttpResponse("True")
+    except:
+        return HttpResponse("False")

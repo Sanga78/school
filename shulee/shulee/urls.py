@@ -84,7 +84,8 @@ urlpatterns = [
     path('staff_profile',StaffViews.staff_profile,name="staff_profile"),
     path('staff_profile_save',StaffViews.staff_profile_save,name="staff_profile_save"),
     path('staff_fcmtoken_save',StaffViews.staff_fcmtoken_save,name="student_fcmtoken_save"),
-
+    path('staff_add_result',StaffViews.staff_add_result,name="staff_add_result"),
+    path('save_student_result',StaffViews.save_student_result,name="save_student_result"),
    #student urls
     path('student_home',StudentViews.student_home,name="student_home"),
     path('student_view_attendance',StudentViews.student_view_attendance,name="student_view_attendance"),

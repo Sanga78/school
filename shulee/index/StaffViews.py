@@ -1,7 +1,7 @@
 from django.http import HttpResponse,JsonResponse,HttpResponseRedirect
 from django.core import serializers
 from django.shortcuts import render
-from index.models import Courses, CustomUser, FeedbackStaff, Staffs, Subjects,SessionYearModel,Students,Attendance,AttendanceReport,LeaveReportStaff
+from index.models import Courses, CustomUser, FeedbackStaff, NotificationStaff, Staffs, Subjects,SessionYearModel,Students,Attendance,AttendanceReport,LeaveReportStaff
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib import messages
@@ -218,4 +218,32 @@ def staff_profile_save(request):
             messages.error(request,"Failed to Update Profile")
             return HttpResponseRedirect(reverse("staff_profile"))
 
-  
+@csrf_exempt        
+def staff_fcmtoken_save(request):
+    token = request.POST.get("token")
+    try:
+        staff=Staffs.objects.get(admin=request.user.id)
+        staff.fcm_token=token
+        staff.save()
+        return HttpResponse("True")
+    except:
+        return HttpResponse("False")
+    
+def staff_all_notifications(request):
+    staff=Staffs.objects.get(admin=request.user.id)
+    notifications=NotificationStaff.objects.filter(staff_id=staff.id)
+    return render(request,"staff_template/all_notifications.html",{"notifications":notifications})
+
+def staff_add_result(request):
+    subjects=Subjects.objects.filter(staff_id=request.user.id)
+    session_year=SessionYearModel.object.all()
+    return render(request,"staff_template/staff_add_result.html",{"subjects":subjects,"session_years":session_year})
+
+def save_student_result(request):
+    student_admin_id=request.POST.get("student_list")
+    assignment_marks=request.POST.get("assignment_marks")
+    exam_marks=request.POST.get("exam_marks")
+    subject_id=request.POST.get("subject")
+
+    student_obj=Students.objects.get(admin=student_admin_id)
+    subject_obj=Subjects.objects.get(id=subject_id)
