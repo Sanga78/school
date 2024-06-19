@@ -247,3 +247,4 @@ def save_student_result(request):
 
     student_obj=Students.objects.get(admin=student_admin_id)
     subject_obj=Subjects.objects.get(id=subject_id)
+    return HttpResponse("True")
