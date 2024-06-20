@@ -244,7 +244,9 @@ def save_student_result(request):
     assignment_marks=request.POST.get("assignment_marks")
     exam_marks=request.POST.get("exam_marks")
     subject_id=request.POST.get("subject")
-
-    student_obj=Students.objects.get(admin=student_admin_id)
-    subject_obj=Subjects.objects.get(id=subject_id)
-    return HttpResponse("True")
+    try:
+        student_obj=Students.objects.get(admin=student_admin_id)
+        subject_obj=Subjects.objects.get(id=subject_id)
+        return HttpResponse("True")
+    except:
+        return HttpResponse("False")
