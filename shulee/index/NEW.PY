@@ -1,8 +1,3 @@
-import random
-from random import choice
-
-numbers=[num for num in range(0,100)]
-# shuffle=shuffle(numbers)
-pick=choice(numbers)
-# print(shuffle)
-print(pick)
+document =(2,'sweet,'(1,2,3),['sing','b'])
+n=document[-1].append('poerty')
+print(n)

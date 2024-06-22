@@ -10,5 +10,5 @@ class EditResultViewClass(View):
         edit_result_form = EditResultForm(staff_id=staff_id)
         return render(request,"edit_student_result.html",{"form":edit_result_form})
     
-    def post(self,request,*args,**kwargs):
-        pass
+    # def post(self,request,*args,**kwargs):
+    #     pass
