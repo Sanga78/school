@@ -266,3 +266,17 @@ def save_student_result(request):
         except:
             messages.error(request,"Failed to Add Result")
             return HttpResponseRedirect(reverse("staff_add_result"))
+
+@csrf_exempt       
+def fetch_student_result(request):
+    subject_id=request.POST.get('subject_id')
+    student_id=request.POST.get('student_id')
+    student_obj=Students.objects.get(admin=student_id.id)
+    result=StudentResult.objects.filter(student_id=student_obj.id,subject_id=subject_id).exists()
+    if result:
+        result=StudentResult.objects.filter(student_id=student_obj.id,subject_id=subject_id).exists()
+        result_data={"exam_marks":result.subject_exam_marks,"assignment_marks":result.subject_assignment_marks}
+        return HttpResponse(json.dumps(result_data))
+    else:
+        return HttpResponse("False")
+

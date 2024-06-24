@@ -85,19 +85,20 @@ class EditResultForm(forms.Form):
                 subject_list.append(subject_single)
         except:
             subject_list=[]
+        self.fields['subject_id'].choices=subject_list
 
+    session_list=[]
+    try:
+        sessions=SessionYearModel.object.all()
+        for session in sessions:
+            session_single=(session.id,str(session.session_start_year)+" TO "+str(session.session_end_year))
+            session_list.append(session_single)
+    except:
         session_list=[]
-        try:
-            sessions=SessionYearModel.objects.all()
-            for session in sessions:
-                session_single=(session.id,session.session_start_year+" TO "+session.session_end_year)
-                session_list.append(session_single)
-        except:
-            session_list=[]
 
-        self.subject_id=forms.ChoiceField(label="Subject",choices=subject_list,widget=forms.Select(attrs={"class":"form-control"}))
-        self.session_id=forms.ChoiceField(label="Session Year",choices=session_list,widget=forms.Select(attrs={"class":"form-control"}))
-        self.student_id=forms.ChoiceField(label="Student",widget=forms.Select(attrs={"class":"form-control"}))
-        self.assignment_marks=forms.CharField(label="Assignment Marks",widget=forms.TextInput(attrs={"class":"form-control"}))
-        self.exam_marks=forms.CharField(label="Exam Marks",widget=forms.TextInput(attrs={"class":"form-control"}))
+    subject_id=forms.ChoiceField(label="Subject",widget=forms.Select(attrs={"class":"form-control"}))
+    session_id=forms.ChoiceField(label="Session Year",choices=session_list,widget=forms.Select(attrs={"class":"form-control"}))
+    student_id=forms.ChoiceField(label="Student",widget=forms.Select(attrs={"class":"form-control"}))
+    assignment_marks=forms.CharField(label="Assignment Marks",widget=forms.TextInput(attrs={"class":"form-control"}))
+    exam_marks=forms.CharField(label="Exam Marks",widget=forms.TextInput(attrs={"class":"form-control"}))
 

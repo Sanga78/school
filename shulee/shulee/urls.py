@@ -20,7 +20,8 @@ from django.conf.urls.static import static
 from index import views,HodViews,StaffViews,StudentViews
 from django.conf import settings
 
-from index import EditResultViewClass
+from index.EditResultViewClass import EditResultViewClass
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('index/',views.index),
@@ -89,6 +90,7 @@ urlpatterns = [
     path('staff_add_result',StaffViews.staff_add_result,name="staff_add_result"),
     path('save_student_result',StaffViews.save_student_result,name="save_student_result"),
     path('edit_student_result',EditResultViewClass.as_view(),name="edit_student_result"),
+    path('fetch_student_result',StaffViews.fetch_student_result,name="fetch_student_result"),
    #student urls
     path('student_home',StudentViews.student_home,name="student_home"),
     path('student_view_attendance',StudentViews.student_view_attendance,name="student_view_attendance"),
