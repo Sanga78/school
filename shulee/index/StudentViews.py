@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Attendance, AttendanceReport, Courses, CustomUser, FeedbackStudent, LeaveReportStudent, Students, Subjects
+from .models import Attendance, AttendanceReport, Courses, CustomUser, FeedbackStudent, LeaveReportStudent, NotificationStudent, StudentResult, Students, Subjects
 
 def student_home(request):
     student_obj=Students.objects.get(admin=request.user.id)
@@ -134,3 +134,13 @@ def student_fcmtoken_save(request):
         return HttpResponse("True")
     except:
         return HttpResponse("False")
+    
+def student_all_notifications(request):
+    student = Students.objects.get(admin=request.user.id)
+    notifications = NotificationStudent.objects.filter(student_id=student.id)
+    return render(request,'student_template/all_notifications.html',{"notifications":notifications})
+
+def student_view_result(request):
+    student = Students.objects.get(admin=request.user.id)
+    studentresult = StudentResult.objects.filter(student_id=student.id)
+    return render(request,"student_template/student_result.html",{"studentresult":studentresult})

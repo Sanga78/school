@@ -1,0 +1,50 @@
+{% extends 'student_template/base.html' %}
+{% block page_title %}
+Student Results
+{% endblock page_title %}
+{% load static %}
+{% block main_content %}
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Results</h3>
+                    </div>
+                    <div class="table">
+                    <table class="table">
+                        <tr>
+                            <th>ID</th>
+                            <th>Subject</th>
+                            <th>Assignment Marks</th>
+                            <th>Exam Marks</th>
+                            <th>Status</th>
+                        </tr>
+                        {% for result in studentresult %}
+                        <tr>
+                            <td>{{ result.id }}</td>
+                            <td>{{ result.subject_id.subject_name }}</td>
+                            <td>{{ result.subject_assignment_marks }}</td>
+                            <td>{{ result.subject_exam_marks }}</td>
+                            <td>
+                                {% if result.subject_exam_marks >= 40 %}
+                                    <span class="alert alert-success">PASS</span>
+                                {% else %}
+                                    <span class="alert alert-danger">FAIL</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                </div>
+            </div>
+                <!-- /.card -->         
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+  </section>
+  <!-- /.content -->
+{% endblock main_content %}
