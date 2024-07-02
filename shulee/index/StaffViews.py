@@ -271,10 +271,10 @@ def save_student_result(request):
 def fetch_student_result(request):
     subject_id=request.POST.get('subject_id')
     student_id=request.POST.get('student_id')
-    student_obj=Students.objects.get(admin=student_id.id)
+    student_obj=Students.objects.get(admin=student_id)
     result=StudentResult.objects.filter(student_id=student_obj.id,subject_id=subject_id).exists()
     if result:
-        result=StudentResult.objects.filter(student_id=student_obj.id,subject_id=subject_id).exists()
+        result=StudentResult.objects.get(student_id=student_obj.id,subject_id=subject_id)
         result_data={"exam_marks":result.subject_exam_marks,"assignment_marks":result.subject_assignment_marks}
         return HttpResponse(json.dumps(result_data))
     else:
