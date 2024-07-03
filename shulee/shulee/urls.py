@@ -24,6 +24,12 @@ from index.EditResultViewClass import EditResultViewClass
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('signup_admin',views.signup_admin,name="signup_admin"),
+    path('admin_signup',views.admin_signup,name="admin_signup"),
+    path('signup_staff',views.signup_staff,name="signup_staff"),
+    path('staff_signup',views.staff_signup,name="staff_signup"),
+    path('signup_student',views.signup_student,name="signup_student"),
+    path('student_signup',views.student_signup,name="student_signup"),
     path('index/',views.index),
     path('accounts/',include('django.contrib.auth.urls')),
     path('',views.loginPage,name="show_login"),
