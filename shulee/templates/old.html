@@ -1,50 +1,48 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'style.css' %}">\
-    <script src="{% static 'script.js' %}"></script>
+    <link rel="stylesheet" href="">
+    <script src=""></script>
     <title>school</title>
 </head>
 <body>
-    <section class="head">
-        <h1>School Portal</h1>
-        <div class="nav">
-            <!-- <div class="logo"></div> -->
-            <div class="navbar">
-                <ul>
-                    <li>Notices</li>
-                    <div class="dropdown">
-                        <li onclick="myFunction()" class="dropbtn">About Us</li>
-                        <div id="myDropdown" class="dropdown-content">
-                          <a href="#mission">Mission</a>
-                          <a href="#vision">Vision</a>
-                          <a href="#motto">Motto</a>
+    <header> 
+        <navbar>
+            <h1>School Portal</h1>
+            <div class="nav">
+                <!-- <div class="logo"></div> -->
+                <div class="navbar">
+                    <ul>
+                        <li>Notices</li>
+                        <div class="dropdown">
+                            <li onclick="myFunction()" class="dropbtn">About Us</li>
+                            <div id="myDropdown" class="dropdown-content">
+                            <a href="#mission">Mission</a>
+                            <a href="#vision">Vision</a>
+                            <a href="#motto">Motto</a>
+                            </div>
                         </div>
-                      </div>
-                    <li>Fees structure</li>
-                    <li>Accomodation</li>
-                    <li>KCPE results</li>
-                </ul>
+                        <li>Fees structure</li>
+                        <li>Accomodation</li>
+                        <li>KCPE results</li>
+                    </ul>
+                </div>
+                <div class="sign">
+                    <ul>
+                        <li><a href="">Login</a></li>
+                        <li><a href="">Logout</a></li>
+                    </ul>
+                </div>
             </div>
-            <div class="sign">
-                <ul>
-                    {% if request.user.is_authenticated %}
-                        <li><a href="{% url 'signup' %}">Signup</a></li>
-                    {% endif %}
-                    {% if request.user.is_authenticated %}
-                    Logged in as: {{ request.user.username }}
-                    <li><a href="{% url 'logout' %}">Logout</a></li>
-                    {% else %}
-                    <li><a href="{% url 'login' %}">Login</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
+        </navbar>
+    </header>
+    <main>
+   
+    <section class="herp">
+        <h1>AIC Laboret girls boarding primary school</h1>
     </section>
-    <hr>
 
     <!-- body starts here -->
     <section class="body">
@@ -84,7 +82,31 @@
         </div>
        </div>
     </section>
+    <section>
+        <div class="teachers">
+        </div>
+        <table>
+            <caption>Results</caption>
+            <th>
+                <thead>
+                    <th></th>
+                    <tr></tr>
+                </thead>
+                <tbody>
+                    <td>
+                        <tr></tr>
+                        <tr></tr>
+                        <tr></tr>
+                        <tr></tr>
+                    </td>
+                </tbody>
+            </th>
+        </table>
+    </section>
+</main>
    <!-- footer -->
+    <footer>
+    </footer>
 
 </body>
 </html>
