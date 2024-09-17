@@ -1,6 +1,166 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>AIC Laboret Girls</title>
-    <meta name="viewport" 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>School Home Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100">
+
+    <!-- Header Section -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <!-- School Logo -->
+            <div class="flex items-center">
+                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="h-10">
+                <span class="text-xl font-bold ml-2 text-blue-700">My School</span>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <div class="block md:hidden">
+                <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navigation Menu (hidden on mobile) -->
+            <nav id="desktop-menu" class="hidden md:flex space-x-6">
+                <a href="#" class="text-gray-700 hover:text-blue-600">Home</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">About Us</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">Admissions</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">Academics</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">Events</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">News</a>
+                <a href="#" class="text-gray-700 hover:text-blue-600">Contact Us</a>
+            </nav>
+
+            <!-- Search Bar & Login Button -->
+            <div class="hidden md:flex items-center space-x-4">
+                <!-- Search Bar -->
+                <div class="relative">
+                    <input type="text" class="border rounded-full py-2 px-4 pl-10 w-64 focus:outline-none focus:border-blue-500" placeholder="Search...">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+
+                <!-- Login Button -->
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">
+                    Login
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <nav id="mobile-menu" class="hidden md:hidden bg-white shadow-lg px-4 py-2">
+            <a href="#" class="block text-gray-700 py-2 hover:text-blue-600">Home</a>
+            <a href="#" class="block text-gray-700 py-2 hover:text-blue-600">About Us</a>
+            <a href="#" class="block text-gray-700 py-2 hover:text-blue-600">Admissions</a>
+            <a href="#" class="block text-gray-700 py-2 hover:text-blue-600">Academics</a>
+            <a href="#" class="block text-gray-700 py-2 hover:text-blue-600">Events</a>
+            <a href="#" class="block text-gray-700 py-2 hover:text-blue-600">News</a>
+            <a href="#" class="block text-gray-700 py-2 hover:text-blue-600">Contact Us</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-cover bg-center h-96" style="background-image: url('https://via.placeholder.com/1920x600');">
+        <div class="container mx-auto h-full flex flex-col justify-center items-center text-center text-white">
+            <h1 class="text-4xl md:text-5xl font-bold">Welcome to My School</h1>
+            <p class="mt-4 text-lg md:text-2xl">Inspiring Excellence, Shaping Futures</p>
+            <div class="mt-6 space-x-0 space-y-4 md:space-y-0 md:space-x-4 flex flex-col md:flex-row">
+                <a href="#" class="bg-white text-blue-600 px-6 py-2 rounded-full font-semibold hover:bg-blue-100">Learn More</a>
+                <a href="#" class="bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700">Apply Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Announcements Section -->
+    <section class="container mx-auto mt-12 px-4">
+        <h2 class="text-3xl font-bold text-center mb-6">Latest Announcements</h2>
+        <div class="space-y-4">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold">Exam Schedule for Fall 2024</h3>
+                <p class="text-gray-600">Check the exam schedules for all grades. Exams start from November 15th, 2024.</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold">Holiday Notice: Winter Break</h3>
+                <p class="text-gray-600">The school will be closed for Winter Break from December 20th, 2024, to January 5th, 2025.</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold">Upcoming Science Fair</h3>
+                <p class="text-gray-600">Don't miss the annual Science Fair on November 25th, 2024. All students are invited to participate.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Events Section -->
+    <section class="container mx-auto mt-12 px-4">
+        <h2 class="text-3xl font-bold text-center mb-6">Upcoming Events</h2>
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold">Parent-Teacher Conference</h3>
+                <p class="text-gray-600">Date: November 10th, 2024</p>
+                <p class="text-gray-600">A chance for parents to meet with teachers and discuss their child's progress.</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h3 class="text-xl font-semibold">Sports Day</h3>
+                <p class="text-gray-600">Date: December 1st, 2024</p>
+                <p class="text-gray-600">Join us for a fun-filled day of sports and outdoor activities.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Links Section -->
+    <section class="container mx-auto mt-12 px-4">
+        <h2 class="text-3xl font-bold text-center mb-6">Quick Links</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+            <a href="#" class="bg-blue-600 text-white p-4 rounded-lg text-center font-semibold hover:bg-blue-700">Student Portal</a>
+            <a href="#" class="bg-blue-600 text-white p-4 rounded-lg text-center font-semibold hover:bg-blue-700">Parent Portal</a>
+            <a href="#" class="bg-blue-600 text-white p-4 rounded-lg text-center font-semibold hover:bg-blue-700">Staff Portal</a>
+            <a href="#" class="bg-blue-600 text-white p-4 rounded-lg text-center font-semibold hover:bg-blue-700">Library</a>
+            <a href="#" class="bg-blue-600 text-white p-4 rounded-lg text-center font-semibold hover:bg-blue-700">Sports</a>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 text-white py-12 mt-12 px-4">
+        <div class="container mx-auto grid md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
+                <p>123 School Street, Education City</p>
+                <p>Phone: (123) 456-7890</p>
+                <p>Email: info@myschool.edu</p>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold mb-4">Follow Us</h3>
+                <div class="space-x-4">
+                    <a href="#" class="text-blue-500 hover:underline">Facebook</a>
+                    <a href="#" class="text-blue-300 hover:underline">Twitter</a>
+                    <a href="#" class="text-pink-400 hover:underline">Instagram</a>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold mb-4">Useful Links</h3>
+                <a href="#" class="block hover:underline">Privacy Policy</a>
+                <a href="#" class="block hover:underline">Terms of Service</a>
+                <a href="#" class="block hover:underline">Sitemap</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function () {
+            var menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+</body>
 </html>
