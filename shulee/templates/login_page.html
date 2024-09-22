@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Login - My School Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Header Section (Same as Home Page) -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="h-10">
+                <span class="text-xl font-bold ml-2 text-blue-700">My School</span>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
+                <a href="about.html" class="text-gray-700 hover:text-blue-600">About Us</a>
+                <a href="admissions.html" class="text-gray-700 hover:text-blue-600">Admissions</a>
+                <a href="academics.html" class="text-gray-700 hover:text-blue-600">Academics</a>
+                <a href="events.html" class="text-gray-700 hover:text-blue-600">Events</a>
+                <a href="news.html" class="text-gray-700 hover:text-blue-600">News</a>
+                <a href="contact.html" class="text-gray-700 hover:text-blue-600">Contact Us</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Login Form Section -->
+    <section class="container mx-auto mt-12 px-4">
+        <h2 class="text-3xl font-bold mb-6 text-center">Login to Your Portal</h2>
+        <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
+            <form>
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-700">Username</label>
+                    <input type="text" id="username" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Username">
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-gray-700">Password</label>
+                    <input type="password" id="password" class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Password">
+                </div>
+                <div class="mb-4">
+                    <a href="#" class="text-blue-600 hover:underline">Forgot Password?</a>
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full">Login</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer Section (Same as Home Page) -->
+    <footer class="bg-gray-800 text-white py-12 mt-12 px-4">
+        <div class="container mx-auto grid md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
+                <p>123 School Street, Education City</p>
+                <p>Phone: (123) 456-7890</p>
+                <p>Email: info@myschool.edu</p>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold mb-4">Follow Us</h3>
+                <div class="space-x-4">
+                    <a href="#" class="text-blue-500 hover:underline">Facebook</a>
+                    <a href="#" class="text-blue-300 hover:underline">Twitter</a>
+                    <a href="#" class="text-pink-400 hover:underline">Instagram</a>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xl font-bold mb-4">Useful Links</h3>
+                <a href="#" class="block hover:underline">Privacy Policy</a>
+                <a href="#" class="block hover:underline">Terms of Service</a>
+                <a href="#" class="block hover:underline">Sitemap</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

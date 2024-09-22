@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Events - My School</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Header Section (Same as Home Page) -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="h-10">
+                <span class="text-xl font-bold ml-2 text-blue-700">My School</span>
+            </div>
+            <nav class="hidden md:flex space-x-6">
+                <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
+                <a href="about.html" class="text-gray-700 hover:text-blue-600">About Us</a>
+                <a href="admissions.html" class="text-gray-700 hover:text-blue-600">Admissions</a>
+                <a href="academics.html" class="text-gray-700 hover:text-blue-600">Academics</a>
+                <a href="events.html" class="text-gray-700 hover:text-blue-600">Events</a>
+                <a href="news.html" class="text-gray-700 hover:text-blue-600">News</a>
+                <a href="contact.html" class="text-gray-700 hover:text-blue-600">Contact Us</a>
+            </nav>
+            <div class="hidden md:flex items-center space-x-4">
+                <div class="relative">
+                    <input type="text" class="border rounded-full py-2 px-4 pl-10 w-64 focus:outline-none focus:border-blue-500" placeholder="Search...">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">Login</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-cover bg-center h-96" style="background-image: url('https://via.placeholder.com/1920x600');">
+        <div class="container mx-auto h-full flex flex-col justify-center items-center text-center text-white">
+            <h1 class="text-4xl md:text-5xl font-bold">School Events</h1>
+        </div>
+    </section>
+
+    <!-- Event Calendar Section -->
+    <section class="container mx-auto mt-12 px-4">
+        <h2 class="text-3xl font-bold mb-6 text-center">Event Calendar</h2>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <!-- Embed an interactive calendar (Google Calendar or similar) -->
+            <iframe src="https://calendar.google.com/calendar/embed?src=your_calendar_link_here" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+        </div>
+    </section>
+
+    <!-- Event Details Section -->
+    <section class="container mx-auto mt-12 px-4">
+        <h2 class="text-3xl font-bold mb-6 text-center">Event Highlights</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-4">Science Fair 2024</h3>
+                <p class="text-gray-600 mb-4">Join us for the annual Science Fair on November 25th, 2024. This event showcases students' innovative projects and scientific achievements. Register to participate now!</p>
+                <a href="#" class="text-blue-600 hover:underline">Register Here</a>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-4">Sports Day</h3>
+                <p class="text-gray-600 mb-4">Don't miss Sports Day on December 1st, 2024, where students compete in a variety of athletic activities. Spectators and participants are welcome.</p>
+                <a href="#" class="text-blue-600 hover:underline">View Schedule</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section (Same as Home Page) -->
+    <footer class="bg-gray-800 text-white py-12 mt-12 px-4">
+        <div class="container mx-auto grid md:grid-cols-3 gap-8">
+            <div>
+                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
+                <p>123 School Street, Education City</p>
+                <p>Phone: (123) 456-7890</p>
+                <p>Email: info@myschool.edu</p>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Follow Us</h3>
+                <div class="space-x-4">
+                    <a href="#" class="text-blue-500 hover:underline">Facebook</a>
+                    <a href="#" class="text-blue-300 hover:underline">Twitter</a>
+                    <a href="#" class="text-pink-400 hover:underline">Instagram</a>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold mb-4">Useful Links</h3>
+                <a href="#" class="block hover:underline">Privacy Policy</a>
+                <a href="#" class="block hover:underline">Terms of Service</a>
+                <a href="#" class="block hover:underline">Sitemap</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
