@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>About Us - My School</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
 </head>
 <body class="bg-gray-100">
 
@@ -13,9 +14,9 @@
     <header class="bg-white shadow-lg">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <!-- School Logo -->
-            <div class="flex items-center">
-                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="h-10">
-                <span class="text-xl font-bold ml-2 text-blue-700">My School</span>
+            <div class="logo-container">
+                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="logo">
+                <span class="school-name">My School</span>
             </div>
 
             <!-- Navigation Menu -->
@@ -48,23 +49,23 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="bg-cover bg-center h-96" style="background-image: url('https://via.placeholder.com/1920x600');">
+    <section class="hero bg-cover bg-center h-96" style="background-image: url('https://via.placeholder.com/1920x600');">
         <div class="container mx-auto h-full flex flex-col justify-center items-center text-center text-white">
             <h1 class="text-4xl md:text-5xl font-bold">About Us</h1>
         </div>
     </section>
 
     <!-- Content Sections -->
-    <section class="container mx-auto mt-12 px-4">
+    <section class="content container mx-auto mt-12 px-4">
         <!-- Our History -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <div class="bg-white p-6 rounded-lg shadow mb-8 history">
             <h2 class="text-3xl font-bold mb-4">Our History</h2>
             <p class="text-gray-600 mb-4">Founded in 1950, our school has a rich history of excellence in education. From humble beginnings, we have grown to become one of the top institutions in the country.</p>
             <img src="https://via.placeholder.com/800x400" alt="Historical School Image" class="w-full rounded-lg">
         </div>
 
         <!-- Mission & Vision -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <div class="bg-white p-6 rounded-lg shadow mb-8 mission_vission">
             <h2 class="text-3xl font-bold mb-4">Mission & Vision</h2>
             <p class="text-gray-600">Our mission is to inspire academic excellence and foster lifelong learning. Our vision is to create a nurturing environment where students grow into responsible and successful individuals.</p>
         </div>
@@ -73,12 +74,12 @@
         <div class="bg-white p-6 rounded-lg shadow mb-8">
             <h2 class="text-3xl font-bold mb-4">Administration</h2>
             <div class="grid md:grid-cols-2 gap-4">
-                <div class="bg-gray-100 p-4 rounded-lg text-center">
+                <div class="card">
                     <img src="https://via.placeholder.com/150x150" alt="Principal Photo" class="rounded-full mx-auto mb-4">
                     <h3 class="text-xl font-semibold">John Doe - Principal</h3>
                     <p class="text-gray-600">John has over 20 years of experience in education and leadership, guiding our school towards excellence.</p>
                 </div>
-                <div class="bg-gray-100 p-4 rounded-lg text-center">
+                <div class="card">
                     <img src="https://via.placeholder.com/150x150" alt="Vice Principal Photo" class="rounded-full mx-auto mb-4">
                     <h3 class="text-xl font-semibold">Jane Smith - Vice Principal</h3>
                     <p class="text-gray-600">With a passion for learning and student success, Jane has been a key member of the administration team for 15 years.</p>
@@ -87,7 +88,7 @@
         </div>
 
         <!-- Facilities -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
+        <div class="bg-white p-6 rounded-lg shadow mb-8 facilities">
             <h2 class="text-3xl font-bold mb-4">Facilities</h2>
             <p class="text-gray-600 mb-4">Our campus boasts state-of-the-art facilities, including modern classrooms, science labs, sports fields, and a well-stocked library.</p>
             <img src="https://via.placeholder.com/800x400" alt="Facilities Image" class="w-full rounded-lg">
@@ -100,15 +101,15 @@
             <!-- Contact Information -->
             <div>
                 <h3 class="text-xl font-bold mb-4">Contact Information</h3>
-                <p>123 School Street, Education City</p>
+                <p>3043 Eldoret,Kenya</p>
                 <p>Phone: (123) 456-7890</p>
-                <p>Email: info@myschool.edu</p>
+                <p>Email: aiclaboretgirlspri@gmail.com</p>
             </div>
 
             <!-- Social Media Links -->
             <div>
                 <h3 class="text-xl font-bold mb-4">Follow Us</h3>
-                <div class="space-x-4">
+                <div class="space-x-4 social-icons">
                     <a href="#" class="text-blue-500 hover:underline">Facebook</a>
                     <a href="#" class="text-blue-300 hover:underline">Twitter</a>
                     <a href="#" class="text-pink-400 hover:underline">Instagram</a>
