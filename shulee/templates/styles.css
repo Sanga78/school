@@ -1,4 +1,6 @@
-/* General Styles */
+:root{
+    --main-color: maroon;
+}
 * {
     margin: 0;
     padding: 0;
@@ -51,7 +53,7 @@ header .container {
     font-size: 20px;             
     font-weight: bold;           
     margin-left: 8px;            
-    color: #1D4ED8;              
+    color: var(--main-color);              
 }
 
 header nav {
@@ -68,7 +70,7 @@ header nav a {
 }
 
 header nav a:hover, header nav a:focus {
-    color: #0056b3;
+    color: var(--main-color);
     border-radius: 5px;
 }
 
@@ -92,7 +94,7 @@ header .hidden .relative input {
 }
 
 header .hidden .relative input:focus {
-    border-color: #007BFF;
+    border-color: var(--main-color);
     outline: none;
 }
 
@@ -107,7 +109,7 @@ header .hidden .relative svg {
 
 /* Button */
 header button {
-    background-color: #007BFF;
+    background-color: var(--main-color);
     color: #fff;
     padding: 10px 20px;
     border-radius: 50px;
