@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Greenwood High</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/index.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-branding">
+            <img src="assets/logo.png" alt="Greenwood High School" class="login-logo">
+            <h1>Greenwood High</h1>
+            <p>Student & Parent Portal</p>
+        </div>
+
+        <div class="login-form">
+            <h2>Create Your Account</h2>
+            
+            <form id="registerForm" method="POST">
+                <!-- User Type Selection -->
+                <div class="form-group">
+                    <label>I am registering as:</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="userType" value="student" checked> 
+                            <span class="radio-label">Student</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="userType" value="parent"> 
+                            <span class="radio-label">Parent</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="userType" value="staff"> 
+                            <span class="radio-label">Staff</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="form-group">
+                    <label for="fullName">Full Name*</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address*</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+
+                <!-- Student ID (conditionally shown) -->
+                <div class="form-group student-field">
+                    <label for="studentId">Student ID*</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="studentId" name="studentId">
+                    </div>
+                </div>
+
+                <!-- Password Fields -->
+                <div class="form-group">
+                    <label for="password">Create Password*</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" class="toggle-password" aria-label="Show password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-bar"></div>
+                        <span class="strength-text">Password Strength</span>
+                    </div>
+                    <ul class="password-requirements">
+                        <li data-requirement="length">8+ characters</li>
+                        <li data-requirement="uppercase">1 uppercase letter</li>
+                        <li data-requirement="number">1 number</li>
+                        <li data-requirement="special">1 special character</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password*</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+                </div>
+
+                <!-- Terms Agreement -->
+                <div class="form-group">
+                    <label class="checkbox-option">
+                        <input type="checkbox" name="terms" required> 
+                        I agree to the <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>*
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-login">Create Account</button>
+            </form>
+
+            <div class="register-prompt">
+                <p>Already have an account? <a href="login.html">Sign in here</a></p>
+            </div>
+        </div>
+
+        <div class="login-footer">
+            <p>&copy; 2023 Greenwood High School. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="help.html">Help Center</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'new.js' %}"></script>
+    <script>
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const passwordInput = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.classList.replace('fa-eye', 'fa-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    icon.classList.replace('fa-eye-slash', 'fa-eye');
+                }
+            });
+        });
+
+        // Show/hide student ID field based on user type
+        document.querySelectorAll('input[name="userType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const studentFields = document.querySelectorAll('.student-field');
+                if (this.value === 'student') {
+                    studentFields.forEach(field => field.style.display = 'block');
+                } else {
+                    studentFields.forEach(field => field.style.display = 'none');
+                }
+            });
+        });
+
+        // Password strength checker
+        document.getElementById('password').addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+        });
+
+        function checkPasswordStrength(password) {
+            const strengthBar = document.querySelector('.strength-bar');
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                number: /\d/.test(password),
+                special: /[^A-Za-z0-9]/.test(password)
+            };
+
+            // Update requirement indicators
+            Object.keys(requirements).forEach(key => {
+                const element = document.querySelector(`[data-requirement="${key}"]`);
+                if (requirements[key]) {
+                    element.classList.add('requirement-met');
+                } else {
+                    element.classList.remove('requirement-met');
+                }
+            });
+
+            // Calculate strength percentage
+            const metCount = Object.values(requirements).filter(Boolean).length;
+            const strengthPercent = (metCount / Object.keys(requirements).length) * 100;
+            
+            // Update strength bar
+            strengthBar.style.width = `${strengthPercent}%`;
+            strengthBar.style.backgroundColor = getStrengthColor(strengthPercent);
+        }
+
+        function getStrengthColor(percent) {
+            if (percent < 25) return '#ff4d4d';
+            if (percent < 50) return '#ffa64d';
+            if (percent < 75) return '#ffcc00';
+            return '#2ecc71';
+        }
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Basic client-side validation
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // Proceed with registration
+            console.log('Registration form submitted');
+            // window.location.href = 'registration-success.html';
+        });
+    </script>
+</body>
+</html>

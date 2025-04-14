@@ -1,106 +1,246 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Dashboard - My School Portal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-gray-100">
+{% extends 'base.html' %}
+{%block content%}
 
-    <!-- Header Section (Same as Home Page) -->
-    <header class="bg-white shadow-lg">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="h-10">
-                <span class="text-xl font-bold ml-2 text-blue-700">My School</span>
-            </div>
-            <nav class="hidden md:flex space-x-6">
-                <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
-                <a href="about.html" class="text-gray-700 hover:text-blue-600">About Us</a>
-                <a href="admissions.html" class="text-gray-700 hover:text-blue-600">Admissions</a>
-                <a href="academics.html" class="text-gray-700 hover:text-blue-600">Academics</a>
-                <a href="events.html" class="text-gray-700 hover:text-blue-600">Events</a>
-                <a href="news.html" class="text-gray-700 hover:text-blue-600">News</a>
-                <a href="contact.html" class="text-gray-700 hover:text-blue-600">Contact Us</a>
-            </nav>
-        </div>
-    </header>
-
-    <!-- Dashboard Welcome Section -->
-    <section class="container mx-auto mt-12 px-4">
-        <h2 class="text-3xl font-bold mb-6">Welcome, [User Name]!</h2>
-        <div class="grid md:grid-cols-3 gap-6">
-            <!-- Quick Links for Students -->
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-xl font-semibold mb-4">For Students</h3>
-                <ul class="list-disc list-inside text-gray-600">
-                    <li><a href="#" class="text-blue-600 hover:underline">View Grades</a></li>
-                    <li><a href="#" class="text-blue-600 hover:underline">Class Schedules</a></li>
-                    <li><a href="#" class="text-blue-600 hover:underline">Assignments</a></li>
-                </ul>
-            </div>
-
-            <!-- Quick Links for Parents -->
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-xl font-semibold mb-4">For Parents</h3>
-                <ul class="list-disc list-inside text-gray-600">
-                    <li><a href="#" class="text-blue-600 hover:underline">View Announcements</a></li>
-                    <li><a href="#" class="text-blue-600 hover:underline">Parent-Teacher Meetings</a></li>
-                    <li><a href="#" class="text-blue-600 hover:underline">Track Attendance</a></li>
-                </ul>
-            </div>
-
-            <!-- Quick Links for Staff -->
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-xl font-semibold mb-4">For Staff</h3>
-                <ul class="list-disc list-inside text-gray-600">
-                    <li><a href="#" class="text-blue-600 hover:underline">Admin Tools</a></li>
-                    <li><a href="#" class="text-blue-600 hover:underline">Faculty Resources</a></li>
-                    <li><a href="#" class="text-blue-600 hover:underline">School Events</a></li>
-                </ul>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Empowering Girls Through Education</h2>
+            <p>Providing quality education since 1985</p>
+            <div class="hero-buttons">
+                <a href="{% url 'home' %}" class="btn-primary">Apply Now</a>
+                <a href="{% url 'about' %}" class="btn-secondary">Learn More</a>
             </div>
         </div>
     </section>
 
-    <!-- Imagery Section -->
-    <section class="container mx-auto mt-12 px-4">
-        <h3 class="text-2xl font-semibold mb-4">Our Community</h3>
-        <div class="grid md:grid-cols-2 gap-6">
-            <img src="https://via.placeholder.com/800x400" alt="Students Image" class="rounded-lg">
-            <img src="https://via.placeholder.com/800x400" alt="School Facilities Image" class="rounded-lg">
+    <!-- Quick Links -->
+    <section class="quick-links">
+        <div class="container">
+            <div class="quick-link-card">
+                <i class="fas fa-graduation-cap"></i>
+                <h3>Academics</h3>
+                <p>Explore our curriculum and programs</p>
+                <a href="{% url 'academics' %}">Learn More →</a>
+            </div>
+            <div class="quick-link-card">
+                <i class="fas fa-calendar-alt"></i>
+                <h3>Events</h3>
+                <p>Upcoming school events and activities</p>
+                <a href="{% url 'events' %}">View Calendar →</a>
+            </div>
+            <div class="quick-link-card">
+                <i class="fas fa-user-tie"></i>
+                <h3>Admissions</h3>
+                <p>Start your application process</p>
+                <a href="{% url 'admissions' %}">Apply Now →</a>
+            </div>
+            <div class="quick-link-card">
+                <i class="fas fa-user-tie"></i>
+                <h3>Fees Structure</h3>
+                <p>View This years fess Structure</p>
+                <a href="">View Now →</a>
+            </div>
         </div>
     </section>
 
-    <!-- Footer Section (Same as Home Page) -->
-    <footer class="bg-gray-800 text-white py-12 mt-12 px-4">
-        <div class="container mx-auto grid md:grid-cols-3 gap-8">
-            <div>
-                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
-                <p>123 School Street, Education City</p>
-                <p>Phone: (123) 456-7890</p>
-                <p>Email: info@myschool.edu</p>
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="container">
+            <div class="about-content">
+                <h2 class="section-title">Welcome to AIC Laboret Girls Boarding Primary School</h2>
+                <p class="section-subtitle">Nurturing Young Minds, Shaping Future Leaders</p>
+                <p>AIC Laboret Girls Primary School provides a comprehensive educational journey from ECDE through Junior Secondary, with excellent boarding facilities. Our mission is to foster academic excellence, character development, and lifelong learning in a nurturing environment.</p>
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <span class="stat-number">1500+</span>
+                        <span class="stat-label">Students</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">120+</span>
+                        <span class="stat-label">Faculty</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">35+</span>
+                        <span class="stat-label">Programs</span>
+                    </div>
+                </div>
+                <a href="{% url 'about' %}" class="btn-primary">Our Story</a>
             </div>
+            <div class="about-image">
+                <img src="assets/about-image.jpg" alt="Students in classroom">
+            </div>
+        </div>
+    </section>
 
-            <div>
-                <h3 class="text-xl font-bold mb-4">Follow Us</h3>
-                <div class="space-x-4">
-                    <a href="#" class="text-blue-500 hover:underline">Facebook</a>
-                    <a href="#" class="text-blue-300 hover:underline">Twitter</a>
-                    <a href="#" class="text-pink-400 hover:underline">Instagram</a>
+    <!-- Programs Section -->
+    <section class="programs-section">
+        <div class="container">
+            <h2 class="section-title">Our Programs</h2>
+            <p class="section-subtitle">Comprehensive education for all ages</p>
+            
+            <div class="programs-grid">
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <h3>ECDE</h3>
+                    <p>Early Childhood Development Education for foundational learning.</p>
+                    <a href="#" class="program-link">Explore →</a>
+                </div>
+                
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Primary School</h3>
+                    <p>Comprehensive primary education for grades 1-6.</p>
+                    <a href="#" class="program-link">Explore →</a>
+                </div>
+                
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>Junior Secondary</h3>
+                    <p>Transitional program for grades 7-9.</p>
+                    <a href="#" class="program-link">Explore →</a>
+                </div>
+                
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-paint-brush"></i>
+                    </div>
+                    <h3>Arts</h3>
+                    <p>Comprehensive arts program including visual and performing arts.</p>
+                    <a href="#" class="program-link">Explore →</a>
+                </div>
+                
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-running"></i>
+                    </div>
+                    <h3>Athletics</h3>
+                    <p>Competitive sports teams and physical education programs.</p>
+                    <a href="#" class="program-link">Explore →</a>
+                </div>
+                
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <h3>Boarding Facilities</h3>
+                    <p>Safe and nurturing boarding environment.</p>
+                    <a href="#" class="program-link">Explore →</a>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div>
-                <h3 class="text-xl font-bold mb-4">Useful Links</h3>
-                <a href="#" class="block hover:underline">Privacy Policy</a>
-                <a href="#" class="block hover:underline">Terms of Service</a>
-                <a href="#" class="block hover:underline">Sitemap</a>
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <h2 class="section-title">What Parents Say</h2>
+            <p class="section-subtitle">Hear from our community</p>
+            
+            <div class="testimonials-container">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"AIC Laboret Girls has provided my daughter with an exceptional education and a nurturing environment. The teachers are truly dedicated."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="assets/parent1.jpg" alt="Sarah Johnson">
+                        <div>
+                            <h4>Sarah Johnson</h4>
+                            <p>Parent of 8th Grader</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        <p>"The education and values instilled at AIC Laboret Girls are invaluable. My daughter has thrived academically and personally."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="assets/parent2.jpg" alt="Michael Chen">
+                        <div>
+                            <h4>Michael Chen</h4>
+                            <p>Alumni Parent</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </footer>
+    </section>
 
-</body>
-</html>
+    <!-- News Section -->
+    <section class="news-section">
+        <div class="container">
+            <h2 class="section-title">Latest News</h2>
+            <p class="section-subtitle">Stay updated with our school</p>
+            
+            <div class="news-grid">
+                <article class="news-card">
+                    <div class="news-image">
+                        <img src="assets/news1.jpg" alt="Science Fair Winners">
+                        <div class="news-date">
+                            <span>15</span>
+                            <span>Jun</span>
+                        </div>
+                    </div>
+                    <div class="news-content">
+                        <h3>School Anual General Meeting</h3>
+                        <p>Highlights from our recent school events and activities...</p>
+                        <a href="#" class="read-more">Read More →</a>
+                    </div>
+                </article>
+                
+                <article class="news-card">
+                    <div class="news-image">
+                        <img src="assets/news2.jpg" alt="New Library">
+                        <div class="news-date">
+                            <span>28</span>
+                            <span>May</span>
+                        </div>
+                    </div>
+                    <div class="news-content">
+                        <h3>School Updates</h3>
+                        <p>Latest updates and announcements from AIC Laboret Girls...</p>
+                        <a href="#" class="read-more">Read More →</a>
+                    </div>
+                </article>
+                
+                <article class="news-card">
+                    <div class="news-image">
+                        <img src="assets/news3.jpg" alt="Basketball Champions">
+                        <div class="news-date">
+                            <span>12</span>
+                            <span>May</span>
+                        </div>
+                    </div>
+                    <div class="news-content">
+                        <h3>Sports Achievements</h3>
+                        <p>Our students' achievements in recent sports events...</p>
+                        <a href="#" class="read-more">Read More →</a>
+                    </div>
+                </article>
+            </div>
+            
+            <div class="text-center">
+                <a href="news.html" class="btn-secondary">View All News</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Enroll Your Daughter Today!</h2>
+            <p>Applications are now open. Schedule a tour today!</p>
+            <div class="cta-buttons">
+                <a href="{% url 'admissions' %}" class="btn-primary">Apply Now</a>
+                <a href="{% url 'contact' %}" class="btn-secondary">Schedule Tour</a>
+            </div>
+        </div>
+    </section>
+
+  {%endblock%}

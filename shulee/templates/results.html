@@ -1,0 +1,493 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Results - Greenwood High</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'index.css' %}">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="contact-info">
+                <span><i class="fas fa-phone"></i> (123) 456-7890</span>
+                <span><i class="fas fa-envelope"></i> info@greenwood.edu</span>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="assets/logo.png" alt="Greenwood High School" class="logo">
+                <div class="school-name">
+                    <h1>Greenwood</h1>
+                    <p>High School</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'about' %}">About Us</a></li>
+                    <li class="active"><a href="{% url 'academics' %}">Academics</a></li>
+                    <li><a href="{% url 'admissions' %}">Admissions</a></li>
+                    <li><a href="{% url 'events' %}">Events</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Results Hero Section -->
+    <section class="page-hero" style="background-image: url('assets/results-hero.jpg');">
+        <div class="container">
+            <h1>Academic Results</h1>
+            <p>Celebrating our students' outstanding achievements</p>
+        </div>
+    </section>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <div class="container">
+            <a href="index.html">Home</a>
+            <span>/</span>
+            <a href="academics.html">Academics</a>
+            <span>/</span>
+            <a href="results.html">Results</a>
+        </div>
+    </div>
+
+    <!-- Results Overview Section -->
+    <section class="results-overview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">2022-2023 Academic Year Highlights</h2>
+                <p class="section-subtitle">A record-breaking year of achievement</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">Graduation Rate</div>
+                    <div class="stat-comparison">+2% from previous year</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">92%</div>
+                    <div class="stat-label">College Acceptance</div>
+                    <div class="stat-comparison">85% national average</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1320</div>
+                    <div class="stat-label">Average SAT Score</div>
+                    <div class="stat-comparison">+120 points above national</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">29</div>
+                    <div class="stat-label">Average ACT Score</div>
+                    <div class="stat-comparison">Top 10% nationally</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Performance Charts Section -->
+    <section class="charts-section">
+        <div class="container">
+            <div class="chart-row">
+                <div class="chart-container">
+                    <h3>5-Year Graduation Rate Trend</h3>
+                    <canvas id="graduationChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>College Acceptance Rate</h3>
+                    <canvas id="acceptanceChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-row">
+                <div class="chart-container">
+                    <h3>SAT Scores Distribution</h3>
+                    <canvas id="satChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>AP Exam Pass Rates</h3>
+                    <canvas id="apChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AP Performance Section -->
+    <section class="ap-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Advanced Placement Excellence</h2>
+                <p class="section-subtitle">Outstanding performance in college-level coursework</p>
+            </div>
+            <div class="ap-results">
+                <div class="ap-stats">
+                    <div class="ap-stat-card">
+                        <div class="ap-stat-number">85%</div>
+                        <div class="ap-stat-label">Pass Rate (Score 3+)</div>
+                    </div>
+                    <div class="ap-stat-card">
+                        <div class="ap-stat-number">42</div>
+                        <div class="ap-stat-label">AP Scholars</div>
+                    </div>
+                    <div class="ap-stat-card">
+                        <div class="ap-stat-number">15</div>
+                        <div class="ap-stat-label">National AP Scholars</div>
+                    </div>
+                    <div class="ap-stat-card">
+                        <div class="ap-stat-number">22</div>
+                        <div class="ap-stat-label">AP Courses Offered</div>
+                    </div>
+                </div>
+                <div class="ap-subjects">
+                    <h3>Top Performing AP Subjects</h3>
+                    <div class="subject-bars">
+                        <div class="subject-bar">
+                            <div class="subject-name">Calculus BC</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 94%;">94%</div>
+                            </div>
+                        </div>
+                        <div class="subject-bar">
+                            <div class="subject-name">Physics C</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 89%;">89%</div>
+                            </div>
+                        </div>
+                        <div class="subject-bar">
+                            <div class="subject-name">Computer Science</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 87%;">87%</div>
+                            </div>
+                        </div>
+                        <div class="subject-bar">
+                            <div class="subject-name">English Literature</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 85%;">85%</div>
+                            </div>
+                        </div>
+                        <div class="subject-bar">
+                            <div class="subject-name">U.S. History</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: 82%;">82%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- College Acceptances Section -->
+    <section class="college-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">College Acceptances</h2>
+                <p class="section-subtitle">Where our graduates continue their education</p>
+            </div>
+            <div class="college-logos">
+                <img src="assets/college1.png" alt="University A">
+                <img src="assets/college2.png" alt="University B">
+                <img src="assets/college3.png" alt="University C">
+                <img src="assets/college4.png" alt="University D">
+                <img src="assets/college5.png" alt="University E">
+                <img src="assets/college6.png" alt="University F">
+                <img src="assets/college7.png" alt="University G">
+                <img src="assets/college8.png" alt="University H">
+            </div>
+            <div class="college-stats">
+                <div class="college-stat">
+                    <div class="number">150+</div>
+                    <div class="label">Universities Worldwide</div>
+                </div>
+                <div class="college-stat">
+                    <div class="number">$12M+</div>
+                    <div class="label">In Scholarships Earned</div>
+                </div>
+                <div class="college-stat">
+                    <div class="number">85%</div>
+                    <div class="label">First Choice Acceptance</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alumni Success Section -->
+    <section class="alumni-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Alumni Success Stories</h2>
+                <p class="section-subtitle">Where Greenwood graduates are making an impact</p>
+            </div>
+            <div class="alumni-grid">
+                <div class="alumni-card">
+                    <div class="alumni-image">
+                        <img src="assets/alumni1.jpg" alt="Alumni 1">
+                    </div>
+                    <div class="alumni-info">
+                        <h3>Jennifer Park</h3>
+                        <p class="grad-year">Class of 2018</p>
+                        <p class="college">Stanford University '22</p>
+                        <p class="current">Software Engineer at Google</p>
+                        <blockquote>"Greenwood's STEM program gave me the foundation to excel in computer science at Stanford."</blockquote>
+                    </div>
+                </div>
+                <div class="alumni-card">
+                    <div class="alumni-image">
+                        <img src="assets/alumni2.jpg" alt="Alumni 2">
+                    </div>
+                    <div class="alumni-info">
+                        <h3>Michael Chen</h3>
+                        <p class="grad-year">Class of 2016</p>
+                        <p class="college">Harvard Medical School '24</p>
+                        <p class="current">Medical Researcher</p>
+                        <blockquote>"The research opportunities I had at Greenwood prepared me for medical school."</blockquote>
+                    </div>
+                </div>
+                <div class="alumni-card">
+                    <div class="alumni-image">
+                        <img src="assets/alumni3.jpg" alt="Alumni 3">
+                    </div>
+                    <div class="alumni-info">
+                        <h3>Sarah Johnson</h3>
+                        <p class="grad-year">Class of 2019</p>
+                        <p class="college">Yale University '23</p>
+                        <p class="current">Fulbright Scholar</p>
+                        <blockquote>"The writing skills I developed at Greenwood have been invaluable in my academic career."</blockquote>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="results-cta">
+        <div class="container">
+            <h2>Ready to Join Our Academic Community?</h2>
+            <p>Applications for the 2023-2024 school year are now open. Learn how Greenwood can help your student achieve their potential.</p>
+            <div class="cta-buttons">
+                <a href="admissions.html" class="btn-primary">Admissions Process</a>
+                <a href="contact.html" class="btn-secondary">Schedule a Tour</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="assets/logo-white.png" alt="Greenwood High School">
+                        <h3>Greenwood High School</h3>
+                    </div>
+                    <p>123 Education Boulevard<br>Learning City, LC 12345</p>
+                    <p>Phone: (123) 456-7890<br>Email: info@greenwood.edu</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="academics.html">Academics</a></li>
+                        <li><a href="admissions.html">Admissions</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Academics</h4>
+                    <ul>
+                        <li><a href="#">Elementary School</a></li>
+                        <li><a href="#">Middle School</a></li>
+                        <li><a href="#">High School</a></li>
+                        <li><a href="#">STEM Program</a></li>
+                        <li><a href="#">Arts Program</a></li>
+                        <li><a href="#">Athletics</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Connect With Us</h4>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    <div class="newsletter">
+                        <h5>Subscribe to Newsletter</h5>
+                        <form>
+                            <input type="email" placeholder="Your Email">
+                            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2023 Greenwood High School. All Rights Reserved.</p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Sitemap</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Charts
+        document.addEventListener('DOMContentLoaded', function() {
+            // Graduation Rate Chart
+            const gradCtx = document.getElementById('graduationChart').getContext('2d');
+            const graduationChart = new Chart(gradCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                    datasets: [{
+                        label: 'Graduation Rate %',
+                        data: [92, 93, 94, 96, 97, 98],
+                        borderColor: '#2c5f2d',
+                        backgroundColor: 'rgba(44, 95, 45, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 90,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // College Acceptance Chart
+            const acceptCtx = document.getElementById('acceptanceChart').getContext('2d');
+            const acceptanceChart = new Chart(acceptCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                    datasets: [{
+                        label: 'Greenwood %',
+                        data: [85, 86, 88, 89, 90, 92],
+                        backgroundColor: '#2c5f2d',
+                    }, {
+                        label: 'National Avg %',
+                        data: [80, 81, 82, 83, 84, 85],
+                        backgroundColor: '#6c757d',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 75,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // SAT Scores Chart
+            const satCtx = document.getElementById('satChart').getContext('2d');
+            const satChart = new Chart(satCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['1200-1399', '1400-1599', '1000-1199', '800-999'],
+                    datasets: [{
+                        data: [35, 45, 15, 5],
+                        backgroundColor: [
+                            '#2c5f2d',
+                            '#4a8c4b',
+                            '#a5d6a7',
+                            '#e8f5e9'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Score Distribution'
+                        }
+                    }
+                }
+            });
+
+            // AP Scores Chart
+            const apCtx = document.getElementById('apChart').getContext('2d');
+            const apChart = new Chart(apCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['5', '4', '3', '2', '1'],
+                    datasets: [{
+                        label: 'Score Distribution',
+                        data: [25, 35, 25, 10, 5],
+                        backgroundColor: 'rgba(44, 95, 45, 0.2)',
+                        borderColor: '#2c5f2d',
+                        pointBackgroundColor: '#2c5f2d',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#2c5f2d'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 40
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - Greenwood High</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-branding">
+            <img src="assets/logo.png" alt="Greenwood High School" class="login-logo">
+            <h1>Greenwood High</h1>
+            <p>Student & Parent Portal</p>
+        </div>
+
+        <div class="login-form">
+            <h2>Reset Your Password</h2>
+            <p class="reset-instructions">Enter your email address and we'll send you a link to reset your password.</p>
+            
+            <form id="forgotPasswordForm" method="POST">
+                <div class="form-group">
+                    <label for="email">Email Address*</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">Send Reset Link</button>
+            </form>
+
+            <div class="back-to-login">
+                <a href="login.html"><i class="fas fa-arrow-left"></i> Back to login</a>
+            </div>
+        </div>
+
+        <div class="login-footer">
+            <p>&copy; 2023 Greenwood High School. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="help.html">Help Center</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'new.js' %}"></script>
+    <script>
+        // Form submission
+        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simulate sending reset link
+            const email = document.getElementById('email').value;
+            console.log(`Password reset link would be sent to: ${email}`);
+            
+            // Show success message (in a real app, this would be after server response)
+            const form = document.getElementById('forgotPasswordForm');
+            form.innerHTML = `
+                <div class="reset-success">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>Reset Link Sent!</h3>
+                    <p>We've sent an email to <strong>${email}</strong> with instructions to reset your password.</p>
+                    <p class="check-spam">Didn't receive it? Check your spam folder or <a href="#" id="resend-link">resend the link</a>.</p>
+                    <a href="login.html" class="btn-login">Return to Login</a>
+                </div>
+            `;
+            
+            // Add event listener for resend link
+            document.getElementById('resend-link')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Resending password reset link...');
+                // Resend logic would go here
+            });
+        });
+    </script>
+</body>
+</html>

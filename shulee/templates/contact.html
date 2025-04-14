@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{%block content%}
+
+    <!-- Contact Hero Section -->
+    <section class="page-hero" style="background-image: url('assets/contact-hero.jpg');">
+        <div class="container">
+            <h1>Contact Us</h1>
+            <p>We'd love to hear from you</p>
+        </div>
+    </section>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <div class="container">
+            <a href="{% url 'home' %}">Home</a>
+            <span>/</span>
+            <a href="{% url 'contact' %}">Contact</a>
+        </div>
+    </div>
+
+    <!-- Contact Info Section -->
+    <section class="contact-info-section">
+        <div class="container">
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Visit Us</h3>
+                    <address>
+                        123 Education Boulevard<br>
+                        Learning City, LC 12345<br>
+                        United States
+                    </address>
+                    <a href="#map" class="contact-link">View on map <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <h3>Call Us</h3>
+                    <p>Main Office: <a href="tel:+11234567890">(123) 456-7890</a></p>
+                    <p>Admissions: <a href="tel:+11234567891">(123) 456-7891</a></p>
+                    <p>Fax: (123) 456-7892</p>
+                    <a href="tel:+11234567890" class="contact-link">Call now <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3>Email Us</h3>
+                    <p>General Inquiries: <a href="mailto:info@greenwood.edu">info@greenwood.edu</a></p>
+                    <p>Admissions: <a href="mailto:admissions@greenwood.edu">admissions@greenwood.edu</a></p>
+                    <p>Support: <a href="mailto:support@greenwood.edu">support@greenwood.edu</a></p>
+                    <a href="#contact-form" class="contact-link">Send message <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="contact-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Office Hours</h3>
+                    <p>Monday-Friday: 8:00 AM - 5:00 PM</p>
+                    <p>Saturday: 9:00 AM - 12:00 PM</p>
+                    <p>Sunday: Closed</p>
+                    <a href="{% url 'events' %}" class="contact-link">View events <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section class="map-section" id="map">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Location</h2>
+                <p class="section-subtitle">Find us easily with these directions</p>
+            </div>
+            <div class="map-container">
+                <div id="school-map"></div>
+                <div class="map-directions">
+                    <h3>Getting Here</h3>
+                    <div class="transport-option">
+                        <i class="fas fa-subway"></i>
+                        <div>
+                            <h4>By Metro</h4>
+                            <p>Take the Blue Line to Education Station. We're a 5-minute walk from the station.</p>
+                        </div>
+                    </div>
+                    <div class="transport-option">
+                        <i class="fas fa-bus"></i>
+                        <div>
+                            <h4>By Bus</h4>
+                            <p>Routes 42, 56, and 128 stop directly in front of the school.</p>
+                        </div>
+                    </div>
+                    <div class="transport-option">
+                        <i class="fas fa-car"></i>
+                        <div>
+                            <h4>By Car</h4>
+                            <p>Free parking available in our visitor lot. Use the main entrance on Education Blvd.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section class="contact-form-section" id="contact-form">
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Send Us a Message</h2>
+                    <p>Have questions? Fill out the form below and we'll get back to you within 24 hours.</p>
+                </div>
+                <form class="contact-form">
+                    <div class="form-group">
+                        <label for="name">Full Name*</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address*</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject*</label>
+                        <select id="subject" name="subject" required>
+                            <option value="" disabled selected>Select a subject</option>
+                            <option value="admissions">Admissions Inquiry</option>
+                            <option value="general">General Information</option>
+                            <option value="tour">Schedule a Tour</option>
+                            <option value="feedback">Feedback/Suggestions</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Your Message*</label>
+                        <textarea id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    <div class="form-submit">
+                        <button type="submit" class="btn-primary">Send Message</button>
+                        <p class="form-note">* Required fields</p>
+                    </div>
+                </form>
+            </div>
+            <div class="form-image">
+                <img src="assets/contact-image.jpg" alt="School Reception">
+            </div>
+        </div>
+    </section>
+
+    <!-- Departments Section -->
+    <section class="departments-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Key Departments</h2>
+                <p class="section-subtitle">Connect directly with the right team</p>
+            </div>
+            <div class="departments-grid">
+                <div class="department-card">
+                    <div class="department-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3>Admissions</h3>
+                    <p>Questions about applications, tours, or enrollment process.</p>
+                    <a href="mailto:admissions@greenwood.edu" class="department-link">admissions@greenwood.edu</a>
+                    <a href="tel:+11234567891" class="department-link">(123) 456-7891</a>
+                </div>
+                <div class="department-card">
+                    <div class="department-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3>Academics</h3>
+                    <p>Curriculum, programs, and academic support services.</p>
+                    <a href="mailto:academics@greenwood.edu" class="department-link">academics@greenwood.edu</a>
+                    <a href="tel:+11234567893" class="department-link">(123) 456-7893</a>
+                </div>
+                <div class="department-card">
+                    <div class="department-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <h3>Financial Aid</h3>
+                    <p>Tuition, scholarships, and payment plan inquiries.</p>
+                    <a href="mailto:financialaid@greenwood.edu" class="department-link">financialaid@greenwood.edu</a>
+                    <a href="tel:+11234567894" class="department-link">(123) 456-7894</a>
+                </div>
+                <div class="department-card">
+                    <div class="department-icon">
+                        <i class="fas fa-running"></i>
+                    </div>
+                    <h3>Athletics</h3>
+                    <p>Sports teams, schedules, and athletic facilities.</p>
+                    <a href="mailto:athletics@greenwood.edu" class="department-link">athletics@greenwood.edu</a>
+                    <a href="tel:+11234567895" class="department-link">(123) 456-7895</a>
+                </div>
+                <div class="department-card">
+                    <div class="department-icon">
+                        <i class="fas fa-paint-brush"></i>
+                    </div>
+                    <h3>Arts</h3>
+                    <p>Music, theater, and visual arts programs.</p>
+                    <a href="mailto:arts@greenwood.edu" class="department-link">arts@greenwood.edu</a>
+                    <a href="tel:+11234567896" class="department-link">(123) 456-7896</a>
+                </div>
+                <div class="department-card">
+                    <div class="department-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Alumni Relations</h3>
+                    <p>Stay connected after graduation and support current students.</p>
+                    <a href="mailto:alumni@greenwood.edu" class="department-link">alumni@greenwood.edu</a>
+                    <a href="tel:+11234567897" class="department-link">(123) 456-7897</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Emergency Contact Section -->
+    <section class="emergency-section">
+        <div class="container">
+            <div class="emergency-content">
+                <div class="emergency-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="emergency-info">
+                    <h2>Emergency Contact</h2>
+                    <p>For urgent matters outside office hours, please contact our security team.</p>
+                    <div class="emergency-contact">
+                        <i class="fas fa-phone"></i>
+                        <a href="tel:+11234567899">(123) 456-7899</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{%endblock%}

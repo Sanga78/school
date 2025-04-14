@@ -30,7 +30,15 @@ urlpatterns = [
     path('staff_signup',views.staff_signup,name="staff_signup"),
     path('signup_student',views.signup_student,name="signup_student"),
     path('student_signup',views.student_signup,name="student_signup"),
-    path('index/',views.index),
+
+    path('index/',views.index,name='home'),
+    path('about/',views.about,name='about'),
+    path('academics/',views.academics,name='academics'),
+    path('admissions/',views.admissions,name='admissions'),
+    path('results/',views.results,name='results'),
+    path('events/',views.events,name='events'),
+    path('contact/',views.contact,name='contact'),
+
     path('accounts/',include('django.contrib.auth.urls')),
     path('',views.loginPage,name="show_login"),
     path('login',views.Login,name="do_login"),

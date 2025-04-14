@@ -1,161 +1,332 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Academics - My School</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-gray-100">
-
-    <!-- Header Section (Same as Home Page) -->
-    <header class="bg-white shadow-lg">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <!-- School Logo -->
-            <div class="flex items-center">
-                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="h-10">
-                <span class="text-xl font-bold ml-2 text-blue-700">My School</span>
-            </div>
-
-            <!-- Navigation Menu -->
-            <nav class="hidden md:flex space-x-6">
-                <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
-                <a href="about.html" class="text-gray-700 hover:text-blue-600">About Us</a>
-                <a href="#" class="text-gray-700 hover:text-blue-600">Admissions</a>
-                <a href="academics.html" class="text-gray-700 hover:text-blue-600">Academics</a>
-                <a href="#" class="text-gray-700 hover:text-blue-600">Events</a>
-                <a href="#" class="text-gray-700 hover:text-blue-600">News</a>
-                <a href="#" class="text-gray-700 hover:text-blue-600">Contact Us</a>
-            </nav>
-
-            <!-- Search Bar & Login Button -->
-            <div class="hidden md:flex items-center space-x-4">
-                <!-- Search Bar -->
-                <div class="relative">
-                    <input type="text" class="border rounded-full py-2 px-4 pl-10 w-64 focus:outline-none focus:border-blue-500" placeholder="Search...">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-
-                <!-- Login Button -->
-                <button class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">
-                    Login
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Hero Section -->
-    <section class="bg-cover bg-center h-96" style="background-image: url('https://via.placeholder.com/1920x600');">
-        <div class="container mx-auto h-full flex flex-col justify-center items-center text-center text-white">
-            <h1 class="text-4xl md:text-5xl font-bold">Academics</h1>
+{% extends 'base.html' %}
+{%block content%}
+    <section class="page-hero" style="background-image: url('assets/academics-hero.jpg');">
+        <div class="container">
+            <h1>Academic Excellence</h1>
+            <p>Nurturing young minds, building strong foundations, and preparing for lifelong learning</p>
         </div>
     </section>
 
-    <!-- Content Sections -->
-    <section class="container mx-auto mt-12 px-4">
-        <!-- Curriculum Section -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
-            <h2 class="text-3xl font-bold mb-4">Curriculum</h2>
-            <p class="text-gray-600 mb-4">Our academic programs are designed to offer a comprehensive education that prepares students for future success. We offer a broad range of subjects, including Mathematics, Science, Humanities, Languages, and the Arts.</p>
-            <ul class="list-disc list-inside text-gray-600">
-                <li>Primary Education (Grades 1-5)</li>
-                <li>Secondary Education (Grades 6-12)</li>
-                <li>Advanced Placement Courses</li>
-                <li>Extracurricular Programs</li>
-            </ul>
+    <div class="breadcrumb">
+        <div class="container">
+            <a href="{% url 'home' %}">Home</a>
+            <span>/</span>
+            <a href="{% url 'academics' %}">Academics</a>
         </div>
+    </div>
 
-        <!-- Departments Section -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
-            <h2 class="text-3xl font-bold mb-4">Departments</h2>
-            <div class="grid md:grid-cols-2 gap-4">
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <h3 class="text-xl font-semibold">Mathematics Department</h3>
-                    <p class="text-gray-600">Our Mathematics department focuses on developing critical thinking and problem-solving skills through courses ranging from basic arithmetic to advanced calculus.</p>
+    <section class="academic-overview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Academic Approach</h2>
+                <p class="section-subtitle">Balancing foundational learning with creative engagement</p>
+            </div>
+            <div class="overview-content">
+                <div class="overview-image">
+                    <img src="assets/classroom.jpg" alt="Students in classroom">
                 </div>
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <h3 class="text-xl font-semibold">Science Department</h3>
-                    <p class="text-gray-600">Our Science department offers courses in Physics, Chemistry, and Biology, with an emphasis on hands-on learning and research opportunities.</p>
-                </div>
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <h3 class="text-xl font-semibold">Humanities Department</h3>
-                    <p class="text-gray-600">The Humanities department encourages students to explore history, geography, and literature, fostering a deep understanding of the world around them.</p>
-                </div>
-                <div class="bg-gray-100 p-4 rounded-lg">
-                    <h3 class="text-xl font-semibold">Arts Department</h3>
-                    <p class="text-gray-600">Our Arts department nurtures creativity through courses in music, visual arts, and performing arts, allowing students to express themselves artistically.</p>
+                <div class="overview-text">
+                    <p>At AIC LABORET GIRLS BOARDING PRIMARY, we believe in providing a holistic education that lays a strong foundation for future learning. Our approach emphasizes:</p>
+                    <ul class="academic-features">
+                        <li><i class="fas fa-check-circle"></i> Interactive and engaging teaching methods</li>
+                        <li><i class="fas fa-check-circle"></i> Individualized attention to meet diverse learning needs</li>
+                        <li><i class="fas fa-check-circle"></i> Use of educational resources and technology</li>
+                        <li><i class="fas fa-check-circle"></i> Development of critical thinking and problem-solving skills</li>
+                        <li><i class="fas fa-check-circle"></i> Integration of cultural and moral values</li>
+                    </ul>
+                    <a href="#" class="btn-primary">Download Curriculum Overview</a>
                 </div>
             </div>
-        </div>
-
-        <!-- Faculty Section -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
-            <h2 class="text-3xl font-bold mb-4">Faculty</h2>
-            <div class="grid md:grid-cols-3 gap-4">
-                <div class="bg-gray-100 p-4 rounded-lg text-center">
-                    <img src="https://via.placeholder.com/150x150" alt="Teacher Photo" class="rounded-full mx-auto mb-4">
-                    <h3 class="text-xl font-semibold">Mr. Adam Johnson</h3>
-                    <p class="text-gray-600">Mathematics Teacher</p>
-                </div>
-                <div class="bg-gray-100 p-4 rounded-lg text-center">
-                    <img src="https://via.placeholder.com/150x150" alt="Teacher Photo" class="rounded-full mx-auto mb-4">
-                    <h3 class="text-xl font-semibold">Mrs. Emily White</h3>
-                    <p class="text-gray-600">Science Teacher</p>
-                </div>
-                <div class="bg-gray-100 p-4 rounded-lg text-center">
-                    <img src="https://via.placeholder.com/150x150" alt="Teacher Photo" class="rounded-full mx-auto mb-4">
-                    <h3 class="text-xl font-semibold">Mr. Daniel Brown</h3>
-                    <p class="text-gray-600">History Teacher</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Resources Section -->
-        <div class="bg-white p-6 rounded-lg shadow mb-8">
-            <h2 class="text-3xl font-bold mb-4">Resources</h2>
-            <ul class="list-disc list-inside text-gray-600">
-                <li><a href="#" class="text-blue-600 hover:underline">Library</a> - Access our extensive collection of books, journals, and online resources.</li>
-                <li><a href="#" class="text-blue-600 hover:underline">Study Materials</a> - Find course-specific materials and resources to aid your learning.</li>
-                <li><a href="#" class="text-blue-600 hover:underline">Student Support Services</a> - Our counseling and academic advising services are here to help you succeed.</li>
-            </ul>
         </div>
     </section>
 
-    <!-- Footer Section (Same as Home Page) -->
-    <footer class="bg-gray-800 text-white py-12 mt-12 px-4">
-        <div class="container mx-auto grid md:grid-cols-3 gap-8">
-            <!-- Contact Information -->
-            <div>
-                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
-                <p>123 School Street, Education City</p>
-                <p>Phone: (123) 456-7890</p>
-                <p>Email: info@myschool.edu</p>
-            </div>
+    <section class="divider-section" style="background-image: url('assets/library.jpg');">
+        <div class="container">
+            <blockquote>
+                "Education is the most powerful weapon which you can use to change the world."
+                <cite>- Nelson Mandela</cite>
+            </blockquote>
+        </div>
+    </section>
 
-            <!-- Social Media Links -->
-            <div>
-                <h3 class="text-xl font-bold mb-4">Follow Us</h3>
-                <div class="space-x-4">
-                    <a href="#" class="text-blue-500 hover:underline">Facebook</a>
-                    <a href="#" class="text-blue-300 hover:underline">Twitter</a>
-                    <a href="#" class="text-pink-400 hover:underline">Instagram</a>
+    <section class="grade-levels">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Grade Level Programs</h2>
+                <p class="section-subtitle">Tailored education for every stage of development</p>
+            </div>
+            <div class="grade-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="ecde">ECDE (Play Group, PP1, PP2)</button>
+                    <button class="tab-button" data-tab="primary">Primary (Grades 1-6)</button>
+                    <button class="tab-button" data-tab="junior">Junior Secondary (Grades 7-9)</button>
+                </div>
+                <div class="tab-content active" id="ecde">
+                    <div class="tab-content-inner">
+                        <div class="tab-image">
+                            <img src="assets/elementary.jpg" alt="ECDE Students">
+                        </div>
+                        <div class="tab-text">
+                            <h3>ECDE (Play Group, PP1, PP2): Early Childhood Development</h3>
+                            <p>Our ECDE program focuses on holistic development through play-based learning and early literacy skills. Key features include:</p>
+                            <ul>
+                                <li>Play-based learning activities</li>
+                                <li>Early literacy and numeracy skills development</li>
+                                <li>Creative arts and music</li>
+                                <li>Social and emotional development</li>
+                                <li>Physical development and outdoor play</li>
+                            </ul>
+                            <a href="#" class="btn-secondary">ECDE Details</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="primary">
+                    <div class="tab-content-inner">
+                        <div class="tab-image">
+                            <img src="assets/middle-school.jpg" alt="Primary Students">
+                        </div>
+                        <div class="tab-text">
+                            <h3>Primary (Grades 1-6): Foundational Learning</h3>
+                            <p>Our primary program builds on ECDE foundations with a focus on core academic subjects and critical thinking. Key features include:</p>
+                            <ul>
+                                <li>Comprehensive literacy and numeracy skills</li>
+                                <li>Science and environmental studies</li>
+                                <li>Social studies and cultural awareness</li>
+                                <li>Language studies and communication skills</li>
+                                <li>Extracurricular activities and sports</li>
+                            </ul>
+                            <a href="#" class="btn-secondary">Primary Details</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="junior">
+                    <div class="tab-content-inner">
+                        <div class="tab-image">
+                            <img src="assets/high-school.jpg" alt="Junior Secondary Students">
+                        </div>
+                        <div class="tab-text">
+                            <h3>Junior Secondary (Grades 7-9): Transition to Secondary Education</h3>
+                            <p>Our junior secondary program prepares students for higher education with a focus on in-depth subject knowledge and practical skills. Key features include:</p>
+                            <ul>
+                                <li>Advanced subject-specific learning</li>
+                                <li>Introduction to technology and computer literacy</li>
+                                <li>Practical skills and project-based learning</li>
+                                <li>Career guidance and exploration</li>
+                                <li>Leadership and personal development</li>
+                            </ul>
+                            <a href="#" class="btn-secondary">Junior Secondary Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="special-programs">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Signature Programs</h2>
+                <p class="section-subtitle">Unique learning opportunities beyond the standard curriculum</p>
+            </div>
+            <div class="programs-grid">
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Reading and Literacy Program</h3>
+                    <p>Focus on developing strong reading and comprehension skills through engaging activities.</p>
+                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <h3>Creative Arts & Music</h3>
+                    <p>Opportunities for students to explore their creativity through music, art, and drama.</p>
+                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-tree"></i>
+                    </div>
+                    <h3>Environmental Studies</h3>
+                    <p>Hands-on learning about nature and environmental conservation.</p>
+                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="program-card">
+                    <div class="program-icon">
+                        <i class="fas fa-hands-helping"></i>
+                    </div>
+                    <h3>Community Service</h3>
+                    <p>Inculcating a sense of responsibility and empathy through community engagement.</p>
+                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="faculty-spotlight">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Meet Our Faculty</h2>
+                <p class="section-subtitle">Dedicated educators nurturing young minds</p>
+            </div>
+            <div class="faculty-grid">
+                <div class="faculty-card">
+                    <div class="faculty-image">
+                        <img src="assets/math-teacher.jpg" alt="Primary teacher">
+                    </div>
+                    <div class="faculty-info">
+                        <h3>Ms. Jane Doe</h3>
+                        <p class="department">Lower Primary Teacher</p>
+                        <p class="bio">With over 10 years of experience, Ms. Jane is passionate about early childhood education.</p>
+                        <a href="#" class="faculty-link">View Profile</a>
+                    </div>
+                </div>
+                <div class="faculty-card">
+                    <div class="faculty-image">
+                        <img src="assets/science-teacher.jpg" alt="Primary teacher">
+                    </div>
+                    <div class="faculty-info">
+                        <h3>Mr. John Smith</h3>
+                        <p class="department">Upper Primary Teacher</p>
+                        <p class="bio">Mr. John brings a wealth of knowledge and enthusiasm to his teaching.</p>
+                        <a href="#" class="faculty-link">View Profile</a>
+                    </div>
+                </div>
+                <div class="faculty-card">
+                    <div class="faculty-image">
+                        <img src="assets/english-teacher.jpg" alt="Primary teacher">
+                    </div>
+                    <div class="faculty-info">
+                        <h3>Ms. Alice Karanja</h3>
+                        <p class="department">Language and Literacy Teacher</p>
+                        <p class="bio">Ms. Alice specializes in developing strong literacy skills in young learners.</p>
+                        <a href="#" class="faculty-link">View Profile</a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <a href="faculty.html" class="btn-primary">View All Faculty</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="calendar-section">
+        <div class="container">
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <h2>Upcoming Academic Dates</h2>
+                    <a href="#" class="btn-secondary">Full Calendar</a>
+                </div>
+                <div class="calendar-events">
+                    <div class="event-card">
+                        <div class="event-date">
+                            <span class="day">15</span>
+                            <span class="month">Aug</span>
+                        </div>
+                        <div class="event-details">
+                            <h3>First Day of School</h3>
+                            <p>Start of the new academic year</p>
+                        </div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-date">
+                            <span class="day">05</span>
+                            <span class="month">Sep</span>
+                        </div>
+                        <div class="event-details">
+                            <h3>Parents' Meeting</h3>
+                            <p>Meeting with parents to discuss academic progress</p>
+                        </div>
+                    </div>
+                    <div class="event-card">
+                        <div class="event-date">
+                            <span class="day">15</span>
+                            <span class="month">Oct</span>
+                        </div>
+                        <div class="event-details">
+                            <h3>Mid-Term Exams</h3>
+                            <p>Mid-term examinations for all students</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="achievements-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Our Academic Achievements</h2>
+                <p class="section-subtitle">Celebrating excellence in primary education</p>
+            </div>
+            <div class="achievements-container">
+                <div class="achievement-card">
+                    <div class="achievement-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="achievement-content">
+                        <h3>Excellent KCPE Results</h3>
+                        <div class="achievement-stats">
+                            <div class="stat">
+                                <span class="number">95%</span>
+                                <span class="label">Pass Rate</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-icon">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    <div class="achievement-content">
+                        <h3>Top Performing Students</h3>
+                        <div class="achievement-stats">
+                            <div class="stat">
+                                <span class="number">5+</span>
+                                <span class="label">Students Above 400 Marks</span>
+                            </div>
+                            <div class="stat">
+                                <span class="number">20+</span>
+                                <span class="label">Students Above 350 Marks</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="achievement-content">
+                        <h3>Consistent Academic Growth</h3>
+                        <div class="achievement-stats">
+                            <div class="stat">
+                                <span class="number">100%</span>
+                                <span class="label">Improvement Rate</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="achievement-card">
+                    <div class="achievement-icon">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div class="achievement-content">
+                        <h3>Successful Transitions</h3>
+                        <p>Students placed in top secondary schools</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Useful Links -->
-            <div>
-                <h3 class="text-xl font-bold mb-4">Useful Links</h3>
-                <a href="#" class="block hover:underline">Privacy Policy</a>
-                <a href="#" class="block hover:underline">Terms of Service</a>
-                <a href="#" class="block hover:underline">Sitemap</a>
+            <div class="achievements-cta">
+                <a href="{% url 'results' %}" class="btn-primary">View Detailed Results</a>
+                <a href="{% url 'admissions' %}" class="btn-secondary">How We Achieve This</a>
             </div>
         </div>
-    </footer>
-
-</body>
-</html>
-
+    </section>
+    {%endblock%}

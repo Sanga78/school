@@ -1,100 +1,239 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Events - AIC Laboret Girls</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100">
+{% extends 'base.html' %}
+{%block content%}
 
-    <!-- Header Section (Same as Home Page) -->
-    <header class="bg-white shadow-lg">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <img src="https://via.placeholder.com/150x50" alt="School Logo" class="h-10">
-                <span class="text-xl font-bold ml-2 text-blue-700">My School</span>
+    <!-- Events Hero Section -->
+    <section class="page-hero" style="background-image: url('assets/events-hero.jpg');">
+        <div class="container">
+            <h1>School Events</h1>
+            <p>Join our vibrant community activities and celebrations</p>
+        </div>
+    </section>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb">
+        <div class="container">
+            <a href="index.html">Home</a>
+            <span>/</span>
+            <a href="events.html">Events</a>
+        </div>
+    </div>
+
+    <!-- Upcoming Events Section -->
+    <section class="upcoming-events">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Upcoming Events</h2>
+                <p class="section-subtitle">Mark your calendars for these exciting activities</p>
             </div>
-            <nav class="hidden md:flex space-x-6">
-                <a href="index.html" class="text-gray-700 hover:text-blue-600">Home</a>
-                <a href="about.html" class="text-gray-700 hover:text-blue-600">About Us</a>
-                <a href="admissions.html" class="text-gray-700 hover:text-blue-600">Admissions</a>
-                <a href="academics.html" class="text-gray-700 hover:text-blue-600">Academics</a>
-                <a href="events.html" class="text-gray-700 hover:text-blue-600">Events</a>
-                <a href="news.html" class="text-gray-700 hover:text-blue-600">News</a>
-                <a href="contact.html" class="text-gray-700 hover:text-blue-600">Contact Us</a>
-            </nav>
-            <div class="hidden md:flex items-center space-x-4">
-                <div class="relative">
-                    <input type="text" class="border rounded-full py-2 px-4 pl-10 w-64 focus:outline-none focus:border-blue-500" placeholder="Search...">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+            <div class="events-filter">
+                <button class="filter-btn active" data-filter="all">All Events</button>
+                <button class="filter-btn" data-filter="academic">Academic</button>
+                <button class="filter-btn" data-filter="arts">Arts</button>
+                <button class="filter-btn" data-filter="sports">Sports</button>
+                <button class="filter-btn" data-filter="community">Community</button>
+            </div>
+            <div class="events-grid">
+                <!-- Event 1 -->
+                <div class="event-card" data-category="academic">
+                    <div class="event-date">
+                        <span class="month">Oct</span>
+                        <span class="day">15</span>
+                    </div>
+                    <div class="event-image">
+                        <img src="assets/science-fair.jpg" alt="Science Fair">
+                    </div>
+                    <div class="event-content">
+                        <span class="event-category academic">Academic</span>
+                        <h3>Annual Science Fair</h3>
+                        <p class="event-time"><i class="far fa-clock"></i> 9:00 AM - 3:00 PM | Gymnasium</p>
+                        <p class="event-description">Students showcase their innovative projects in our biggest STEM event of the year. Open to all families and community members.</p>
+                        <div class="event-actions">
+                            <a href="#" class="btn-secondary">Details</a>
+                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
+                        </div>
+                    </div>
                 </div>
-                <button class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">Login</button>
-            </div>
-        </div>
-    </header>
 
-    <!-- Hero Section -->
-    <section class="bg-cover bg-center h-96" style="background-image: url('https://via.placeholder.com/1920x600');">
-        <div class="container mx-auto h-full flex flex-col justify-center items-center text-center text-white">
-            <h1 class="text-4xl md:text-5xl font-bold">School Events</h1>
-        </div>
-    </section>
+                <!-- Event 2 -->
+                <div class="event-card" data-category="arts">
+                    <div class="event-date">
+                        <span class="month">Nov</span>
+                        <span class="day">3</span>
+                    </div>
+                    <div class="event-image">
+                        <img src="assets/fall-concert.jpg" alt="Fall Concert">
+                    </div>
+                    <div class="event-content">
+                        <span class="event-category arts">Arts</span>
+                        <h3>Fall Music Concert</h3>
+                        <p class="event-time"><i class="far fa-clock"></i> 7:00 PM | Auditorium</p>
+                        <p class="event-description">Our orchestra, band, and choir present an evening of musical performances featuring classical and contemporary pieces.</p>
+                        <div class="event-actions">
+                            <a href="#" class="btn-secondary">Details</a>
+                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Event Calendar Section -->
-    <section class="container mx-auto mt-12 px-4">
-        <h2 class="text-3xl font-bold mb-6 text-center">Event Calendar</h2>
-        <div class="bg-white p-6 rounded-lg shadow">
-            <!-- Embed an interactive calendar (Google Calendar or similar) -->
-            <iframe src="https://calendar.google.com/calendar/embed?src=your_calendar_link_here" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
-        </div>
-    </section>
+                <!-- Event 3 -->
+                <div class="event-card" data-category="sports">
+                    <div class="event-date">
+                        <span class="month">Nov</span>
+                        <span class="day">18</span>
+                    </div>
+                    <div class="event-image">
+                        <img src="assets/basketball-game.jpg" alt="Basketball Game">
+                    </div>
+                    <div class="event-content">
+                        <span class="event-category sports">Sports</span>
+                        <h3>Varsity Basketball Championship</h3>
+                        <p class="event-time"><i class="far fa-clock"></i> 6:30 PM | School Gym</p>
+                        <p class="event-description">Cheer on our Eagles as they compete for the regional championship title against rival Jefferson High.</p>
+                        <div class="event-actions">
+                            <a href="#" class="btn-secondary">Details</a>
+                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Event Details Section -->
-    <section class="container mx-auto mt-12 px-4">
-        <h2 class="text-3xl font-bold mb-6 text-center">Event Highlights</h2>
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-xl font-semibold mb-4">Science Fair 2024</h3>
-                <p class="text-gray-600 mb-4">Join us for the annual Science Fair on November 25th, 2024. This event showcases students' innovative projects and scientific achievements. Register to participate now!</p>
-                <a href="#" class="text-blue-600 hover:underline">Register Here</a>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-xl font-semibold mb-4">Sports Day</h3>
-                <p class="text-gray-600 mb-4">Don't miss Sports Day on December 1st, 2024, where students compete in a variety of athletic activities. Spectators and participants are welcome.</p>
-                <a href="#" class="text-blue-600 hover:underline">View Schedule</a>
-            </div>
-        </div>
-    </section>
+                <!-- Event 4 -->
+                <div class="event-card" data-category="community">
+                    <div class="event-date">
+                        <span class="month">Dec</span>
+                        <span class="day">5</span>
+                    </div>
+                    <div class="event-image">
+                        <img src="assets/winter-market.jpg" alt="Winter Market">
+                    </div>
+                    <div class="event-content">
+                        <span class="event-category community">Community</span>
+                        <h3>Winter Holiday Market</h3>
+                        <p class="event-time"><i class="far fa-clock"></i> 10:00 AM - 4:00 PM | School Courtyard</p>
+                        <p class="event-description">Local vendors, student crafts, food trucks, and holiday performances. Proceeds benefit our scholarship fund.</p>
+                        <div class="event-actions">
+                            <a href="#" class="btn-secondary">Details</a>
+                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Footer Section (Same as Home Page) -->
-    <footer class="bg-gray-800 text-white py-12 mt-12 px-4">
-        <div class="container mx-auto grid md:grid-cols-3 gap-8">
-            <div>
-                <h3 class="text-xl font-bold mb-4">Contact Information</h3>
-                <p>123 School Street, Education City</p>
-                <p>Phone: (123) 456-7890</p>
-                <p>Email: info@myschool.edu</p>
-            </div>
-            <div>
-                <h3 class="text-xl font-bold mb-4">Follow Us</h3>
-                <div class="space-x-4">
-                    <a href="#" class="text-blue-500 hover:underline">Facebook</a>
-                    <a href="#" class="text-blue-300 hover:underline">Twitter</a>
-                    <a href="#" class="text-pink-400 hover:underline">Instagram</a>
+                <!-- Event 5 -->
+                <div class="event-card" data-category="academic">
+                    <div class="event-date">
+                        <span class="month">Jan</span>
+                        <span class="day">12</span>
+                    </div>
+                    <div class="event-image">
+                        <img src="assets/college-fair.jpg" alt="College Fair">
+                    </div>
+                    <div class="event-content">
+                        <span class="event-category academic">Academic</span>
+                        <h3>College Fair</h3>
+                        <p class="event-time"><i class="far fa-clock"></i> 6:00 PM - 8:30 PM | Cafeteria</p>
+                        <p class="event-description">Representatives from 50+ universities will be available to discuss programs, admissions, and financial aid.</p>
+                        <div class="event-actions">
+                            <a href="#" class="btn-secondary">Details</a>
+                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event 6 -->
+                <div class="event-card" data-category="arts">
+                    <div class="event-date">
+                        <span class="month">Feb</span>
+                        <span class="day">9</span>
+                    </div>
+                    <div class="event-image">
+                        <img src="assets/art-show.jpg" alt="Art Show">
+                    </div>
+                    <div class="event-content">
+                        <span class="event-category arts">Arts</span>
+                        <h3>Student Art Exhibition</h3>
+                        <p class="event-time"><i class="far fa-clock"></i> 5:00 PM - 8:00 PM | Art Gallery</p>
+                        <p class="event-description">Annual showcase of student artwork including paintings, sculptures, photography, and digital media.</p>
+                        <div class="event-actions">
+                            <a href="#" class="btn-secondary">Details</a>
+                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <h3 class="text-xl font-bold mb-4">Useful Links</h3>
-                <a href="#" class="block hover:underline">Privacy Policy</a>
-                <a href="#" class="block hover:underline">Terms of Service</a>
-                <a href="#" class="block hover:underline">Sitemap</a>
+            <div class="view-all">
+                <a href="#" class="btn-primary">View Full Calendar</a>
             </div>
         </div>
-    </footer>
+    </section>
 
-</body>
-</html>
+    <!-- Featured Event Section -->
+    <section class="featured-event">
+        <div class="container">
+            <div class="featured-content">
+                <span class="featured-badge">Featured Event</span>
+                <h2>Greenwood Gala: 25th Anniversary Celebration</h2>
+                <div class="featured-meta">
+                    <span class="featured-date"><i class="far fa-calendar-alt"></i> March 18, 2024</span>
+                    <span class="featured-location"><i class="fas fa-map-marker-alt"></i> Grand Ballroom, City Convention Center</span>
+                </div>
+                <p>Join us for an unforgettable evening celebrating 25 years of educational excellence. The gala will feature dinner, dancing, live auctions, and special performances by our talented students and alumni.</p>
+                <div class="featured-actions">
+                    <a href="#" class="btn-primary">Purchase Tickets</a>
+                    <a href="#" class="btn-secondary">Event Details</a>
+                </div>
+            </div>
+            <div class="featured-image">
+                <img src="assets/gala.jpg" alt="Gala Event">
+            </div>
+        </div>
+    </section>
+
+    <!-- Past Events Section -->
+    <section class="past-events">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Past Events Gallery</h2>
+                <p class="section-subtitle">Relive our recent memorable moments</p>
+            </div>
+            <div class="event-gallery">
+                <div class="gallery-item">
+                    <img src="assets/graduation.jpg" alt="Graduation">
+                    <div class="gallery-caption">Class of 2023 Graduation</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/science-olympiad.jpg" alt="Science Olympiad">
+                    <div class="gallery-caption">Regional Science Olympiad Winners</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/spring-musical.jpg" alt="Spring Musical">
+                    <div class="gallery-caption">Spring Musical Performance</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/field-day.jpg" alt="Field Day">
+                    <div class="gallery-caption">Elementary Field Day</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/robotics.jpg" alt="Robotics Competition">
+                    <div class="gallery-caption">State Robotics Competition</div>
+                </div>
+                <div class="gallery-item">
+                    <img src="assets/book-fair.jpg" alt="Book Fair">
+                    <div class="gallery-caption">Annual Book Fair</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="events-newsletter">
+        <div class="container">
+            <div class="newsletter-content">
+                <h2>Stay Updated on School Events</h2>
+                <p>Subscribe to our monthly newsletter for the latest event announcements, photos, and school news.</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit" class="btn-primary">Subscribe</button>
+                </form>
+            </div>
+        </div>
+    </section>
+{%endblock%}

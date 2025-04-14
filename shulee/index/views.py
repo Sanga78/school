@@ -8,8 +8,19 @@ from django.core.files.storage import FileSystemStorage
 from index.models import Courses, CustomUser, SessionYearModel
 # Create your views here.
 def index(request):
-    return render(request,'index.html')
-
+    return render(request,'dashboard.html')
+def about(request):
+    return render(request,'about.html')
+def academics(request):
+    return render(request,'academics.html')
+def admissions(request):
+    return render(request,'admissions.html')
+def results(request):
+    return render(request,'results.html')
+def events(request):
+    return render(request,'events.html')
+def contact(request):
+    return render(request,'contact.html')
 def loginPage(request):
     return render(request,'login.html')
 

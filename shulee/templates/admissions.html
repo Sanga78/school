@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{%block content%}
+    <section class="page-hero" style="background-image: url('assets/admissions-hero.jpg');">
+        <div class="container">
+            <h1>Join AIC LABORET GIRLS BOARDING PRIMARY</h1>
+            <p>Begin your journey toward academic excellence</p>
+        </div>
+    </section>
+
+    <div class="breadcrumb">
+        <div class="container">
+            <a href="{% url 'home' %}">Home</a>
+            <span>/</span>
+            <a href="{% url 'admissions' %}">Admissions</a>
+        </div>
+    </div>
+
+    <section class="admissions-process">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Admissions Process</h2>
+                <p class="section-subtitle">Your step-by-step guide to joining AIC LABORET GIRLS BOARDING PRIMARY</p>
+            </div>
+            <div class="process-steps">
+                <div class="process-card">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Inquiry & Exploration</h3>
+                        <p>Submit an inquiry form and explore our programs through virtual or in-person tours.</p>
+                        <a href="#" class="step-link">Schedule a Tour <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="process-card">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Application Submission</h3>
+                        <p>Complete our online application along with required documents by the deadline.</p>
+                        <a href="#" class="step-link">Application Portal <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="process-card">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Student Assessment</h3>
+                        <p>Participate in age-appropriate assessments and interviews.</p>
+                        <a href="#" class="step-link">Assessment Details <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="process-card">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Admission Decision</h3>
+                        <p>Receive your admission decision within 3 weeks of completing all requirements.</p>
+                        <a href="#" class="step-link">Decision Timeline <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="process-card">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>Enrollment</h3>
+                        <p>Secure your spot by submitting enrollment forms and tuition deposit.</p>
+                        <a href="#" class="step-link">Enrollment Info <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="dates-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Admissions Timeline</h2>
+                <p class="section-subtitle">Key dates for the upcoming academic year</p>
+            </div>
+            <div class="dates-container">
+                <div class="date-card">
+                    <div class="date-month">Sep</div>
+                    <div class="date-day">15</div>
+                    <div class="date-content">
+                        <h3>Applications Open</h3>
+                        <p>Online application portal becomes available for all grade levels.</p>
+                    </div>
+                </div>
+                <div class="date-card">
+                    <div class="date-month">Nov</div>
+                    <div class="date-day">1</div>
+                    <div class="date-content">
+                        <h3>Early Decision Deadline</h3>
+                        <p>Priority consideration for applications submitted by this date.</p>
+                    </div>
+                </div>
+                <div class="date-card">
+                    <div class="date-month">Jan</div>
+                    <div class="date-day">15</div>
+                    <div class="date-content">
+                        <h3>Regular Decision Deadline</h3>
+                        <p>Final deadline for all applications.</p>
+                    </div>
+                </div>
+                <div class="date-card">
+                    <div class="date-month">Mar</div>
+                    <div class="date-day">1</div>
+                    <div class="date-content">
+                        <h3>Admission Decisions Released</h3>
+                        <p>All applicants notified of admission status.</p>
+                    </div>
+                </div>
+                <div class="date-card">
+                    <div class="date-month">Apr</div>
+                    <div class="date-day">15</div>
+                    <div class="date-content">
+                        <h3>Enrollment Deadline</h3>
+                        <p>Deadline to secure your spot with enrollment contract and deposit.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tuition-section">
+        <div class="container">
+            <div class="tuition-grid">
+                <div class="tuition-info">
+                    <h2>Tuition & Fees</h2>
+                    <p>AIC LABORET GIRLS BOARDING PRIMARY is committed to providing quality education. Please find the tuition and fee details below.</p>
+                    
+                    <div class="tuition-table">
+                        <div class="tuition-row">
+                            <div class="grade-level">Boarding Fees (Per Term)</div>
+                            <div class="tuition-amount">Ksh. 3000/term</div>
+                        </div>
+                        <div class="tuition-row">
+                            <div class="grade-level">Tuition Fees (Per Term)</div>
+                            <div class="tuition-amount">Ksh. 5000/term</div>
+                        </div>
+                        <div class="tuition-row">
+                            <div class="grade-level">Other Fees (Including Activity Fees, etc)</div>
+                            <div class="tuition-amount">Ksh. 1000/term</div>
+                        </div>
+                    </div>
+                    
+                    <p>Please note that these fees are subject to change. Contact the school administration for the most up-to-date information and payment plans.</p>
+                    <a href="#" class="btn-primary">Fee Payment Information</a>
+                </div>
+                <div class="tuition-image">
+                    <img src="assets/tuition-image.jpg" alt="Students in classroom">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <p class="section-subtitle">Answers to common admissions questions</p>
+            </div>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <button class="faq-question">
+                        What are the age requirements for entry?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Please contact the school administration for specific age requirements for each grade level.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Is there an application fee?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes, there is a non-refundable application fee. Please refer to the application form for the exact amount.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        What documents are required for application?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Requirements vary by grade level, but typically include: completed application form, previous school records, and birth certificate.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Do you accept mid-term transfers?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>We consider mid-term transfers on a space-available basis. Please contact the admissions office for more information.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">
+                        How are admission decisions made?
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Admission decisions are based on a holistic review of the application, including academic records and assessment results.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="faq-cta">
+                <p>Have more questions? Our admissions team is happy to help.</p>
+                <a href="contact.html" class="btn-secondary">Contact Admissions</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="tour-section">
+        <div class="container">
+            <div class="tour-content">
+                <h2>Experience AIC LABORET GIRLS Virtually</h2>
+                <p>Can't visit in person? Take our virtual tour to explore our campus, classrooms, and facilities from anywhere in the world.</p>
+                <a href="#" class="btn-primary">Start Virtual Tour</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="apply-cta">
+        <div class="container">
+            <div class="apply-content">
+                <h2>Ready to Apply?</h2>
+                <p>Begin your application to AIC LABORET GIRLS BOARDING PRIMARY today. Our admissions team is available to guide you through every step of the process.</p>
+                <div class="apply-buttons">
+                    <a href="#" class="btn-primary">Start Application</a>
+                    <a href="{% url 'contact' %}" class="btn-secondary">Request Info</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+{%endblock%}

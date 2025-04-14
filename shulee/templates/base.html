@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIC Laboret Girls Boarding Primary School</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Optional Bootstrap (just for components like carousel) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{%static 'index.css' %}">
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="contact-info">
+                <span><i class="fas fa-phone"></i> (123) 456-7890</span>
+                <span><i class="fas fa-envelope"></i> info@aiclaboretgirls.edu</span>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+            <div class="login-link">
+                <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <header class="main-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="assets/logo.png" alt="AIC LOGO" class="logo">
+                <div class="school-name">
+                    <h1>AIC Laboret Girls Primary</h1>
+                    <p>School</p>
+                </div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}"><a href="{% url 'home' %}">Home</a></li>
+                    <li class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}"><a href="{% url 'about' %}">About Us</a></li>
+                    <li class="{% if request.resolver_match.url_name == 'academics' %}active{% endif %}"><a href="{% url 'academics' %}">Academics</a></li>
+                    <li class="{% if request.resolver_match.url_name == 'admissions' %}active{% endif %}"><a href="{% url 'admissions' %}">Admissions</a></li>
+                    <li class="{% if request.resolver_match.url_name == 'events' %}active{% endif %}"><a href="{% url 'events' %}">Events</a></li>
+                    <li class="{% if request.resolver_match.url_name == 'contact' %}active{% endif %}"><a href="{% url 'contact' %}">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+ {% block content%}{%endblock%}
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-logo">
+                        <img src="assets/logo-white.png" alt="AIC Logo">
+                        <h3>AIC Laboret Girls Boarding Primary School</h3>
+                    </div>
+                    <p>123 Education Lane<br>Learning City, LC 12345</p>
+                    <p>Phone: (123) 456-7890<br>Email: info@aiclaboretgirls.edu</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li class="active"><a href="{% url 'home' %}">Home</a></li>
+                        <li><a href="{% url 'about' %}">About Us</a></li>
+                        <li><a href="{% url 'academics' %}">Academics</a></li>
+                        <li><a href="{% url 'admissions' %}">Admissions</a></li>
+                        <li><a href="{% url 'events' %}">Events</a></li>
+                        <li><a href="{% url 'contact' %}">Contact</a></li>
+                        <li><a href="">Login</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Academics</h4>
+                    <ul>
+                       <li><a href="#">ECDE</a></li>
+                        <li><a href="#">Primary School</a></li>
+                        <li><a href="#">Junior Secondary</a></li>
+                        <li><a href="#">Arts Program</a></li>
+                        <li><a href="#">Athletics</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Connect With Us</h4>
+                    <div class="footer-social">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    <div class="newsletter">
+                        <h5>Subscribe to Newsletter</h5>
+                        <form>
+                            <input type="email" placeholder="Your Email">
+                            <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 AIC Laboret Girls Boarding Primary School. All Rights Reserved.</p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Sitemap</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Optional Bootstrap JS (for components like carousel) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'new.js' %}"></script>
+</body>
+</html>
