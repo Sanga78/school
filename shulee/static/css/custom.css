@@ -1,0 +1,118 @@
+:root {
+    --primary: #800000;       /* Maroon */
+    --primary-light: #a00000; /* Lighter maroon */
+    --primary-dark: #600000;  /* Darker maroon */
+    --accent: #ffcc00;        /* Gold accent */
+    --text-dark: #333;
+    --text-light: #666;
+    --gray-light: #e0e0e0;
+    --white: #ffffff;
+}
+
+/* Sidebar Styling */
+.sidebar-dark-primary {
+    background-color: var(--primary-dark) !important;
+}
+
+.sidebar-dark-primary .brand-link {
+    background-color: var(--primary) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active {
+    background-color: var(--primary-light);
+    border-left: 4px solid var(--accent);
+    color: white;
+}
+
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link:hover:not(.active) {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.sidebar-dark-primary .nav-header {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 1rem;
+    margin-top: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-dark-primary .nav-sidebar .nav-link > p {
+    position: relative;
+    margin-left: 5px;
+}
+
+.sidebar-dark-primary .nav-sidebar .nav-link > .fas,
+.sidebar-dark-primary .nav-sidebar .nav-link > .far,
+.sidebar-dark-primary .nav-sidebar .nav-link > .ion {
+    color: rgba(255,255,255,0.8);
+}
+
+/* Dashboard Card Styling */
+.card-primary:not(.card-outline) > .card-header {
+    background-color: var(--primary);
+    color: white;
+}
+
+.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+.bg-gradient-primary {
+    background-image: linear-gradient(to right, var(--primary), var(--primary-light)) !important;
+}
+
+/* Button Styling */
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: white;
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* Navbar Styling */
+.navbar-white {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar-brand h4 {
+    color: var(--primary);
+}
+
+/* Small Boxes */
+.small-box {
+    color: white !important;
+}
+
+.small-box .icon > i {
+    color: rgba(255,255,255,0.3) !important;
+}
+
+.small-box.bg-gradient-primary {
+    background-image: linear-gradient(to right, var(--primary), var(--primary-light)) !important;
+}
+
+/* Chart Colors */
+.chart-colors {
+    --chart-primary: var(--primary);
+    --chart-accent: var(--accent);
+}

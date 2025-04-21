@@ -1,0 +1,212 @@
+{% extends 'admin/base.html' %}
+{% block title %}Manage Bursars{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>Bursars Management</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Bursars</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'add_bursar' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i> Add New Bursar
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Bursars List</h4>
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown">
+                    <i class="fas fa-filter me-1"></i> Filter
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="?status=active">Active Only</a></li>
+                    <li><a class="dropdown-item" href="?status=inactive">Inactive Only</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="?">Show All</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Profile</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Last Login</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bursar in bursars %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                {% if bursar.user.profile_pic %}
+                                <img src="{{ bursar.user.profile_pic.url }}" class="rounded-circle" width="40" height="40">
+                                {% else %}
+                                <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                                    {{ bursar.user.get_initials }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ bursar.user.get_full_name }}</td>
+                            <td>{{ bursar.user.email }}</td>
+                            <td>{{ bursar.user.phone|default:"-" }}</td>
+                            <td>{{ bursar.user.last_login|date:"M d, Y H:i"|default:"Never" }}</td>
+                            <td>
+                                {% if bursar.user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="" class="btn btn-sm btn-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-info" title="View Details" data-bs-toggle="modal" data-bs-target="#bursarModal{{ bursar.id }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="" class="btn btn-sm {% if bursar.user.is_active %}btn-warning{% else %}btn-success{% endif %}" title="{% if bursar.user.is_active %}Deactivate{% else %}Activate{% endif %}">
+                                        <i class="fas {% if bursar.user.is_active %}fa-times{% else %}fa-check{% endif %}"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal for each bursar -->
+                        <div class="modal fade" id="bursarModal{{ bursar.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">Bursar Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-4 text-center">
+                                                {% if bursar.user.profile_pic %}
+                                                <img src="{{ bursar.user.profile_pic.url }}" class="img-thumbnail mb-3" width="150">
+                                                {% else %}
+                                                <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center mx-auto" style="width:150px;height:150px;font-size:50px;">
+                                                    {{ bursar.user.get_initials }}
+                                                </div>
+                                                {% endif %}
+                                                <h4>{{ bursar.user.get_full_name }}</h4>
+                                                <p class="text-muted">Bursar</p>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <table class="table table-bordered">
+                                                    <tr>
+                                                        <th width="30%">Email</th>
+                                                        <td>{{ bursar.user.email }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Phone</th>
+                                                        <td>{{ bursar.user.phone|default:"-" }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Address</th>
+                                                        <td>{{ bursar.user.address|default:"-" }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Last Login</th>
+                                                        <td>{{ bursar.user.last_login|date:"M d, Y H:i"|default:"Never" }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Date Joined</th>
+                                                        <td>{{ bursar.user.date_joined|date:"M d, Y" }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Status</th>
+                                                        <td>
+                                                            {% if bursar.user.is_active %}
+                                                            <span class="badge bg-success">Active</span>
+                                                            {% else %}
+                                                            <span class="badge bg-danger">Inactive</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <a href="" class="btn btn-primary">
+                                            <i class="fas fa-edit me-1"></i> Edit Profile
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                <i class="fas fa-user-slash fa-2x mb-3"></i><br>
+                                No bursars found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if bursars.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if bursars.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ bursars.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in bursars.paginator.page_range %}
+                    {% if bursars.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > bursars.number|add:'-3' and num < bursars.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if bursars.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ bursars.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ bursars.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

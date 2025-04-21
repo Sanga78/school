@@ -1,0 +1,102 @@
+{% extends 'admin/base.html' %}
+{% block title %}System Settings{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>System Settings</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0">Academic Year Settings</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label class="form-label">Current Academic Year</label>
+                            <select name="academic_year" class="form-select" required>
+                                {% for year in academic_years %}
+                                <option value="{{ year.id }}" {% if year.is_current %}selected{% endif %}>{{ year.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Set Current Year</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0">System Configuration</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label class="form-label">School Name</label>
+                            <input type="text" name="school_name" class="form-control" value="{{ settings.school_name }}" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">School Logo</label>
+                            <input type="file" name="logo" class="form-control">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="2">{{ settings.address }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0">User Management</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-4">
+                        <a href="{% url 'manage_administrators' %}" class="btn btn-primary">
+                            <i class="fas fa-user-shield me-2"></i>Manage Administrators
+                        </a>
+                        <a href="{% url 'manage_bursars' %}" class="btn btn-success">
+                            <i class="fas fa-user-tie me-2"></i>Manage Bursars
+                        </a>
+                        <a href="{% url 'backup_database' %}" class="btn btn-warning">
+                            <i class="fas fa-database me-2"></i>Backup Database
+                        </a>
+                        <a href="{% url 'system_logs' %}" class="btn btn-info">
+                            <i class="fas fa-clipboard-list me-2"></i>View System Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function toggleNotesField(select) {
+        const notesField = document.querySelector('#id_notes').parentElement;
+        if (select.value == '2') {  // If rejected
+            notesField.style.display = 'block';
+        } else {
+            notesField.style.display = 'none';
+        }
+    }
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.querySelector('#id_status');
+        if (statusSelect) toggleNotesField(statusSelect);
+    });
+</script>
+{% endblock %}

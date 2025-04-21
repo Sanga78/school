@@ -1,0 +1,73 @@
+{% extends 'admin/base.html' %}
+{% block title %}Manage Feedback{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Feedback Messages</h2>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Filter Feedback</h6>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if replied_filter == '1' %}Replied
+                    {% elif replied_filter == '0' %}Not Replied
+                    {% else %}All Feedback{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?">All Feedback</a></li>
+                    <li><a class="dropdown-item" href="?replied=0">Not Replied</a></li>
+                    <li><a class="dropdown-item" href="?replied=1">Replied</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>From</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for feedback in feedback_list %}
+                        <tr>
+                            <td>{{ feedback.user.get_full_name }}</td>
+                            <td>{{ feedback.message|truncatechars:50 }}</td>
+                            <td>{{ feedback.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if feedback.reply %}
+                                    <span class="badge bg-success">Replied</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'respond_feedback' feedback.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-reply"></i> Respond
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No feedback messages found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

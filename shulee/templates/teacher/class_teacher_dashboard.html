@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Class Teacher Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Class Teacher Dashboard</h2>
+            <p class="lead">Welcome, {{ request.user.get_full_name }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">My Classes</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>Number of Students</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for class in classes %}
+                                <tr>
+                                    <td>{{ class.name }}</td>
+                                    <td>{{ class.student_set.count }}</td>
+                                    <td>
+                                        <a href="{% url 'view_class_results' class.id %}" 
+                                           class="btn btn-sm btn-primary">
+                                            View Results
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

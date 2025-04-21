@@ -1,0 +1,139 @@
+{% extends 'admin/base.html' %}
+{% block title %}Add New Student{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Register New Student</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'manage_students' %}">Students</a></li>
+                    <li class="breadcrumb-item active">Add Student</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Student Information</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Personal Info -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Personal Details</h5>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Admission Number*</label>
+                            {{ form.admission_number }}
+                            <small class="text-danger">{{ form.admission_number.errors }}</small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">First Name*</label>
+                                    {{ form.user.first_name }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Last Name*</label>
+                                    {{ form.user.last_name }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Gender*</label>
+                            {{ form.gender }}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            {{ form.date_of_birth }}
+                        </div>
+                    </div>
+                    
+                    <!-- Academic Info -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2">Academic Information</h5>
+                        <div class="form-group mb-3">
+                            <label class="form-label">Class*</label>
+                            {{ form.current_class }}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Academic Year*</label>
+                            {{ form.academic_year }}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            {{ form.user.profile_pic }}
+                        </div>
+                    </div>
+                    
+                    <!-- Family Info -->
+                    <div class="col-md-12 mt-3">
+                        <h5 class="border-bottom pb-2">Family Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Father's Name</label>
+                                    {{ form.father_name }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Mother's Name</label>
+                                    {{ form.mother_name }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Contact Email*</label>
+                            {{ form.user.email }}
+                            <small class="text-danger">{{ form.user.email.errors }}</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Contact Phone</label>
+                            {{ form.user.phone }}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Address</label>
+                            {{ form.user.address }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'manage_students' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i> Save Student
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize date picker
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateField = document.querySelector('#id_date_of_birth');
+        if (dateField) {
+            dateField.type = 'date';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Class Results - {{ class.name }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Class Results - {{ class.name }}</h2>
+            <p class="lead">Academic Year: {{ current_year.name }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            {% for student_id, data in organized_results.items %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title">{{ data.student.user.get_full_name }}</h3>
+                </div>
+                <div class="card-body">
+                    {% for term, results in data.terms.items %}
+                    <h4>{{ term }}</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Exam Score</th>
+                                    <th>Assignment Score</th>
+                                    <th>Total Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>{{ result.subject.name }}</td>
+                                    <td>{{ result.exam_score }}</td>
+                                    <td>{{ result.assignment_score }}</td>
+                                    <td>{{ result.total_score }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

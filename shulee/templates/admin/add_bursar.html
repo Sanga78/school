@@ -1,0 +1,217 @@
+{% extends 'admin/base.html' %}
+{% block title %}Add New Bursar{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Register New Bursar</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'manage_bursars' %}">Bursars</a></li>
+                    <li class="breadcrumb-item active">Add Bursar</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Bursar Information</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="bursarForm">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Personal Information -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">Personal Details</h5>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">First Name*</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="first_name" 
+                                   value="{{ form.first_name.value|default:'' }}"
+                                   required>
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small">{{ form.first_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Last Name*</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="last_name" 
+                                   value="{{ form.last_name.value|default:'' }}"
+                                   required>
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small">{{ form.last_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select" name="gender">
+                                <option value="">Select Gender</option>
+                                <option value="M" {% if form.gender.value == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if form.gender.value == 'F' %}selected{% endif %}>Female</option>
+                                <option value="O" {% if form.gender.value == 'O' %}selected{% endif %}>Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   name="date_of_birth"
+                                   value="{{ form.date_of_birth.value|default:'' }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Account Information -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">Account Details</h5>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Email*</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   name="email" 
+                                   value="{{ form.email.value|default:'' }}"
+                                   required>
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   name="phone" 
+                                   value="{{ form.phone.value|default:'' }}">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Temporary Password*</label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       name="password" 
+                                       id="passwordField"
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" id="generatePassword">
+                                    <i class="fas fa-random"></i> Generate
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Minimum 8 characters</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   name="profile_pic"
+                                   accept="image/*">
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Information -->
+                    <div class="col-md-12 mt-3">
+                        <h5 class="border-bottom pb-2 mb-3">Additional Information</h5>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" 
+                                      name="address" 
+                                      rows="2">{{ form.address.value|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Qualification</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   name="qualification"
+                                   value="{{ form.qualification.value|default:'' }}">
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Date of Joining</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   name="date_of_joining"
+                                   value="{{ form.date_of_joining.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'manage_bursars' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i> Save Bursar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password generation
+    document.getElementById('generatePassword').addEventListener('click', function() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+        let password = '';
+        for (let i = 0; i < 12; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('passwordField').value = password;
+    });
+    
+    // Password visibility toggle
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('passwordField');
+        const icon = this.querySelector('i');
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+    
+    // Form validation
+    document.getElementById('bursarForm').addEventListener('submit', function(e) {
+        const password = document.getElementById('passwordField').value;
+        if (password.length < 8) {
+            e.preventDefault();
+            alert('Password must be at least 8 characters long');
+        }
+    });
+});
+</script>
+
+<style>
+.form-group {
+    margin-bottom: 1.25rem;
+}
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+.border-bottom {
+    border-bottom: 2px solid #dee2e6 !important;
+}
+</style>
+{% endblock %}

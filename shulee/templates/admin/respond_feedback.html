@@ -1,0 +1,54 @@
+{% extends 'admin/base.html' %}
+{% block title %}Respond to Feedback{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Respond to Feedback</h2>
+            <p class="lead">From {{ feedback.user.get_full_name }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Original Message</h6>
+                </div>
+                <div class="card-body">
+                    <p>{{ feedback.message }}</p>
+                    <small class="text-muted">Received on {{ feedback.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Your Response</h6>
+                </div>
+                <div class="card-body">
+                    {% if feedback.reply %}
+                    <div class="alert alert-info mb-4">
+                        <strong>Current Response:</strong>
+                        <p class="mt-2">{{ feedback.reply }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label class="form-label">Reply Message</label>
+                            <textarea name="reply" class="form-control" rows="5" required>{% if feedback.reply %}{{ feedback.reply }}{% endif %}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'manage_feedback' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Send Response</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

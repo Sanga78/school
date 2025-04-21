@@ -1,32 +1,26 @@
 from django.http import HttpResponse,JsonResponse,HttpResponseRedirect
 from django.core import serializers
-from django.shortcuts import render
-from index.models import Courses, CustomUser, FeedbackStaff, NotificationStaff, Staffs, StudentResult, Subjects,SessionYearModel,Students,Attendance,AttendanceReport,LeaveReportStaff
+from django.shortcuts import render, redirect
+from index.models import Class,CustomUser, Feedback, Notification, SubjectResult, Subject,SessionYearModel,Attendance,AttendanceReport, LeaveRequest,Staff, SubjectResult, Student, AcademicYear
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib import messages
 import json
+from django.contrib.auth.decorators import login_required
+from .forms import ResultUploadForm
 def staff_home(request):
     # for fetching all student under staff
-    subjects = Subjects.objects.filter(staff_id=request.user.id)
-    course_id_list=[]
-    for subject in subjects:
-        course=Courses.objects.get(id=subject.course_id.id)
-        course_id_list.append(course.id)
-    # Removing Duplicate Course IDs
-    final_course=[]
-    for course_id in course_id_list:
-        if course_id not in final_course:
-            final_course.append(course_id)
+    subjects = Subject.objects.filter(staff_id=request.user.id)
+   
 
-    student_count=Students.objects.filter(course_id__in=final_course).count()
+    student_count=Student.objects.count()
 
     # Fetch All Attendance Count
     attendance_count=Attendance.objects.filter(subject_id__in=subjects).count()
 
     # Fetch All Approved Leave
-    staff=Staffs.objects.get(admin=request.user.id)
-    leave_count=LeaveReportStaff.objects.filter(staff_id=staff.id,leave_status=1).count()
+    staff=Staff.objects.get(admin=request.user.id)
+    leave_count= LeaveRequest.objects.filter(staff_id=staff.id,leave_status=1).count()
     subject_count=subjects.count()
 
     #Fetch Attendance Data By Subject
@@ -37,7 +31,7 @@ def staff_home(request):
         subject_list.append(subject.subject_name)
         attendance_list.append(attendance_count1)
 
-    student_attendance=Students.objects.filter(course_id__in=final_course)
+    student_attendance=Student.objects.all()
     student_list = []
     student_list_attendance_present = []
     student_list_attendance_absent = []
@@ -51,7 +45,7 @@ def staff_home(request):
     return render(request, "staff_template/staff_home.html",{"students_count":student_count,"attendance_count":attendance_count,"leave_count":leave_count,"subject_count":subject_count,"subject_list":subject_list,"attendance_list":attendance_list,"student_list":student_list,"present_list":student_list_attendance_present,"absent_list":student_list_attendance_absent})
 
 def staff_take_attendance(request):
-    subjects = Subjects.objects.filter(staff_id=request.user.id)
+    subjects = Subject.objects.filter(staff_id=request.user.id)
     session_years = SessionYearModel.object.all()
     return render(request,"staff_template/attendance.html",{"subjects":subjects,"session_years":session_years})
 
@@ -60,9 +54,9 @@ def get_students(request):
     subject_id = request.POST.get("subject")
     session_year = request.POST.get("session_year")
 
-    subject = Subjects.objects.get(id=subject_id)
+    subject = Subject.objects.get(id=subject_id)
     session_model = SessionYearModel.object.get(id=session_year)
-    students = Students.objects.filter(course_id=subject.course_id,session_year_id=session_model)
+    students = Student.objects.filter(session_year_id=session_model)
     list_data=[]
 
     for student in students:
@@ -76,7 +70,7 @@ def save_attendance_data(request):
     subject_id = request.POST.get("subject_id")
     session_year_id = request.POST.get("session_year_id")
     attendance_date = request.POST.get("attendance_date")
-    subject_model = Subjects.objects.get(id=subject_id)
+    subject_model = Subject.objects.get(id=subject_id)
     session_model = SessionYearModel.object.get(id=session_year_id)
 
     json_sstudent=json.loads(student_ids)
@@ -87,7 +81,7 @@ def save_attendance_data(request):
         attendance.save()
 
         for stud in json_sstudent:
-            student = Students.objects.get(admin=stud['id'])
+            student = Student.objects.get(admin=stud['id'])
             attendance_report=AttendanceReport(student_id=student,attendance_id=attendance,status=stud['status'])
             attendance_report.save()
         return HttpResponse("OK")
@@ -95,7 +89,7 @@ def save_attendance_data(request):
         return HttpResponse("ERROR")
     
 def staff_update_attendance(request):
-    subjects = Subjects.objects.filter(staff_id=request.user.id)
+    subjects = Subject.objects.filter(staff_id=request.user.id)
     session_year_id = SessionYearModel.object.all()
     return render(request,"staff_template/attendance_update.html",{"subjects":subjects,"session_year_id":session_year_id})
 
@@ -103,7 +97,7 @@ def staff_update_attendance(request):
 def get_attendance_dates(request):
     subject = request.POST.get("subject")
     session_year_id = request.POST.get("session_year_id")
-    subject_obj = Subjects.objects.get(id=subject)
+    subject_obj = Subject.objects.get(id=subject)
     session_year_obj = SessionYearModel.object.get(id=session_year_id)
     attendance = Attendance.objects.filter(subject_id=subject_obj,session_year_id=session_year_obj)
     attendance_obj=[]
@@ -137,7 +131,7 @@ def save_updateattendance_data(request):
 
     try:
         for stud in json_sstudent:
-            student = Students.objects.get(admin=stud['id'])
+            student = Student.objects.get(admin=stud['id'])
             attendance_report=AttendanceReport.objects.get(student_id=student,attendance_id=attendance)
             attendance_report.status=stud['status']
             attendance_report.save()
@@ -146,8 +140,8 @@ def save_updateattendance_data(request):
         return HttpResponse("ERROR")
     
 def staff_apply_leave(request):
-    staff_obj = Staffs.objects.get(admin=request.user.id)
-    leave_data = LeaveReportStaff.objects.filter(staff_id=staff_obj)
+    staff_obj = Staff.objects.get(admin=request.user.id)
+    leave_data =  LeaveRequest.objects.filter(staff_id=staff_obj)
     return render(request,'staff_template/staff_apply_leave.html',{"leave_data":leave_data})
 
 def staff_apply_leave_save(request):
@@ -157,9 +151,9 @@ def staff_apply_leave_save(request):
         leave_date = request.POST.get('leave_date')
         leave_msg = request.POST.get('leave_reason')
 
-        staff_obj = Staffs.objects.get(admin=request.user.id)
+        staff_obj = Staff.objects.get(admin=request.user.id)
         try:
-            leave_report = LeaveReportStaff(staff_id=staff_obj,leave_date=leave_date,leave_message=leave_msg,leave_status=0)
+            leave_report = LeaveRequest(staff_id=staff_obj,leave_date=leave_date,leave_message=leave_msg,leave_status=0)
             leave_report.save()
             messages.success(request,"Successfully Applied for Leave")
             return HttpResponseRedirect(reverse("staff_apply_leave"))
@@ -168,8 +162,8 @@ def staff_apply_leave_save(request):
             return HttpResponseRedirect(reverse("staff_apply_leave"))
 
 def staff_feedback(request):
-    staff_obj = Staffs.objects.get(admin=request.user.id)
-    feedback_data = FeedbackStaff.objects.filter(staff_id=staff_obj)
+    staff_obj = Staff.objects.get(admin=request.user.id)
+    feedback_data = Feedback.objects.filter(staff_id=staff_obj)
     return render(request,'staff_template/staff_feedback.html',{"feedback_data":feedback_data})
 
 def staff_feedback_save(request):
@@ -178,9 +172,9 @@ def staff_feedback_save(request):
     else:
         feedback_msg = request.POST.get('feedback_msg')
 
-        staff_obj = Staffs.objects.get(admin=request.user.id)
+        staff_obj = Staff.objects.get(admin=request.user.id)
         try:
-            feedback = FeedbackStaff(staff_id=staff_obj,feedback=feedback_msg,feedback_reply="")
+            feedback = Feedback(staff_id=staff_obj,feedback=feedback_msg,feedback_reply="")
             feedback.save()
             messages.success(request,"Successfully Sent Feedback")
             return HttpResponseRedirect(reverse("staff_feedback"))
@@ -190,7 +184,7 @@ def staff_feedback_save(request):
 
 def staff_profile(request):
     user = CustomUser.objects.get(id=request.user.id)
-    staff = Staffs.objects.get(admin=user)
+    staff = Staff.objects.get(admin=user)
     return render(request,"staff_template/staff_profile.html",{"user":user,"staff":staff})
 
 def staff_profile_save(request):
@@ -209,7 +203,7 @@ def staff_profile_save(request):
                 customuser.set_password(password)
             customuser.save()
 
-            staff=Staffs.objects.get(id=customuser.id)
+            staff=Staff.objects.get(id=customuser.id)
             staff.address = address
             staff.save()
             messages.success(request,"Successfully Updated Profile")
@@ -222,7 +216,7 @@ def staff_profile_save(request):
 def staff_fcmtoken_save(request):
     token = request.POST.get("token")
     try:
-        staff=Staffs.objects.get(admin=request.user.id)
+        staff=Staff.objects.get(admin=request.user.id)
         staff.fcm_token=token
         staff.save()
         return HttpResponse("True")
@@ -230,12 +224,12 @@ def staff_fcmtoken_save(request):
         return HttpResponse("False")
     
 def staff_all_notifications(request):
-    staff=Staffs.objects.get(admin=request.user.id)
-    notifications=NotificationStaff.objects.filter(staff_id=staff.id)
+    staff=Staff.objects.get(admin=request.user.id)
+    notifications=Notification.objects.filter(staff_id=staff.id)
     return render(request,"staff_template/all_notifications.html",{"notifications":notifications})
 
 def staff_add_result(request):
-    subjects=Subjects.objects.filter(staff_id=request.user.id)
+    subjects=Subject.objects.filter(staff_id=request.user.id)
     session_year=SessionYearModel.object.all()
     return render(request,"staff_template/staff_add_result.html",{"subjects":subjects,"session_years":session_year})
 
@@ -247,19 +241,19 @@ def save_student_result(request):
         assignment_marks=request.POST.get("assignment_marks")
         exam_marks=request.POST.get("exam_marks")
         subject_id=request.POST.get("subject")
-        student_obj=Students.objects.get(admin=student_admin_id)
-        subject_obj=Subjects.objects.get(id=subject_id)
+        student_obj=Student.objects.get(admin=student_admin_id)
+        subject_obj=Subject.objects.get(id=subject_id)
         try:
-            check_exist=StudentResult.objects.filter(student_id=student_obj,subject_id=subject_obj).exists()
+            check_exist=SubjectResult.objects.filter(student_id=student_obj,subject_id=subject_obj).exists()
             if check_exist:
-                result=StudentResult.objects.get(student_id=student_obj,subject_id=subject_obj)
+                result=SubjectResult.objects.get(student_id=student_obj,subject_id=subject_obj)
                 result.subject_assignment_marks=assignment_marks 
                 result.subject_exam_marks=exam_marks
                 result.save()
                 messages.success(request,"Successfully Updated Result")
                 return HttpResponseRedirect(reverse("staff_add_result"))
             else:
-                result=StudentResult(student_id=student_obj,subject_id=subject_obj,subject_exam_marks=exam_marks,subject_assignment_marks=assignment_marks)
+                result=SubjectResult(student_id=student_obj,subject_id=subject_obj,subject_exam_marks=exam_marks,subject_assignment_marks=assignment_marks)
                 result.save()
                 messages.success(request,"Successfully Added Result")
                 return HttpResponseRedirect(reverse("staff_add_result"))
@@ -271,12 +265,128 @@ def save_student_result(request):
 def fetch_student_result(request):
     subject_id=request.POST.get('subject_id')
     student_id=request.POST.get('student_id')
-    student_obj=Students.objects.get(admin=student_id)
-    result=StudentResult.objects.filter(student_id=student_obj.id,subject_id=subject_id).exists()
+    student_obj=Student.objects.get(admin=student_id)
+    result=SubjectResult.objects.filter(student_id=student_obj.id,subject_id=subject_id).exists()
     if result:
-        result=StudentResult.objects.get(student_id=student_obj.id,subject_id=subject_id)
+        result=SubjectResult.objects.get(student_id=student_obj.id,subject_id=subject_id)
         result_data={"exam_marks":result.subject_exam_marks,"assignment_marks":result.subject_assignment_marks}
         return HttpResponse(json.dumps(result_data))
     else:
         return HttpResponse("False")
 
+@login_required
+def teacher_dashboard(request):
+    staff = Staff.objects.get(user=request.user)
+    current_year = AcademicYear.objects.get(is_current=True)
+    
+    # Get classes and subjects the teacher teaches
+    assignments = staff.staffsubjectassignment_set.all()
+    
+    context = {
+        'assignments': assignments,
+        'current_year': current_year,
+    }
+    return render(request, 'teacher/teacher_dashboard.html', context)
+
+@login_required
+def upload_results(request, class_id, subject_id):
+    staff = Staff.objects.get(user=request.user)
+    current_year = AcademicYear.objects.get(is_current=True)
+    
+    # Verify the teacher is assigned to teach this subject for this class
+    if not staff.staffsubjectassignment_set.filter(
+        subject_id=subject_id,
+        classes__id=class_id
+    ).exists():
+        return redirect('teacher_dashboard')
+    
+    students = Student.objects.filter(
+        current_class_id=class_id,
+        academic_year=current_year
+    )
+    
+    if request.method == 'POST':
+        form = ResultUploadForm(request.POST)
+        if form.is_valid():
+            term = form.cleaned_data['term']
+            
+            for student in students:
+                exam_score = request.POST.get(f'exam_{student.id}')
+                assignment_score = request.POST.get(f'assignment_{student.id}')
+                
+                if exam_score and assignment_score:
+                    SubjectResult.objects.update_or_create(
+                        student=student,
+                        subject_id=subject_id,
+                        academic_year=current_year,
+                        term=term,
+                        defaults={
+                            'exam_score': exam_score,
+                            'assignment_score': assignment_score,
+                            'created_by': staff
+                        }
+                    )
+            
+            return redirect('teacher_dashboard')
+    else:
+        form = ResultUploadForm()
+    
+    context = {
+        'students': students,
+        'form': form,
+    }
+    return render(request, 'teacher/upload_results.html', context)
+
+@login_required
+def class_teacher_dashboard(request):
+    staff = Staff.objects.get(user=request.user)
+    current_year = AcademicYear.objects.get(is_current=True)
+    
+    # Get classes where this teacher is class teacher
+    classes = Class.objects.filter(class_teacher=staff)
+    
+    context = {
+        'classes': classes,
+        'current_year': current_year,
+    }
+    return render(request, 'teacher/class_teacher_dashboard.html', context)
+
+@login_required
+def view_class_results(request, class_id):
+    staff = Staff.objects.get(user=request.user)
+    current_year = AcademicYear.objects.get(is_current=True)
+    
+    # Verify the teacher is the class teacher for this class
+    if not Class.objects.filter(id=class_id, class_teacher=staff).exists():
+        return redirect('class_teacher_dashboard')
+    
+    students = Student.objects.filter(
+        current_class_id=class_id,
+        academic_year=current_year
+    )
+    
+    # Get all results for this class
+    results = SubjectResult.objects.filter(
+        student__current_class_id=class_id,
+        academic_year=current_year
+    ).select_related('student', 'subject')
+    
+    # Organize results by student and term
+    organized_results = {}
+    for student in students:
+        organized_results[student.id] = {
+            'student': student,
+            'terms': {}
+        }
+    
+    for result in results:
+        if result.term not in organized_results[result.student.id]['terms']:
+            organized_results[result.student.id]['terms'][result.term] = []
+        organized_results[result.student.id]['terms'][result.term].append(result)
+    
+    context = {
+        'class': Class.objects.get(id=class_id),
+        'organized_results': organized_results,
+        'current_year': current_year,
+    }
+    return render(request, 'teacher/view_class_results.html', context)

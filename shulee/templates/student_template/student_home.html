@@ -1,204 +1,360 @@
 {% extends 'student_template/base.html' %}
-{% block page_title %}Home{% endblock page_title %}
+{% block page_title %}Student Dashboard{% endblock page_title %}
 {% load static %}
 {% block main_content %}
 
 <section class="content">
     <div class="container-fluid">
-      <div class="row">
-        <div class="col-lg-3 col-6">
-          <!-- small box -->
-          <div class="small-box bg-info">
-            <div class="inner">
-              <h3>{{ total_attendance }}</h3>
-
-              <p>Total Attendance</p>
+        <!-- Welcome Card -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card card-primary card-outline">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3">
+                                <img src="{{ user.students.profile_pic }}" class="img-circle elevation-2" alt="Student Image" style="width: 80px; height: 80px;">
+                            </div>
+                            <div>
+                                <h3 class="mb-1">Welcome, {{ user.first_name }} {{ user.last_name }}</h3>
+                                <p class="mb-0 text-muted">Class: {{ user.students.class_id.class_name }} | Admission Date: {{ user.students.created_at|date:"F j, Y" }}</p>
+                                <div class="mt-2">
+                                    <span class="badge badge-info">Roll Number: {{ user.students.roll_number }}</span>
+                                    <span class="badge badge-success ml-2">Session: {{ current_session }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="icon">
-              <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="{% url 'student_view_attendance' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-          </div>
         </div>
-        <!-- ./col -->
-        <div class="col-lg-3 col-6">
-          <!-- small box -->
-          <div class="small-box bg-success">
-            <div class="inner">
-              <h3>{{ attendance_present }}</h3>
 
-              <p>Present</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="{% url 'student_view_attendance' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-          </div>
-        </div>
-        <!-- ./col -->
-        <div class="col-lg-3 col-6">
-          <!-- small box -->
-          <div class="small-box bg-warning">
-            <div class="inner">
-              <h3>{{ attendance_absent }}</h3>
-
-              <p>Absent</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="{% url 'student_view_attendance' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
-          </div>
-        </div>
-        <!-- ./col -->
-        <div class="col-lg-3 col-6">
-          <!-- small box -->
-          <div class="small-box bg-danger">
-            <div class="inner">
-              <h3>{{ subjects }}</h3>
-
-              <p>Total Subjects</p>
-            </div>
-            <div class="icon">
-              <i class="ion ion-pie-graph"></i>
-            </div>
-            <a href="#" class="small-box-footer">&nbsp;</a>
-          </div>
-        </div>
-        <!-- ./col -->
-      </div>
-      <!-- ./col --> 
+        <!-- Quick Stats Row -->
         <div class="row">
-          <div class="col-lg-6">
-            <div class="card card-danger">
-              <div class="card-header">
-                <h3 class="card-title">Attendance Chart</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
+            <div class="col-lg-3 col-6">
+              <!-- small box -->
+              <div class="small-box bg-gradient-primary">
+                  <div class="inner">
+                      <h3>{{ total_attendance }}</h3>
+                      <p>Total Attendance</p>
+                  </div>
+                  <div class="icon">
+                      <i class="ion ion-stats-bars"></i>
+                  </div>
+                  <a href="{% url 'student_view_attendance' %}" class="small-box-footer">
+                      More info <i class="fas fa-arrow-circle-right"></i>
+                  </a>
               </div>
-              <div class="card-body">
-                <canvas id="pieChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-              </div>
-              <!-- /.card-body -->
             </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card card-success">
-              <div class="card-header">
-                <h3 class="card-title">Attendance Statistics</h3>
 
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-gradient-success">
+                    <div class="inner">
+                        <h3>{{ attendance_present }}</h3>
+                        <p>Days Present</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <a href="{% url 'student_view_attendance' %}" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
                 </div>
-              </div>
-              <div class="card-body">
-                <div class="chart"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
-                  <canvas id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%; display: block; width: 444px;" width="666" height="375" class="chartjs-render-monitor"></canvas>
-                </div>
-              </div>
-              <!-- /.card-body -->
             </div>
-          </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-gradient-warning">
+                    <div class="inner">
+                        <h3>{{ attendance_absent }}</h3>
+                        <p>Days Absent</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-user-times"></i>
+                    </div>
+                    <a href="{% url 'student_view_attendance' %}" class="small-box-footer">
+                        View Details <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-gradient-danger">
+                    <div class="inner">
+                        <h3>{{ subjects }}</h3>
+                        <p>Subjects Enrolled</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <a href="#" class="small-box-footer">
+                        View Subjects <i class="fas fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
         </div>
-    </div><!-- /.container-fluid -->
-  </section>
-  <!-- /.content -->
-  {% endblock main_content %}
-  {% block custom_js %}
-  <script>
-    $(document).ready(function() {
 
-      var subjects={{ data_name|safe}};
-      var data1={{ data1 }};
-      var data2={{ data2 }};
+        <!-- Charts Row -->
+        <div class="row mt-4">
+            <div class="col-lg-6">
+                <div class="card card-dark">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-2"></i>Attendance Overview
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="pieChart" style="min-height: 300px; height: 300px; max-height: 300px; max-width: 100%;"></canvas>
+                    </div>
+                    <div class="card-footer bg-dark">
+                        <small class="text-white">Your overall attendance performance</small>
+                    </div>
+                </div>
+            </div>
 
-      // Data for pie chart
-        var pieData = {
-          labels: [
-              'ABSENT',
-              'PRESENT',
-              'TOTAL'
-          ],
-          datasets: [
-            {
-              data: [{{ attendance_absent }},{{ attendance_present }},{{ total_attendance }}],
-              backgroundColor : ['#f56954', '#00a65a','#ffc107'],
-            }
-          ]
-        }
+            <div class="col-lg-6">
+                <div class="card card-success">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar mr-2"></i>Subject-wise Attendance
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="barChart" style="min-height: 300px; height: 300px; max-height: 300px; max-width: 100%;"></canvas>
+                    </div>
+                    <div class="card-footer bg-success">
+                        <small class="text-white">Attendance distribution by subject</small>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // Data for Bar cHART
-        var areaChartData = {
-        labels  : subjects,
+        <!-- Quick Links and Notices Row -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title text-white">
+                            <i class="fas fa-bolt mr-2"></i>Quick Actions
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="{% url 'student_view_result' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-poll mr-2 text-info"></i> View Exam Results
+                            </a>
+                            <a href="{% url 'student_apply_leave' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-signature mr-2 text-warning"></i> Apply for Leave
+                            </a>
+                            <a href="{% url 'student_feedback' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-comment-alt mr-2 text-success"></i> Send Feedback
+                            </a>
+                            <a href="{% url 'student_profile' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-user-edit mr-2 text-primary"></i> Update Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info">
+                        <h3 class="card-title text-white">
+                            <i class="fas fa-bullhorn mr-2"></i>School Notices
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for notice in notices %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <h6 class="mb-1">{{ notice.title }}</h6>
+                                    <small class="text-muted">{{ notice.created_at|date:"M d" }}</small>
+                                </div>
+                                <p class="mb-1 text-muted">{{ notice.message|truncatewords:15 }}</p>
+                            </div>
+                            {% empty %}
+                            <div class="list-group-item text-center text-muted py-4">
+                                No notices available
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="#" class="text-info">View All Notices</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card card-outline card-indigo">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="far fa-calendar-alt mr-2"></i>Upcoming Events
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="bg-indigo">
+                                    <tr>
+                                        <th style="width: 20%">Date</th>
+                                        <th style="width: 30%">Event</th>
+                                        <th style="width: 50%">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in events %}
+                                    <tr>
+                                        <td>{{ event.event_date|date:"F j, Y" }}</td>
+                                        <td>{{ event.title }}</td>
+                                        <td>{{ event.description|truncatewords:20 }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-3">No upcoming events</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock main_content %}
+
+{% block custom_js %}
+<script>
+$(document).ready(function() {
+    var subjects = {{ data_name|safe }};
+    var data1 = {{ data1 }};
+    var data2 = {{ data2 }};
+
+    // Pie Chart Data
+    // In your dashboard.js
+    var pieData = {
+        labels: ['ABSENT', 'PRESENT', 'TOTAL'],
+        datasets: [{
+            data: [{{ attendance_absent }}, {{ attendance_present }}, {{ total_attendance }}],
+            backgroundColor: ['#f56954', '#00a65a', '#800000'], // Maroon as primary
+        }]
+    };
+
+    // Bar Chart Data
+    var barChartData = {
+        labels: subjects,
         datasets: [
-          {
-            label               : 'Present in Class',
-            backgroundColor     : 'rgba(60,141,188,0.9)',
-            borderColor         : 'rgba(60,141,188,0.8)',
-            pointRadius          : false,
-            pointColor          : '#3b8bba',
-            pointStrokeColor    : 'rgba(60,141,188,1)',
-            pointHighlightFill  : '#fff',
-            pointHighlightStroke: 'rgba(60,141,188,1)',
-            data                : data1
-          },
-          {
-            label               : 'Absent in Class',
-            backgroundColor     : 'rgba(210,214,222,1)',
-            borderColor         : 'rgba(210,214,222,1)',
-            pointRadius          : false,
-            pointColor          : 'rgba(210,214,222,1)',
-            pointStrokeColor    : 'c1c7d1',
-            pointHighlightFill  : '#fff',
-            pointHighlightStroke: 'rgba(220,220,220,1)',
-            data                : data2
-          }
+            {
+                label: 'Present',
+                backgroundColor: 'rgba(0, 166, 90, 0.7)',
+                borderColor: 'rgba(0, 166, 90, 1)',
+                borderWidth: 1,
+                data: data1
+            },
+            {
+                label: 'Absent',
+                backgroundColor: 'rgba(245, 105, 84, 0.7)',
+                borderColor: 'rgba(245, 105, 84, 1)',
+                borderWidth: 1,
+                data: data2
+            }
         ]
-      }
+    };
 
-        var pieChartCanvas = $('#pieChart').get(0).getContext('2d')
-        var pieOptions     = {
-          maintainAspectRatio : false,
-          responsive : true,
+    // Pie Chart Options
+    var pieOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        var label = context.label || '';
+                        var value = context.raw || 0;
+                        var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        var percentage = Math.round((value / total) * 100);
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
+            }
         }
-        //Create pie or douhnut chart
-        // You can switch between pie and douhnut using the method below.
-        new Chart(pieChartCanvas, {
-          type: 'pie',
-          data: pieData,
-          options: pieOptions
-        });
-        //- BAR CHART -
-        //-------------
-        var barChartCanvas = $('#barChart').get(0).getContext('2d')
-        var barChartData = $.extend(true, {}, areaChartData)
-        var temp1 = areaChartData.datasets[0]
-        barChartData.datasets[0] = temp1
-    
-        var barChartOptions = {
-          responsive              : true,
-          maintainAspectRatio     : false,
-          datasetFill             : false
+    };
+
+    // Bar Chart Options
+    var barChartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                stacked: false,
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                stacked: false,
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: {
+                        size: 12
+                    }
+                }
+            }
         }
-    
-        new Chart(barChartCanvas, {
-          type: 'bar',
-          data: barChartData,
-          options: barChartOptions
-        })
-  })
-  </script>
-  
-  {% endblock custom_js %}
+    };
+
+    // Initialize Pie Chart
+    var pieChartCanvas = $('#pieChart').get(0).getContext('2d');
+    new Chart(pieChartCanvas, {
+        type: 'pie',
+        data: pieData,
+        options: pieOptions
+    });
+
+    // Initialize Bar Chart
+    var barChartCanvas = $('#barChart').get(0).getContext('2d');
+    new Chart(barChartCanvas, {
+        type: 'bar',
+        data: barChartData,
+        options: barChartOptions
+    });
+
+    // Add animation to cards on page load
+    $('.card').each(function(i) {
+        $(this).delay(i * 200).animate({ opacity: 1 }, 400);
+    });
+});
+</script>
+{% endblock custom_js %}

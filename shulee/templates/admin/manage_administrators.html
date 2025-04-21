@@ -1,0 +1,65 @@
+{% extends 'admin/base.html' %}
+{% block title %}Manage Administrators{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>Administrators</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{% url 'add_administrator' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i> Add Administrator
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admin in admins %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if admin.profile_pic %}
+                                    <img src="{{ admin.profile_pic.url }}" class="rounded-circle me-2" width="40" height="40">
+                                    {% else %}
+                                    <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 40px; height: 40px;">
+                                        {{ admin.get_initials }}
+                                    </div>
+                                    {% endif %}
+                                    {{ admin.get_full_name }}
+                                </div>
+                            </td>
+                            <td>{{ admin.email }}</td>
+                            <td>{{ admin.phone|default:"-" }}</td>
+                            <td>{{ admin.last_login|date:"M d, Y H:i"|default:"Never" }}</td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No administrators found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

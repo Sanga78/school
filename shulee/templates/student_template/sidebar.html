@@ -1,77 +1,103 @@
-{%load static%}
+{% load static %}
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="" class="brand-link">
-      <img src="{% static 'dist/img/AdminLTELogo.png' %}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-      <span class="brand-text font-weight-light">AdminLTE 3</span>
+    <a href="{% url 'student_home' %}" class="brand-link text-center py-3" style="border-bottom: none;">
+        <img src="{% static 'dist/img/school-logo.png' %}" alt="School Logo" class="brand-image img-circle elevation-3" style="opacity: .8; width: 40px; height: 40px;">
+        <span class="brand-text font-weight-light d-block mt-1" style="font-size: 1.1rem;">AIC Laboret Girls</span>
+        <small class="d-block" style="font-size: 0.75rem; opacity: 0.8;">Student Portal</small>
     </a>
 
     <!-- Sidebar -->
     <div class="sidebar">
-      <!-- Sidebar user panel (optional) -->
-      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-          <img src="{{ user.students.profile_pic }}" class="img-circle elevation-2" alt="{{ user.username }}">
+        <!-- Sidebar user panel -->
+        <div class="user-panel mt-3 d-flex align-items-center">
+            <div class="image">
+                <img src="{{ user.students.profile_pic }}" class="img-circle elevation-2" alt="{{ user.username }}" onerror="this.src='{% static 'dist/img/avatar.png' %}'">
+            </div>
+            <div class="info">
+                <a href="{% url 'student_profile' %}" class="d-block">{{ user.first_name }} {{ user.last_name }}</a>
+                <small class="text-muted">{{ user.students.class_id.class_name }}</small>
+                <span class="badge badge-warning badge-pill mt-1">
+                    <i class="fas fa-wallet mr-1"></i>
+                    Ksh {{ fee_balance|default:"0" }}
+                </span>
+            </div>
         </div>
-        <div class="info">
-          <a href="{% url 'student_profile' %}" class="d-block">{{ user.username }}</a>
-        </div>
-      </div>
-      
-      <!-- Sidebar Menu -->
-      <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-          <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
-          
-          <li class="nav-item">
-            {% url 'student_home' as student_home %}
-            <a href="{{ 'student_home' }}" class="nav-link {% if request.path == student_home %} active {% endif %}">
-              <i class="nav-icon fas fa-th"></i>
-              <p>
-                Home
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            {% url 'student_view_attendance' as student_view_attendance %}
-            <a href="{{ 'student_view_attendance' }}" class="nav-link {% if request.path == student_view_attendance %} active {% endif %}">
-              <i class="nav-icon fas fa-th"></i>
-              <p>
-                Attendance
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            {% url 'student_apply_leave' as student_apply_leave %}
-            <a href="{{ 'student_apply_leave' }}" class="nav-link {% if request.path == student_apply_leave %} active {% endif %}">
-              <i class="nav-icon fas fa-th"></i>
-              <p>
-                Apply for Leave 
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            {% url 'student_feedback' as student_feedback %}
-            <a href="{{ 'student_feedback' }}" class="nav-link {% if request.path == student_feedback %} active {% endif %}">
-              <i class="nav-icon fas fa-th"></i>
-              <p>
-                Feedback Message
-              </p>
-            </a>
-          </li>
-          <li class="nav-item">
-            {% url 'student_view_result' as student_view_result %}
-            <a href="{{ 'student_view_result' }}" class="nav-link {% if request.path == student_view_result %} active {% endif %}">
-              <i class="nav-icon fas fa-th"></i>
-              <p>
-                Results
-              </p>
-            </a>
-          </li
-        </ul>
-      </nav>
-      <!-- /.sidebar-menu -->
+
+        <!-- Sidebar Menu -->
+        <nav class="mt-3">
+            <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent" data-widget="treeview" role="menu" data-accordion="false">
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a href="{% url 'student_home' %}" class="nav-link {% if request.path == '/student_home' %} active {% endif %}">
+                        <i class="nav-icon fas fa-tachometer-alt"></i>
+                        <p>Dashboard</p>
+                    </a>
+                </li>
+
+                <!-- Academics -->
+                <li class="nav-header mt-2"><i class="fas fa-graduation-cap mr-1"></i> ACADEMICS</li>
+                <li class="nav-item">
+                    <a href="{% url 'student_view_result' %}" class="nav-link {% if request.path == '/student_view_result' %} active {% endif %}">
+                        <i class="nav-icon fas fa-poll"></i>
+                        <p>Exam Results</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-book"></i>
+                        <p>Subjects</p>
+                    </a>
+                </li>
+
+                <!-- Finance -->
+                <li class="nav-header mt-2"><i class="fas fa-money-bill-wave mr-1"></i> FINANCE</li>
+                <li class="nav-item">
+                    <a href="{% url 'student_fee_statement' %}" class="nav-link {% if request.path == '/student_fee_statement' %} active {% endif %}">
+                        <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                        <p>Fee Statement</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'student_fee_payments' %}" class="nav-link {% if request.path == '/student_fee_payments' %} active {% endif %}">
+                        <i class="nav-icon fas fa-receipt"></i>
+                        <p>Payment History</p>
+                    </a>
+                </li>
+
+                <!-- Attendance -->
+                <li class="nav-header mt-2"><i class="fas fa-calendar-check mr-1"></i> ATTENDANCE</li>
+                <li class="nav-item">
+                    <a href="{% url 'student_view_attendance' %}" class="nav-link {% if request.path == '/student_view_attendance' %} active {% endif %}">
+                        <i class="nav-icon fas fa-calendar-check"></i>
+                        <p>View Attendance</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'student_apply_leave' %}" class="nav-link {% if request.path == '/student_apply_leave' %} active {% endif %}">
+                        <i class="nav-icon fas fa-file-signature"></i>
+                        <p>Apply for Leave</p>
+                    </a>
+                </li>
+
+                <!-- Communication -->
+                <li class="nav-header mt-2"><i class="fas fa-comments mr-1"></i> COMMUNICATION</li>
+                <li class="nav-item">
+                    <a href="{% url 'student_feedback' %}" class="nav-link {% if request.path == '/student_feedback' %} active {% endif %}">
+                        <i class="nav-icon fas fa-comment-alt"></i>
+                        <p>Send Feedback</p>
+                    </a>
+                </li>
+
+                <!-- Personal -->
+                <li class="nav-header mt-2"><i class="fas fa-user-circle mr-1"></i> PERSONAL</li>
+                <li class="nav-item">
+                    <a href="{% url 'student_profile' %}" class="nav-link {% if request.path == '/student_profile' %} active {% endif %}">
+                        <i class="nav-icon fas fa-user-edit"></i>
+                        <p>My Profile</p>
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
-    <!-- /.sidebar -->
-  </aside>
+</aside>

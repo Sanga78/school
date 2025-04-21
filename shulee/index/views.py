@@ -4,8 +4,9 @@ from django.contrib.auth import login,logout
 from index.EmailBackEnd import EmailBackEnd
 from django.contrib import  messages
 from django.core.files.storage import FileSystemStorage
-
-from index.models import Courses, CustomUser, SessionYearModel
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import Student, FeeStructure, FeePayment, Expense,CustomUser, SessionYearModel
+from .forms import FeePaymentForm, ExpenseForm
 # Create your views here.
 def index(request):
     return render(request,'dashboard.html')
@@ -31,12 +32,14 @@ def Login(request):
         user = EmailBackEnd.authenticate(request,username=request.POST.get("email"),password=request.POST.get("password"))
         if user != None:
             login(request,user)
-            if user.user_type == "1":
-                return HttpResponseRedirect(reverse("admin_home"))
-            elif user.user_type == "2":
-                return HttpResponseRedirect(reverse("staff_home"))
-            else:
-                return HttpResponseRedirect(reverse("student_home"))
+            if user.user_type == 1:
+                    return redirect(reverse("admin_home"))
+            elif user.user_type == 2:
+                return redirect(reverse("staff_home"))
+            elif user.user_type == 3:
+                return redirect(reverse("student_home"))
+            elif user.user_type == 4:
+                return redirect(reverse("bursar_home"))
         else:
             messages.error(request,"Invalid Login Details")
             return HttpResponseRedirect("/")
@@ -95,9 +98,8 @@ def staff_signup(request):
             return HttpResponseRedirect(reverse("signup_staff"))
 
 def signup_student(request):
-    courses = Courses.objects.all()
     session_year = SessionYearModel.object.all()
-    return render(request,"signup_student.html",{"courses":courses,"session_year":session_year})
+    return render(request,"signup_student.html",{"session_year":session_year})
 
 def student_signup(request):
     if request.method!="POST":
@@ -122,8 +124,6 @@ def student_signup(request):
         try:
             user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
             user.students.address = address
-            course_obj = Courses.objects.get(id=course_id)
-            user.students.course_id = course_obj
             session_year =SessionYearModel.object.get(id=session_year_id)
             user.students.session_year_id = session_year
             user.students.gender = sex
@@ -134,3 +134,90 @@ def student_signup(request):
         except:
             messages.error(request,"Failed to Add student")
             return HttpResponseRedirect(reverse("signup_student"))
+
+def bursar_check(user):
+    return user.is_authenticated and hasattr(user, 'staff_profile') and user.staff_profile.is_bursar
+
+@login_required
+@user_passes_test(bursar_check)
+def bursar_dashboard(request):
+    return render(request, 'bursar/dashboard.html')
+
+@login_required
+@user_passes_test(bursar_check)
+def fee_records(request):
+    students = Student.objects.select_related('current_class').all()
+    fee_structures = FeeStructure.objects.filter(is_active=True)
+    
+    context = {
+        'students': students,
+        'fee_structures': fee_structures,
+    }
+    return render(request, 'bursar/fee_records.html', context)
+
+@login_required
+@user_passes_test(bursar_check)
+def record_payment(request, student_id):
+    student = Student.objects.get(id=student_id)
+    
+    if request.method == 'POST':
+        form = FeePaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.student = student
+            payment.received_by = request.user.staff_profile
+            payment.save()
+            messages.success(request, 'Payment recorded successfully!')
+            return redirect('fee_records')
+    else:
+        form = FeePaymentForm()
+    
+    payments = FeePayment.objects.filter(student=student).order_by('-payment_date')
+    balance = sum(p.amount for p in payments)
+    
+    context = {
+        'student': student,
+        'form': form,
+        'payments': payments,
+        'balance': balance,
+    }
+    return render(request, 'bursar/record_payment.html', context)
+
+@login_required
+@user_passes_test(bursar_check)
+def expense_management(request):
+    if request.method == 'POST':
+        form = ExpenseForm(request.POST)
+        if form.is_valid():
+            expense = form.save(commit=False)
+            expense.bursar = request.user.staff_profile
+            expense.save()
+            messages.success(request, 'Expense recorded successfully!')
+            return redirect('expense_management')
+    else:
+        form = ExpenseForm()
+    
+    expenses = Expense.objects.all().order_by('-date')
+    
+    context = {
+        'form': form,
+        'expenses': expenses,
+    }
+    return render(request, 'bursar/expense_management.html', context)
+
+@login_required
+@user_passes_test(bursar_check)
+def payment_reports(request):
+    # Get all payments grouped by class
+    payments = FeePayment.objects.select_related('student__current_class').all()
+    
+    # Calculate totals
+    total_paid = sum(p.amount for p in payments)
+    total_students = Student.objects.count()
+    
+    context = {
+        'payments': payments,
+        'total_paid': total_paid,
+        'total_students': total_students,
+    }
+    return render(request, 'bursar/payment_reports.html', context)

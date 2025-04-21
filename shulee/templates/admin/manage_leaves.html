@@ -1,0 +1,76 @@
+{% extends 'admin/base.html' %}
+{% block title %}Manage Leave Requests{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Leave Requests</h2>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Filter Leaves</h6>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if status_filter == '0' %}Pending
+                    {% elif status_filter == '1' %}Approved
+                    {% elif status_filter == '2' %}Rejected
+                    {% else %}All Statuses{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="?">All Statuses</a></li>
+                    <li><a class="dropdown-item" href="?status=0">Pending</a></li>
+                    <li><a class="dropdown-item" href="?status=1">Approved</a></li>
+                    <li><a class="dropdown-item" href="?status=2">Rejected</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Leave Type</th>
+                            <th>Date Range</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leaves %}
+                        <tr>
+                            <td>{{ leave.applicant.get_full_name }}</td>
+                            <td>{{ leave.leave_type }}</td>
+                            <td>{{ leave.start_date }} to {{ leave.end_date }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if leave.status == 0 %}bg-warning
+                                    {% elif leave.status == 1 %}bg-success
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ leave.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'respond_leave' leave.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Respond
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No leave requests found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

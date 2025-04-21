@@ -1,0 +1,82 @@
+{% extends 'admin/base.html' %}
+{% block title %}Generate Reports{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Generate Reports</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Student Reports</h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Generate comprehensive student lists and information.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'generate_student_report' 'pdf' %}" class="btn btn-danger">
+                            <i class="fas fa-file-pdf me-2"></i> PDF Report
+                        </a>
+                        <a href="{% url 'generate_student_report' 'csv' %}" class="btn btn-success">
+                            <i class="fas fa-file-csv me-2"></i> CSV Export
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Attendance Reports</h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Generate attendance reports by date range and class.</p>
+                    <a href="{% url 'generate_attendance_report' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-check me-2"></i> Configure Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Financial Reports</h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Generate financial statements and transaction reports.</p>
+                    <a href="{% url 'generate_finance_report' %}" class="btn btn-primary">
+                        <i class="fas fa-money-bill-wave me-2"></i> Configure Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mt-4">
+        <div class="card-header bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Quick Stats</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">{{ student_count }}</h4>
+                        <p class="mb-0">Total Students</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading">{{ staff_count }}</h4>
+                        <p class="mb-0">Total Staff</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'student_template/base.html' %}
+{% block page_title %}Record Fee Payment{% endblock %}
+{% block main_content %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">Record Fee Payment</h3>
+                    </div>
+                    <form method="POST" action="{% url 'make_fee_payment' %}">
+                        {% csrf_token %}
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Current Balance</label>
+                                        <input type="text" class="form-control" 
+                                            value="Ksh {{ fee_balance }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ form.amount.label_tag }}
+                                    {{ form.amount }}
+                                    {{ form.amount.errors }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.payment_date.label_tag }}
+                                    {{ form.payment_date }}
+                                    {{ form.payment_date.errors }}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    {{ form.payment_method.label_tag }}
+                                    {{ form.payment_method }}
+                                    {{ form.payment_method.errors }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.transaction_reference.label_tag }}
+                                    {{ form.transaction_reference }}
+                                    {{ form.transaction_reference.errors }}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    {{ form.remarks.label_tag }}
+                                    {{ form.remarks }}
+                                    {{ form.remarks.errors }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Submit Payment</button>
+                            <a href="{% url 'student_fee_payments' %}" class="btn btn-default">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

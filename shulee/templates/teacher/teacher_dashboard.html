@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Teacher Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Teacher Dashboard</h2>
+            <p class="lead">Welcome, {{ request.user.get_full_name }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">My Subjects and Classes</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Classes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignments %}
+                                <tr>
+                                    <td>{{ assignment.subject.name }}</td>
+                                    <td>
+                                        {% for class in assignment.classes.all %}
+                                        <span class="badge badge-primary">{{ class.name }}</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        {% for class in assignment.classes.all %}
+                                        <a href="{% url 'upload_results' class.id assignment.subject.id %}" 
+                                           class="btn btn-sm btn-success mb-1">
+                                            Upload Results ({{ class.name }})
+                                        </a>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

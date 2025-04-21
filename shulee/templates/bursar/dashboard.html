@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Bursar Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Bursar Dashboard</h2>
+    
+    <div class="row">
+        <!-- Fee Summary Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Fee Collection</h5>
+                </div>
+                <div class="card-body">
+                    <h1 class="display-4">Ksh {{ total_paid|default:"0" }}</h1>
+                    <p class="card-text">Total fees collected this term</p>
+                    <a href="{% url 'fee_records' %}" class="btn btn-primary">View Records</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Summary Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Expenses</h5>
+                </div>
+                <div class="card-body">
+                    <h1 class="display-4">Ksh {{ total_expenses|default:"0" }}</h1>
+                    <p class="card-text">Total expenses this term</p>
+                    <a href="{% url 'expense_management' %}" class="btn btn-success">Manage Expenses</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Summary Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Account Balance</h5>
+                </div>
+                <div class="card-body">
+                    <h1 class="display-4">Ksh {{ balance|default:"0" }}</h1>
+                    <p class="card-text">Current school balance</p>
+                    <a href="{% url 'payment_reports' %}" class="btn btn-info">View Reports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Transactions</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in recent_payments %}
+                        <tr>
+                            <td>{{ payment.payment_date|date:"d M Y" }}</td>
+                            <td><span class="badge bg-success">Payment</span></td>
+                            <td>{{ payment.student.user.get_full_name }}</td>
+                            <td class="text-success">+Ksh {{ payment.amount }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% for expense in recent_expenses %}
+                        <tr>
+                            <td>{{ expense.date|date:"d M Y" }}</td>
+                            <td><span class="badge bg-danger">Expense</span></td>
+                            <td>{{ expense.description|truncatechars:30 }}</td>
+                            <td class="text-danger">-Ksh {{ expense.amount }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
