@@ -189,56 +189,64 @@
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
-                       href="{% url 'admin_dashboard' %}">
+                    href="{% url 'admin_dashboard' %}">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if 'teacher' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'manage_teachers' %}">
+                    href="{% url 'manage_teachers' %}">
                         <i class="fas fa-chalkboard-teacher"></i>
                         <span>Teachers</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if 'student' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'manage_students' %}">
+                    href="{% url 'manage_students' %}">
                         <i class="fas fa-user-graduate"></i>
                         <span>Students</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if 'class' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'manage_classes' %}">
+                    href="{% url 'manage_classes' %}">
                         <i class="fas fa-door-open"></i>
                         <span>Classes</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if 'subject' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'manage_subject' %}">
+                    href="{% url 'manage_subject' %}">
                         <i class="fas fa-book"></i>
                         <span>Subjects</span>
                     </a>
                 </li>
+                <!-- Add Academic Years menu item here -->
+                <li class="nav-item">
+                    <a class="nav-link {% if 'academic_year' in request.resolver_match.url_name %}active{% endif %}" 
+                    href="{% url 'manage_academic_years' %}">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Academic Years</span>
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'manage_attendance' %}">
+                    href="{% url 'manage_attendance' %}">
                         <i class="fas fa-calendar-check"></i>
                         <span>Attendance</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if 'finance' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'manage_finance' %}">
+                    href="{% url 'manage_finance' %}">
                         <i class="fas fa-money-bill-wave"></i>
                         <span>Finance</span>
                     </a>
                 </li>
                 <li class="nav-item mt-3">
                     <a class="nav-link {% if 'settings' in request.resolver_match.url_name %}active{% endif %}" 
-                       href="{% url 'settings' %}">
+                    href="{% url 'settings' %}">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
                     </a>
@@ -246,7 +254,6 @@
             </ul>
         </div>
     </div>
-
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
         {% include 'includes/messages.html' %}

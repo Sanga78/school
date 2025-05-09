@@ -124,6 +124,8 @@ urlpatterns = [
     # Bursar Management
     path('bursars/', HodViews.manage_bursars, name='manage_bursars'),
     path('bursars/add/', HodViews.add_bursar, name='add_bursar'),
+    path('bursars/edit/<int:bursar_id>/', HodViews.edit_bursar, name='edit_bursar'),
+    path('bursars/deactivate/<int:bursar_id>/', HodViews.deactivate_bursar, name='deactivate_bursar'),
     
     # System Maintenance
     path('backup/', HodViews.backup_database, name='backup_database'),
@@ -136,6 +138,12 @@ urlpatterns = [
     path('notifications/send/',HodViews.send_notification, name='send_notification'),
     path('notifications/history/', HodViews.notification_history, name='notification_history'),
     
+    # Academic Years
+    path('academic-years/', HodViews.manage_academic_years, name='manage_academic_years'),
+    path('academic-years/add/', HodViews.add_academic_year, name='add_academic_year'),
+    path('academic-years/edit/<int:year_id>/', HodViews.edit_academic_year, name='edit_academic_year'),
+    path('academic-years/delete/<int:year_id>/', HodViews.delete_academic_year, name='delete_academic_year'),
+    path('set-current-academic-year/', HodViews.set_current_academic_year, name='set_current_academic_year'),
     # Report URLs
     path('reports/', HodViews.generate_reports, name='generate_reports'),
     path('reports/students/<str:report_type>/', HodViews.generate_student_report, name='generate_student_report'),

@@ -1,0 +1,40 @@
+{% extends 'admin/base.html' %}
+{% block title %}Confirm Deactivation{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Confirm Deactivation</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'manage_bursars' %}">Bursars</a></li>
+                    <li class="breadcrumb-item active">Deactivate</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Confirm Deactivation</h4>
+        </div>
+        <div class="card-body">
+            <p>Are you sure you want to deactivate <strong>{{ bursar.user.get_full_name }}</strong>?</p>
+            <p>This will prevent them from accessing the system.</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'manage_bursars' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-user-slash me-2"></i> Confirm Deactivation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -15,7 +15,7 @@
                     <h6 class="m-0">Academic Year Settings</h6>
                 </div>
                 <div class="card-body">
-                    <form method="post" action="">
+                    <form method="post" action="{% url 'set_current_academic_year' %}">
                         {% csrf_token %}
                         <div class="form-group mb-3">
                             <label class="form-label">Current Academic Year</label>

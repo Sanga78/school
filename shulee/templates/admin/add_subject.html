@@ -1,0 +1,43 @@
+{% extends 'admin/base.html' %}
+{% block title %}{% if form.instance.id %}Edit{% else %}Add{% endif %} Subject{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>{% if form.instance.id %}Edit{% else %}Add{% endif %} Subject</h2>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Subject Name</label>
+                            {{ form.name }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Subject Code</label>
+                            {{ form.code }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'manage_subject' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

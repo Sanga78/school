@@ -63,6 +63,7 @@ def manage_teachers(request):
 @login_required
 @user_passes_test(admin_check)
 def add_teacher(request):
+    subjects = Subject.objects.all()
     if request.method == 'POST':
         form = StaffForm(request.POST)
         if form.is_valid():
@@ -74,6 +75,7 @@ def add_teacher(request):
     
     context = {
         'form': form,
+        'subjects':subjects,
     }
     return render(request, 'admin/add_teacher.html', context)
 
@@ -1078,7 +1080,7 @@ def add_subject(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Subject added successfully!')
-            return redirect('manage_subjects')
+            return redirect('manage_subject')
     else:
         form = AddSubjectForm()
     
@@ -1284,3 +1286,175 @@ def generate_finance_report(request):
         return response
     
     return render(request, 'admin/finance_report_form.html')
+
+@login_required
+@user_passes_test(is_admin)
+def manage_academic_years(request):
+    academic_years = AcademicYear.objects.all().order_by('-start_date')
+    context = {
+        'academic_years': academic_years
+    }
+    return render(request, 'admin/manage_academic_years.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def add_academic_year(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        
+        try:
+            AcademicYear.objects.create(
+                name=name,
+                start_date=start_date,
+                end_date=end_date
+            )
+            messages.success(request, 'Academic year added successfully!')
+            return redirect('manage_academic_years')
+        except Exception as e:
+            messages.error(request, f'Error adding academic year: {str(e)}')
+    
+    return render(request, 'admin/add_edit_academic_year.html')
+
+@login_required
+@user_passes_test(is_admin)
+def edit_academic_year(request, year_id):
+    academic_year = get_object_or_404(AcademicYear, id=year_id)
+    
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        is_current = request.POST.get('is_current') == 'on'
+        
+        try:
+            academic_year.name = name
+            academic_year.start_date = start_date
+            academic_year.end_date = end_date
+            
+            # If setting as current, update all others to not current
+            if is_current:
+                AcademicYear.objects.exclude(id=year_id).update(is_current=False)
+                academic_year.is_current = True
+            
+            academic_year.save()
+            messages.success(request, 'Academic year updated successfully!')
+            return redirect('manage_academic_years')
+        except Exception as e:
+            messages.error(request, f'Error updating academic year: {str(e)}')
+    
+    context = {
+        'academic_year': academic_year
+    }
+    return render(request, 'admin/add_edit_academic_year.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def delete_academic_year(request, year_id):
+    academic_year = get_object_or_404(AcademicYear, id=year_id)
+    
+    if request.method == 'POST':
+        try:
+            academic_year.delete()
+            messages.success(request, 'Academic year deleted successfully!')
+        except Exception as e:
+            messages.error(request, f'Error deleting academic year: {str(e)}')
+        
+        return redirect('manage_academic_years')
+    
+    context = {
+        'academic_year': academic_year
+    }
+    return render(request, 'admin/confirm_delete.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def edit_bursar(request, bursar_id):
+    bursar = get_object_or_404(Bursar, id=bursar_id)
+    user = bursar.user
+    
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        gender = request.POST.get('gender')
+        qualification = request.POST.get('qualification')
+        date_of_joining = request.POST.get('date_of_joining')
+        is_active = request.POST.get('is_active') == 'on'
+        
+        try:
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.phone = phone
+            user.is_active = is_active
+            user.save()
+            
+            bursar.gender = gender
+            bursar.qualification = qualification
+            bursar.date_of_joining = date_of_joining
+            bursar.save()
+            
+            messages.success(request, 'Bursar updated successfully!')
+            return redirect('manage_bursars')
+        except Exception as e:
+            messages.error(request, f'Error updating bursar: {str(e)}')
+    
+    context = {
+        'bursar': bursar,
+        'user': user
+    }
+    return render(request, 'admin/edit_bursar.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def deactivate_bursar(request, bursar_id):
+    bursar = get_object_or_404(Bursar, id=bursar_id)
+    
+    if request.method == 'POST':
+        try:
+            user = bursar.user
+            user.is_active = False
+            user.save()
+            messages.success(request, 'Bursar deactivated successfully!')
+        except Exception as e:
+            messages.error(request, f'Error deactivating bursar: {str(e)}')
+        
+        return redirect('manage_bursars')
+    
+    context = {
+        'bursar': bursar
+    }
+    return render(request, 'admin/confirm_deactivate.html', context)
+@login_required
+@user_passes_test(is_admin)
+def set_current_academic_year(request):
+    if request.method == 'POST':
+        year_id = request.POST.get('academic_year')
+        
+        try:
+            # First set all years to inactive
+            AcademicYear.objects.update(is_current=False)
+            
+            # Then set the selected year as current
+            selected_year = AcademicYear.objects.get(id=year_id)
+            selected_year.is_current = True
+            selected_year.save()
+            
+            # Log this action
+            SystemLog.create_log(
+                action='CONFIG',
+                details=f'Changed current academic year to {selected_year.name}',
+                user=request.user,
+                affected_model='AcademicYear',
+                object_id=selected_year.id
+            )
+            
+            messages.success(request, f'{selected_year.name} set as current academic year!')
+        except Exception as e:
+            messages.error(request, f'Error setting academic year: {str(e)}')
+        
+        return redirect('settings')
+    return redirect('settings')

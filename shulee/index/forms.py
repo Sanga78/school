@@ -1,7 +1,7 @@
 from typing import Any
 from django import forms
 from django.forms import ChoiceField
-from .models import AcademicYear, CustomUser, Expense, FeePayment, LeaveRequest, Notification,SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,Class
+from .models import AcademicYear, Bursar, CustomUser, Expense, FeePayment, LeaveRequest, Notification,SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,Class
 from django.apps import apps
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth import get_user_model
@@ -13,30 +13,6 @@ class ChoiceNoValidation(ChoiceField):
     
 class DateInput(forms.DateInput):
     input_type = "date"
-
-class AddStudentForm(forms.Form):
-    email = forms.EmailField(label="Email",max_length=50,widget=forms.EmailInput(attrs={"class":"form-control","autocomplete":"off"}))
-    password = forms.CharField(label="Password",max_length=50,widget=forms.PasswordInput(attrs={"class":"form-control"}))
-    first_name = forms.CharField(label="First Name",max_length=50,widget=forms.TextInput(attrs={"class":"form-control"}))
-    last_name = forms.CharField(label="Last Name",max_length=50,widget=forms.TextInput(attrs={"class":"form-control"}))
-    username = forms.CharField(label="Username",max_length=50,widget=forms.TextInput(attrs={"class":"form-control","autocomplete":"off"}))
-    address = forms.CharField(label="Address",max_length=50,widget=forms.TextInput(attrs={"class":"form-control"}))
-
-    
-    gender_choices=(
-        ("Male","Male"),
-        ("Female","Female")
-    )
-
-    sex = forms.ChoiceField(label="Sex",choices=gender_choices,widget=forms.Select(attrs={"class":"form-control"}))
-    session_year_id = forms.ChoiceField(label="Session Year", widget=forms.Select(attrs={"class": "form-control"}))
-    profile_pic = forms.FileField(label="Profile Picture",max_length=50,widget=forms.FileInput(attrs={"class":"form-control"})) 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        SessionYearModel = apps.get_model('index', 'SessionYearModel')
-        session_list = [(session.id, str(session.session_start_year) + " TO " + str(session.session_end_year)) for session in SessionYearModel.object.all()]
-
-        self.fields['session_year_id'].choices = session_list
 
 class EditStudentForm(forms.Form):
     email = forms.EmailField(label="Email",max_length=50,widget=forms.EmailInput(attrs={"class":"form-control"}))
@@ -111,22 +87,8 @@ class ResultUploadForm(forms.Form):
     
     term = forms.ChoiceField(choices=TERM_CHOICES)
 
-class StaffForm(forms.ModelForm):
-    class Meta:
-        model = Staff
-        fields = ['user']
-        widgets = {
-            'user': forms.Select(attrs={'class': 'form-control'}),
-        }
 
-class StaffSubjectAssignmentForm(forms.ModelForm):
-    class Meta:
-        model = StaffSubjectAssignment
-        fields = ['subject', 'classes']
-        widgets = {
-            'subject': forms.Select(attrs={'class': 'form-control'}),
-            'classes': forms.SelectMultiple(attrs={'class': 'form-control'}),
-        }
+
 
 class ClassTeacherAssignmentForm(forms.ModelForm):
     class Meta:
@@ -173,24 +135,19 @@ class ClassForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
+        super().__init__(*args, **kwargs)       
         # Only show active academic years
-        self.fields['academic_year'].queryset = AcademicYear.objects.filter(is_current=True)
-        
+        self.fields['academic_year'].queryset = AcademicYear.objects.filter(is_current=True)        
         # Only show teachers (staff with user_type=2)
         self.fields['class_teacher'].queryset = Staff.objects.filter(
             user__user_type=2
-        ).select_related('user')
-        
+        ).select_related('user')        
         # Add empty label for dropdowns
         self.fields['academic_year'].empty_label = 'Select Academic Year'
         self.fields['class_teacher'].empty_label = 'Select Class Teacher'
-
     def clean_name(self):
         name = self.cleaned_data.get('name')
-        academic_year = self.cleaned_data.get('academic_year')
-        
+        academic_year = self.cleaned_data.get('academic_year')       
         # Check if class with this name already exists in the same academic year
         if Class.objects.filter(
             name__iexact=name, 
@@ -198,10 +155,8 @@ class ClassForm(forms.ModelForm):
         ).exclude(pk=self.instance.pk if self.instance else None).exists():
             raise forms.ValidationError(
                 'A class with this name already exists for the selected academic year.'
-            )
-        
+            )        
         return name
-    
 
 
 class SystemSettingsForm(forms.Form):
@@ -265,7 +220,7 @@ class SystemSettingsForm(forms.Form):
     
     def clean_logo(self):
         logo = self.cleaned_data.get('logo')
-        if logo and logo.size > 2*1024*1024:  # 2MB limit
+        if logo and logo.size > 2*1024*1024: 
             raise forms.ValidationError("Logo image too large (max 2MB)")
         return logo
 
@@ -391,24 +346,74 @@ class AddAdministratorForm(forms.ModelForm):
             'profile_pic': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
-class AddBursarForm(forms.ModelForm):
+class BursarForm(forms.ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        label="Temporary Password"
+        required=False,
+        label="Password"
     )
-    gender= forms.Select(attrs={'class': 'form-select'})
     
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    ]
+    
+    gender = forms.ChoiceField(
+        choices=GENDER_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    
+    qualification = forms.CharField(
+        max_length=100, 
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    
+    date_of_joining = forms.DateField(
+        widget=DateInput(attrs={'class': 'form-control'}),
+        required=False
+    )
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone', 'profile_pic']
+        fields = ['first_name', 'last_name', 'email', 'username', 'profile_pic', 'phone', 'address']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),          
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'profile_pic': forms.FileInput(attrs={'class': 'form-control'}),
-        } 
+        }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password'].required = not self.instance.pk
+        if self.instance.pk:
+            try:
+                bursar = self.instance.bursar_profile
+                self.fields['gender'].initial = bursar.gender
+                self.fields['qualification'].initial = bursar.qualification
+                self.fields['date_of_joining'].initial = bursar.date_of_joining
+            except Bursar.DoesNotExist:
+                pass
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data['password']:
+            user.set_password(self.cleaned_data['password'])
+        user.user_type = 4  # Bursar user type
+        
+        if commit:
+            user.save()
+            bursar, created = Bursar.objects.get_or_create(user=user)
+            bursar.gender = self.cleaned_data['gender']
+            bursar.qualification = self.cleaned_data['qualification']
+            bursar.date_of_joining = self.cleaned_data['date_of_joining']
+            bursar.save()
+        return user
 
 class NotificationForm(forms.ModelForm):
     recipients = forms.ModelMultipleChoiceField(

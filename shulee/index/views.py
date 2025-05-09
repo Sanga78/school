@@ -33,7 +33,7 @@ def Login(request):
         if user != None:
             login(request,user)
             if user.user_type == 1:
-                    return redirect(reverse("admin_home"))
+                return redirect(reverse("admin_dashboard"))
             elif user.user_type == 2:
                 return redirect(reverse("staff_home"))
             elif user.user_type == 3:
