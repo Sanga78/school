@@ -61,23 +61,17 @@ def manage_teachers(request):
     return render(request, 'admin/manage_teachers.html', context)
 
 @login_required
-@user_passes_test(admin_check)
+@user_passes_test(is_admin)
 def add_teacher(request):
-    subjects = Subject.objects.all()
     if request.method == 'POST':
-        form = StaffForm(request.POST)
+        form = StaffForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save()
+            form.save()
             messages.success(request, 'Teacher added successfully!')
             return redirect('manage_teachers')
     else:
         form = StaffForm()
-    
-    context = {
-        'form': form,
-        'subjects':subjects,
-    }
-    return render(request, 'admin/add_teacher.html', context)
+    return render(request, 'admin/add_edit_teacher.html', {'form': form})
 
 @login_required
 @user_passes_test(admin_check)
@@ -598,10 +592,8 @@ def edit_class(request, class_id):
 
 def delete_class(request, class_id):
     class_obj = get_object_or_404(Class, id=class_id)
-    if request.method == 'POST':
-        class_obj.delete()
-        return redirect('manage_classes')
-    return render(request, 'admin/confirm_delete.html', {'object': class_obj})
+    class_obj.delete()
+    return redirect('manage_classes')
 
 
 @login_required
@@ -851,6 +843,16 @@ def edit_student(request, student_id):
 
 @login_required
 @user_passes_test(is_admin)
+def delete_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    user = student.user
+    student.delete()
+    user.delete()
+    messages.success(request, 'Student deleted successfully!')
+    return redirect('manage_students')
+
+@login_required
+@user_passes_test(is_admin)
 def view_student(request, student_id):
     student = get_object_or_404(Student.objects.select_related(
         'user', 'current_class', 'academic_year'
@@ -967,7 +969,7 @@ def add_administrator(request):
 @login_required
 @user_passes_test(is_admin)
 def manage_bursars(request):
-    bursars = User.objects.filter(user_type=4).order_by('last_name')
+    bursars = Bursar.objects.all()
     context = {'bursars': bursars}
     return render(request, 'admin/manage_bursars.html', context)
 
@@ -977,22 +979,12 @@ def add_bursar(request):
     if request.method == 'POST':
         form = AddBursarForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.user_type = 4  # Bursar
-            user.username = form.cleaned_data['email']
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-            
-            # Create staff profile for bursar
-            Bursar.objects.create(user=user)
-            
+            form.save()
             messages.success(request, 'Bursar added successfully!')
             return redirect('manage_bursars')
     else:
         form = AddBursarForm()
-    
-    context = {'form': form}
-    return render(request, 'admin/add_bursar.html', context)
+    return render(request, 'admin/add_bursar.html', {'form': form})
 
 # Database Backup
 @login_required
@@ -1458,3 +1450,29 @@ def set_current_academic_year(request):
         
         return redirect('settings')
     return redirect('settings')
+
+
+@login_required
+@user_passes_test(is_admin)
+def edit_teacher(request, teacher_id):
+    teacher = get_object_or_404(Staff, id=teacher_id)
+    if request.method == 'POST':
+        form = StaffForm(request.POST, request.FILES, instance=teacher.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Teacher updated successfully!')
+            return redirect('manage_teachers')
+    else:
+        form = StaffForm(instance=teacher.user, initial={
+            'qualification': teacher.qualification,
+            'date_of_joining': teacher.date_of_joining
+        })
+    return render(request, 'admin/add_edit_teacher.html', {'form': form, 'teacher': teacher})
+
+@login_required
+@user_passes_test(is_admin)
+def delete_teacher(request, teacher_id):
+    teacher = get_object_or_404(Staff, id=teacher_id)
+    teacher.user.delete()
+    messages.success(request, 'Teacher deleted successfully!')
+    return redirect('manage_teachers')

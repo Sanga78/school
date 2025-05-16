@@ -23,7 +23,7 @@ def events(request):
 def contact(request):
     return render(request,'contact.html')
 def loginPage(request):
-    return render(request,'login.html')
+    return render(request,'n_log.html')
 
 def Login(request):
     if request.method!="POST":

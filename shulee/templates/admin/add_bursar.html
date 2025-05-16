@@ -1,15 +1,15 @@
 {% extends 'admin/base.html' %}
-{% block title %}Add New Bursar{% endblock %}
+{% block title %}{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Bursar{% endblock %}
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-4">
         <div class="col-md-12">
-            <h2>Register New Bursar</h2>
+            <h2>{% if form.instance.pk %}Edit{% else %}Add New{% endif %} Bursar</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'manage_bursars' %}">Bursars</a></li>
-                    <li class="breadcrumb-item active">Add Bursar</li>
+                    <li class="breadcrumb-item active">{% if form.instance.pk %}Edit{% else %}Add{% endif %}</li>
                 </ol>
             </nav>
         </div>
@@ -19,8 +19,21 @@
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0">Bursar Information</h4>
         </div>
+        
+        <!-- Messages Display Section -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-0 rounded-0" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
         <div class="card-body">
-            <form method="post" enctype="multipart/form-data" id="bursarForm">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 
                 <div class="row">
@@ -30,11 +43,7 @@
                         
                         <div class="form-group mb-3">
                             <label class="form-label">First Name*</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   name="first_name" 
-                                   value="{{ form.first_name.value|default:'' }}"
-                                   required>
+                            {{ form.first_name }}
                             {% if form.first_name.errors %}
                                 <div class="text-danger small">{{ form.first_name.errors }}</div>
                             {% endif %}
@@ -42,11 +51,7 @@
                         
                         <div class="form-group mb-3">
                             <label class="form-label">Last Name*</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   name="last_name" 
-                                   value="{{ form.last_name.value|default:'' }}"
-                                   required>
+                            {{ form.last_name }}
                             {% if form.last_name.errors %}
                                 <div class="text-danger small">{{ form.last_name.errors }}</div>
                             {% endif %}
@@ -54,20 +59,10 @@
                         
                         <div class="form-group mb-3">
                             <label class="form-label">Gender</label>
-                            <select class="form-select" name="gender">
-                                <option value="">Select Gender</option>
-                                <option value="M" {% if form.gender.value == 'M' %}selected{% endif %}>Male</option>
-                                <option value="F" {% if form.gender.value == 'F' %}selected{% endif %}>Female</option>
-                                <option value="O" {% if form.gender.value == 'O' %}selected{% endif %}>Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            <label class="form-label">Date of Birth</label>
-                            <input type="date" 
-                                   class="form-control" 
-                                   name="date_of_birth"
-                                   value="{{ form.date_of_birth.value|default:'' }}">
+                            {{ form.gender }}
+                            {% if form.gender.errors %}
+                                <div class="text-danger small">{{ form.gender.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     
@@ -77,32 +72,24 @@
                         
                         <div class="form-group mb-3">
                             <label class="form-label">Email*</label>
-                            <input type="email" 
-                                   class="form-control" 
-                                   name="email" 
-                                   value="{{ form.email.value|default:'' }}"
-                                   required>
+                            {{ form.email }}
                             {% if form.email.errors %}
                                 <div class="text-danger small">{{ form.email.errors }}</div>
                             {% endif %}
                         </div>
                         
                         <div class="form-group mb-3">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" 
-                                   class="form-control" 
-                                   name="phone" 
-                                   value="{{ form.phone.value|default:'' }}">
+                            <label class="form-label">Username*</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="text-danger small">{{ form.username.errors }}</div>
+                            {% endif %}
                         </div>
                         
                         <div class="form-group mb-3">
-                            <label class="form-label">Temporary Password*</label>
+                            <label class="form-label">{% if form.instance.pk %}New {% endif %}Password{% if not form.instance.pk %}*{% endif %}</label>
                             <div class="input-group">
-                                <input type="password" 
-                                       class="form-control" 
-                                       name="password" 
-                                       id="passwordField"
-                                       required>
+                                {{ form.password }}
                                 <button class="btn btn-outline-secondary" type="button" id="generatePassword">
                                     <i class="fas fa-random"></i> Generate
                                 </button>
@@ -110,43 +97,71 @@
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
-                            <small class="text-muted">Minimum 8 characters</small>
-                        </div>
-                        
-                        <div class="form-group mb-3">
-                            <label class="form-label">Profile Picture</label>
-                            <input type="file" 
-                                   class="form-control" 
-                                   name="profile_pic"
-                                   accept="image/*">
+                            <small class="text-muted">{% if form.instance.pk %}Leave blank to keep current password{% else %}Minimum 8 characters{% endif %}</small>
+                            {% if form.password.errors %}
+                                <div class="text-danger small">{{ form.password.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
                     
-                    <!-- Additional Information -->
-                    <div class="col-md-12 mt-3">
-                        <h5 class="border-bottom pb-2 mb-3">Additional Information</h5>
-                        
-                        <div class="form-group mb-3">
-                            <label class="form-label">Address</label>
-                            <textarea class="form-control" 
-                                      name="address" 
-                                      rows="2">{{ form.address.value|default:'' }}</textarea>
-                        </div>
+                    <!-- Professional Information -->
+                    <div class="col-md-6 mt-3">
+                        <h5 class="border-bottom pb-2 mb-3">Professional Information</h5>
                         
                         <div class="form-group mb-3">
                             <label class="form-label">Qualification</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   name="qualification"
-                                   value="{{ form.qualification.value|default:'' }}">
+                            {{ form.qualification }}
+                            {% if form.qualification.errors %}
+                                <div class="text-danger small">{{ form.qualification.errors }}</div>
+                            {% endif %}
                         </div>
                         
                         <div class="form-group mb-3">
                             <label class="form-label">Date of Joining</label>
-                            <input type="date" 
-                                   class="form-control" 
-                                   name="date_of_joining"
-                                   value="{{ form.date_of_joining.value|default:'' }}">
+                            {{ form.date_of_joining }}
+                            {% if form.date_of_joining.errors %}
+                                <div class="text-danger small">{{ form.date_of_joining.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="col-md-6 mt-3">
+                        <h5 class="border-bottom pb-2 mb-3">Contact Information</h5>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Phone Number</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger small">{{ form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Address</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="text-danger small">{{ form.address.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Picture -->
+                    <div class="col-md-12 mt-3">
+                        <h5 class="border-bottom pb-2 mb-3">Profile Picture</h5>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-label">Upload Profile Picture</label>
+                            {{ form.profile_pic }}
+                            {% if form.instance.pk and form.instance.profile_pic %}
+                                <div class="mt-2">
+                                    <img src="{{ form.instance.profile_pic.url }}" alt="Current Profile Picture" class="img-thumbnail" width="100">
+                                    <span class="ms-2">Current profile picture</span>
+                                </div>
+                            {% endif %}
+                            {% if form.profile_pic.errors %}
+                                <div class="text-danger small">{{ form.profile_pic.errors }}</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -156,7 +171,7 @@
                         <i class="fas fa-times me-2"></i> Cancel
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i> Save Bursar
+                        <i class="fas fa-save me-2"></i> {% if form.instance.pk %}Update{% else %}Create{% endif %} Bursar
                     </button>
                 </div>
             </form>
@@ -164,21 +179,51 @@
     </div>
 </div>
 
+<style>
+    .messages-container {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+    .alert {
+        border-radius: 0;
+        margin-bottom: 0;
+    }
+    .border-bottom {
+        border-bottom: 2px solid #dee2e6 !important;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Password generation
+    // Auto-dismiss alerts after 5 seconds
+    var alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        setTimeout(function() {
+            var bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+    
+    // Password generation functionality
     document.getElementById('generatePassword').addEventListener('click', function() {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
         let password = '';
         for (let i = 0; i < 12; i++) {
             password += chars.charAt(Math.floor(Math.random() * chars.length));
         }
-        document.getElementById('passwordField').value = password;
+        document.getElementById('id_password').value = password;
     });
     
     // Password visibility toggle
     document.getElementById('togglePassword').addEventListener('click', function() {
-        const passwordField = document.getElementById('passwordField');
+        const passwordField = document.getElementById('id_password');
         const icon = this.querySelector('i');
         if (passwordField.type === 'password') {
             passwordField.type = 'text';
@@ -190,28 +235,6 @@ document.addEventListener('DOMContentLoaded', function() {
             icon.classList.add('fa-eye');
         }
     });
-    
-    // Form validation
-    document.getElementById('bursarForm').addEventListener('submit', function(e) {
-        const password = document.getElementById('passwordField').value;
-        if (password.length < 8) {
-            e.preventDefault();
-            alert('Password must be at least 8 characters long');
-        }
-    });
 });
 </script>
-
-<style>
-.form-group {
-    margin-bottom: 1.25rem;
-}
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
-.border-bottom {
-    border-bottom: 2px solid #dee2e6 !important;
-}
-</style>
 {% endblock %}

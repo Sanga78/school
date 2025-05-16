@@ -88,6 +88,8 @@ urlpatterns = [
     path('admin_dashboard/', HodViews.admin_dashboard, name='admin_dashboard'),
     path('teachers/', HodViews.manage_teachers, name='manage_teachers'),
     path('teachers/add/', HodViews.add_teacher, name='add_teacher'),
+    path('edit_teacher/<str:teacher_id>',HodViews.edit_teacher,name="edit_teacher"),
+    path('delete_teacher/<str:teacher_id>',HodViews.delete_teacher,name="delete_teacher"),
     path('teachers/<int:teacher_id>/assign-subjects/', HodViews.assign_subjects, name='assign_subjects'),
     path('teachers/<int:teacher_id>/subjects/', HodViews.teacher_subjects, name='teacher_subjects'),
     path('assign-class-teachers/', HodViews.assign_class_teachers, name='assign_class_teachers'),
@@ -96,6 +98,8 @@ urlpatterns = [
     path('attendance/<int:attendance_id>/', HodViews.view_attendance, name='view_attendance'),
     path('classes/', HodViews.manage_classes, name='manage_classes'),
     path('add_class/', HodViews.add_class, name='add_class'),
+    path('edit_class/<str:class_id>',HodViews.edit_class,name='edit_class'),
+    path('delete_class/<str:class_id>',HodViews.delete_class,name='delete_class'),
     # Leaves
     path('leaves/', HodViews.manage_leaves, name='manage_leaves'),
     path('leaves/<int:leave_id>/respond/', HodViews.respond_leave, name='respond_leave'),

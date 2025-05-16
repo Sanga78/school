@@ -24,13 +24,13 @@
             <div class="login-form">
                 <h2>Sign In</h2>
                 
-                <form id="loginForm" method="POST">
+                <form id="loginForm" method="POST" action="/login">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="username">Username or Email</label>
                         <div class="input-with-icon">
                             <i class="fas fa-user"></i>
-                            <input type="text" id="username" name="username" required autocomplete="username">
+                            <input type="text" id="username" name="email" required autocomplete="username">
                         </div>
                     </div>
                     
@@ -49,14 +49,14 @@
                         <label class="remember-me">
                             <input type="checkbox" name="remember"> Remember me
                         </label>
-                        <a href="forgot-password.html" class="forgot-password">Forgot password?</a>
+                        <a href="{% url 'password_reset' %}" class="forgot-password">Forgot password?</a>
                     </div>
                     
                     <button type="submit" class="btn-login">Sign In</button>
                 </form>
                 
                 <div class="register-prompt">
-                    <p>Don't have an account? <a href="register.html">Contact administration</a></p>
+                    <p>Don't have an account? <a href="{% url 'signup_student' %}">Contact administration</a></p>
                 </div>
             </div>
         </div>

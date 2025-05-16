@@ -56,8 +56,10 @@
                                 <a href="{% url 'edit_teacher' teacher.id %}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'delete_teacher' teacher.id %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                <a href="{% url 'delete_teacher' teacher.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Deleted Teachers will be lost forever. Still want to delete?')">
+                                    <span class="icon text-white" title="Delete">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </span>
                                 </a>
                             </td>
                         </tr>
@@ -72,4 +74,29 @@
         </div>
     </div>
 </div>
+
+<style>
+    .messages-container {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+    .alert {
+        border-radius: 0;
+        margin-bottom: 0;
+    }
+</style>
+
+<script>
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        var alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+</script>
 {% endblock %}

@@ -414,9 +414,7 @@ def create_user_profile(sender, instance, created, **kwargs):
         elif instance.user_type == 3:  # Student
             Student.objects.create(user=instance)
         elif instance.user_type == 4:  # Bursar
-            staff = Staff.objects.create(user=instance)
-            staff.is_bursar = True
-            staff.save()
+            Bursar.objects.create(user=instance)           
 
 @receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):

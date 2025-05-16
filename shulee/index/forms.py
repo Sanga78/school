@@ -301,33 +301,169 @@ class AddSubjectForm(forms.ModelForm):
         return code.upper()
 
 class AddStudentForm(forms.ModelForm):
-    password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        label="Temporary Password"
-    )
-    
+    # Fields from CustomUser
+    first_name = forms.CharField(max_length=50)
+    last_name = forms.CharField(max_length=50)
+    email = forms.EmailField()
+    phone = forms.CharField(max_length=20, required=False)
+    address = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
+    profile_pic = forms.ImageField(required=False)
+
     class Meta:
         model = Student
         fields = [
-            'admission_number', 'current_class', 'academic_year',
-            'gender', 'date_of_birth', 'father_name', 'mother_name'
+            'admission_number', 'gender', 'date_of_birth',
+            'current_class', 'academic_year',
+            'father_name', 'mother_name',
         ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Check if editing (instance exists)
+        self.user_instance = getattr(self.instance, 'user', None)
+
+        # Populate initial values for user fields if editing
+        if self.user_instance:
+            self.fields['first_name'].initial = self.user_instance.first_name
+            self.fields['last_name'].initial = self.user_instance.last_name
+            self.fields['email'].initial = self.user_instance.email
+            self.fields['phone'].initial = self.user_instance.phone
+            self.fields['address'].initial = self.user_instance.address
+            self.fields['profile_pic'].initial = self.user_instance.profile_pic
+
+        # Limit class/year querysets
+        self.fields['current_class'].queryset = Class.objects.all()
+        self.fields['academic_year'].queryset = AcademicYear.objects.all()
+
+        # Set date input
+        self.fields['date_of_birth'].widget.attrs.update({'type': 'date'})
+
+    def clean_admission_number(self):
+        admission_number = self.cleaned_data['admission_number']
+        qs = Student.objects.filter(admission_number=admission_number)
+
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise forms.ValidationError("This admission number already exists.")
+        return admission_number
+
+    def clean(self):
+        cleaned_data = super().clean()
+        admission_number = cleaned_data.get('admission_number')
+
+        if not admission_number:
+            return
+
+        username_conflict = CustomUser.objects.filter(username=admission_number)
+        if self.user_instance:
+            username_conflict = username_conflict.exclude(pk=self.user_instance.pk)
+
+        if username_conflict.exists():
+            self.add_error('admission_number', "This admission number is already used as a username.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        student = super().save(commit=False)
+
+        # New user
+        if not self.user_instance:
+            user = CustomUser.objects.create_user(
+                username=self.cleaned_data['admission_number'],
+                password='default1234',
+                email=self.cleaned_data['email'],
+                first_name=self.cleaned_data['first_name'],
+                last_name=self.cleaned_data['last_name'],
+                user_type=3
+            )
+        else:
+            user = self.user_instance
+            user.first_name = self.cleaned_data['first_name']
+            user.last_name = self.cleaned_data['last_name']
+            user.email = self.cleaned_data['email']
+
+        # Common user fields
+        user.phone = self.cleaned_data.get('phone', '')
+        user.address = self.cleaned_data.get('address', '')
+        profile_pic = self.cleaned_data.get('profile_pic')
+        if profile_pic:
+            user.profile_pic = profile_pic
+
+        if commit:
+            user.save()
+            student.user = user
+            student.save()
+
+        return student
+# Teacher Management Forms
+class StaffForm(forms.ModelForm):
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        required=False,
+        label="Password"
+    )
+    
+    qualification = forms.CharField(
+        max_length=100, 
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    
+    date_of_joining = forms.DateField(
+        widget=DateInput(attrs={'class': 'form-control'}),
+        required=False
+    )
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'username', 'profile_pic', 'phone', 'address']
         widgets = {
-            'admission_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'current_class': forms.Select(attrs={'class': 'form-select'}),
-            'academic_year': forms.Select(attrs={'class': 'form-select'}),
-            'gender': forms.Select(attrs={'class': 'form-select'}),
-            'date_of_birth': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
-            }),
-            'father_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'mother_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'profile_pic': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['academic_year'].queryset = AcademicYear.objects.filter(is_current=True)
+        self.fields['password'].required = not self.instance.pk
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if self.cleaned_data['password']:
+            user.set_password(self.cleaned_data['password'])
+        user.user_type = 2  # Staff user type
+        
+        if commit:
+            user.save()
+            staff, created = Staff.objects.get_or_create(user=user)
+            staff.qualification = self.cleaned_data.get('qualification', '')
+            staff.date_of_joining = self.cleaned_data.get('date_of_joining')
+            staff.save()
+        return user
+
+class StaffSubjectAssignmentForm(forms.ModelForm):
+    class Meta:
+        model = StaffSubjectAssignment
+        fields = ['subject', 'classes', 'academic_year']
+        widgets = {
+            'subject': forms.Select(attrs={'class': 'form-select'}),
+            'classes': forms.SelectMultiple(attrs={'class': 'form-select'}),
+            'academic_year': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        staff = kwargs.pop('staff', None)
+        super().__init__(*args, **kwargs)
+        if staff:
+            self.fields['classes'].queryset = Class.objects.filter(
+                academic_year__is_current=True
+            )
 
 class AddAdministratorForm(forms.ModelForm):
     password = forms.CharField(
@@ -346,7 +482,7 @@ class AddAdministratorForm(forms.ModelForm):
             'profile_pic': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
-class BursarForm(forms.ModelForm):
+class AddBursarForm(forms.ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
         required=False,
