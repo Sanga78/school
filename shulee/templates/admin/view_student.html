@@ -1,93 +1,127 @@
 {% extends 'admin/base.html' %}
-{% block title %}Student Details{% endblock %}
+{% block title %}View Student - {{ student.user.get_full_name }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2>Student Details</h2>
-            <p class="lead">{{ student.user.get_full_name }}</p>
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <h2>Student Details</h2>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'manage_students' %}">Students</a></li>
+          <li class="breadcrumb-item active">View</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card shadow-lg mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Profile</h5>
         </div>
+        <div class="card-body text-center">
+          {% if student.user.profile_pic %}
+          <img src="{{ student.user.profile_pic.url }}" alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+          {% else %}
+          <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px; margin: 0 auto;">
+            <i class="fas fa-user fa-4x text-secondary"></i>
+          </div>
+          {% endif %}
+          <h4>{{ student.user.get_full_name }}</h4>
+          <p class="text-muted">{{ student.current_class.name }}</p>
+        </div>
+      </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Basic Information</h6>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        {% if student.user.profile_pic %}
-                            <img src="{{ student.user.profile_pic.url }}" class="rounded-circle" width="150" height="150">
-                        {% else %}
-                            <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center mx-auto" 
-                                 style="width: 150px; height: 150px; font-size: 50px;">
-                                {{ student.user.get_initials }}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <table class="table table-bordered">
-                        <tr>
-                            <th>Admission Number</th>
-                            <td>{{ student.admission_number }}</td>
-                        </tr>
-                        <tr>
-                            <th>Full Name</th>
-                            <td>{{ student.user.get_full_name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Class</th>
-                            <td>{{ student.current_class.name }}</td>
-                        </tr>
-                        <tr>
-                            <th>Academic Year</th>
-                            <td>{{ student.academic_year }}</td>
-                        </tr>
-                        <tr>
-                            <th>Gender</th>
-                            <td>{{ student.get_gender_display }}</td>
-                        </tr>
-                        <tr>
-                            <th>Date of Birth</th>
-                            <td>{{ student.date_of_birth|date:"M d, Y"|default:"-" }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+    <div class="col-md-8">
+      <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Student Information</h5>
         </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6 class="text-muted">Personal Details</h6>
+              <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Admission No.</span>
+                  <span>{{ student.admission_number }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Gender</span>
+                  <span>{{ student.get_gender_display }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Date of Birth</span>
+                  <span>{{ student.date_of_birth|date:"d M Y" }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Date of Admission</span>
+                  <span>{{ student.date_of_admission|date:"d M Y" }}</span>
+                </li>
+              </ul>
+            </div>
 
-        <div class="col-md-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Contact Information</h6>
-                </div>
-                <div class="card-body">
-                    <table class="table table-bordered">
-                        <tr>
-                            <th>Email</th>
-                            <td>{{ student.user.email }}</td>
-                        </tr>
-                        <tr>
-                            <th>Phone</th>
-                            <td>{{ student.user.phone|default:"-" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Address</th>
-                            <td>{{ student.user.address|default:"-" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Father's Name</th>
-                            <td>{{ student.father_name|default:"-" }}</td>
-                        </tr>
-                        <tr>
-                            <th>Mother's Name</th>
-                            <td>{{ student.mother_name|default:"-" }}</td>
-                        </tr>
-                    </table>
-                </div>
+            <div class="col-md-6">
+              <h6 class="text-muted">Contact Information</h6>
+              <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Email</span>
+                  <span>{{ student.user.email }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Phone</span>
+                  <span>{{ student.user.phone|default:"-" }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Address</span>
+                  <span>{{ student.user.address|default:"-" }}</span>
+                </li>
+              </ul>
             </div>
+
+            <div class="col-md-6">
+              <h6 class="text-muted">Academic Information</h6>
+              <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Class</span>
+                  <span>{{ student.current_class.name }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Academic Year</span>
+                  <span>{{ student.academic_year.name }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="col-md-6">
+              <h6 class="text-muted">Family Information</h6>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Father's Name</span>
+                  <span>{{ student.father_name|default:"-" }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>Mother's Name</span>
+                  <span>{{ student.mother_name|default:"-" }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end mt-4">
+            <a href="{% url 'edit_student' student.id %}" class="btn btn-primary me-2">
+              <i class="fas fa-edit me-2"></i> Edit Profile
+            </a>
+            <a href="{% url 'manage_students' %}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

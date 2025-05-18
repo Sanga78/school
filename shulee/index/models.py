@@ -115,7 +115,8 @@ class Student(models.Model):
     date_of_admission = models.DateField(default=timezone.now)
     father_name = models.CharField(max_length=100, blank=True)
     mother_name = models.CharField(max_length=100, blank=True)
-    
+    active = models.BooleanField(default=True)
+
     class Meta:
         ordering = ['current_class', 'user__last_name']
     

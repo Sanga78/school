@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect,reverse
+from django.shortcuts import render,redirect,reverse, get_object_or_404
 from django.http import HttpResponse,HttpResponseRedirect
 from django.contrib.auth import login,logout
 from index.EmailBackEnd import EmailBackEnd
@@ -37,6 +37,9 @@ def Login(request):
             elif user.user_type == 2:
                 return redirect(reverse("staff_home"))
             elif user.user_type == 3:
+                student = get_object_or_404(Student, user=user)
+                student.active = True
+                student.save()
                 return redirect(reverse("student_home"))
             elif user.user_type == 4:
                 return redirect(reverse("bursar_home"))

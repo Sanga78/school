@@ -61,8 +61,6 @@ urlpatterns = [
     path('manage_subject',HodViews.manage_subject,name="manage_subject"),
     path('edit_staff/<str:staff_id>',HodViews.edit_staff,name="edit_staff"),
     path('edit_staff_save',HodViews.edit_staff_save,name="edit_staff_save"),
-    path('edit_student/<str:student_id>',HodViews.edit_student,name="edit_student"),
-    path('edit_student_save',HodViews.edit_student_save,name="edit_student_save"),
     path('edit_subject/<str:subject_id>',HodViews.edit_subject,name="edit_subject"),
     path('edit_subject_save',HodViews.edit_subject_save,name="edit_subject_save"),
     path('manage_session',HodViews.manage_session,name="manage_session"),
@@ -113,8 +111,12 @@ urlpatterns = [
     # Student Management
     path('students/', HodViews.manage_students, name='manage_students'),
     path('students/add/', HodViews.add_student, name='add_student'),
-    path('students/<int:student_id>/edit/', HodViews.edit_student, name='edit_student'),
     path('students/<int:student_id>/', HodViews.view_student, name='view_student'),
+    path('activate_student/<str:student_id>',HodViews.activate_student,name="activate_student"),
+    path('deactivate_student/<str:student_id>',HodViews.deactivate_student,name="deactivate_student"), 
+    path('students/edit/<int:student_id>/', HodViews.edit_student, name='edit_student'),
+    path('students/delete/<int:student_id>/', HodViews.delete_student, name='delete_student'),
+    path('students/view/<int:student_id>/', HodViews.view_student, name='view_student'),
     
     # Finance Management
     path('finance/', HodViews.manage_finance, name='manage_finance'),

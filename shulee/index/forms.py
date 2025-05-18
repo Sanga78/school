@@ -1,3 +1,4 @@
+from django.utils import timezone
 from typing import Any
 from django import forms
 from django.forms import ChoiceField
@@ -5,7 +6,11 @@ from .models import AcademicYear, Bursar, CustomUser, Expense, FeePayment, Leave
 from django.apps import apps
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import UserCreationForm
+
 User = get_user_model()
+
 
 class ChoiceNoValidation(ChoiceField):
     def validate(self, value):
@@ -300,103 +305,90 @@ class AddSubjectForm(forms.ModelForm):
             raise forms.ValidationError("A subject with this code already exists.")
         return code.upper()
 
-class AddStudentForm(forms.ModelForm):
-    # Fields from CustomUser
-    first_name = forms.CharField(max_length=50)
-    last_name = forms.CharField(max_length=50)
-    email = forms.EmailField()
-    phone = forms.CharField(max_length=20, required=False)
-    address = forms.CharField(widget=forms.Textarea(attrs={'rows': 2}), required=False)
+class AddStudentForm(UserCreationForm):
+    admission_number = forms.CharField(max_length=20, required=True)
+    gender = forms.ChoiceField(choices=Student.GENDER_CHOICES, required=True)
+    date_of_birth = forms.DateField(required=True, widget=forms.DateInput(attrs={'type': 'date'}))
+    current_class = forms.ModelChoiceField(queryset=Class.objects.all(), required=True)
+    academic_year = forms.ModelChoiceField(queryset=AcademicYear.objects.all(), required=True)
+    date_of_admission = forms.DateField(required=True, widget=forms.DateInput(attrs={'type': 'date'}))
+    father_name = forms.CharField(max_length=100, required=False)
+    mother_name = forms.CharField(max_length=100, required=False)
+    address = forms.CharField(widget=forms.Textarea, required=False)
     profile_pic = forms.ImageField(required=False)
+    phone = forms.CharField(max_length=20, required=False)
 
     class Meta:
-        model = Student
+        model = User
         fields = [
-            'admission_number', 'gender', 'date_of_birth',
-            'current_class', 'academic_year',
-            'father_name', 'mother_name',
+            'first_name', 'last_name', 'email', 'username', 'password1', 'password2',
+            'admission_number', 'gender', 'date_of_birth', 'current_class', 
+            'academic_year', 'date_of_admission', 'father_name', 'mother_name',
+            'address', 'profile_pic', 'phone'
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            try:
+                student = self.instance.student_profile
+                self.fields['admission_number'].initial = student.admission_number
+                self.fields['gender'].initial = student.gender
+                self.fields['date_of_birth'].initial = student.date_of_birth
+                self.fields['current_class'].initial = student.current_class
+                self.fields['academic_year'].initial = student.academic_year
+                self.fields['date_of_admission'].initial = student.date_of_admission
+                self.fields['father_name'].initial = student.father_name
+                self.fields['mother_name'].initial = student.mother_name
+                self.fields['address'].initial = student.user.address
+                self.fields['phone'].initial = student.user.phone
+            except Student.DoesNotExist:
+                pass
 
-        # Check if editing (instance exists)
-        self.user_instance = getattr(self.instance, 'user', None)
-
-        # Populate initial values for user fields if editing
-        if self.user_instance:
-            self.fields['first_name'].initial = self.user_instance.first_name
-            self.fields['last_name'].initial = self.user_instance.last_name
-            self.fields['email'].initial = self.user_instance.email
-            self.fields['phone'].initial = self.user_instance.phone
-            self.fields['address'].initial = self.user_instance.address
-            self.fields['profile_pic'].initial = self.user_instance.profile_pic
-
-        # Limit class/year querysets
-        self.fields['current_class'].queryset = Class.objects.all()
-        self.fields['academic_year'].queryset = AcademicYear.objects.all()
-
-        # Set date input
-        self.fields['date_of_birth'].widget.attrs.update({'type': 'date'})
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.user_type = 3  # Student
+        if commit:
+            user.save()
+            
+            student, created = Student.objects.get_or_create(user=user)
+            student.admission_number = self.cleaned_data['admission_number']
+            student.gender = self.cleaned_data['gender']
+            student.date_of_birth = self.cleaned_data['date_of_birth']
+            student.current_class = self.cleaned_data['current_class']
+            student.academic_year = self.cleaned_data['academic_year']
+            student.date_of_admission = self.cleaned_data['date_of_admission']
+            student.father_name = self.cleaned_data['father_name']
+            student.mother_name = self.cleaned_data['mother_name']
+            user.address = self.cleaned_data['address']
+            user.phone = self.cleaned_data['phone']
+            
+            if self.cleaned_data['profile_pic']:
+                student.profile_pic = self.cleaned_data['profile_pic']
+            
+            student.save()
+            user.save()
+            
+        return user
 
     def clean_admission_number(self):
         admission_number = self.cleaned_data['admission_number']
-        qs = Student.objects.filter(admission_number=admission_number)
-
-        if self.instance.pk:
-            qs = qs.exclude(pk=self.instance.pk)
-
-        if qs.exists():
-            raise forms.ValidationError("This admission number already exists.")
+        if Student.objects.filter(admission_number=admission_number).exclude(user=self.instance).exists():
+            raise ValidationError("A student with this admission number already exists.")
         return admission_number
 
-    def clean(self):
-        cleaned_data = super().clean()
-        admission_number = cleaned_data.get('admission_number')
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise ValidationError("A user with this email already exists.")
+        return email
 
-        if not admission_number:
-            return
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
+            raise ValidationError("A user with this username already exists.")
+        return username
 
-        username_conflict = CustomUser.objects.filter(username=admission_number)
-        if self.user_instance:
-            username_conflict = username_conflict.exclude(pk=self.user_instance.pk)
-
-        if username_conflict.exists():
-            self.add_error('admission_number', "This admission number is already used as a username.")
-        return cleaned_data
-
-    def save(self, commit=True):
-        student = super().save(commit=False)
-
-        # New user
-        if not self.user_instance:
-            user = CustomUser.objects.create_user(
-                username=self.cleaned_data['admission_number'],
-                password='default1234',
-                email=self.cleaned_data['email'],
-                first_name=self.cleaned_data['first_name'],
-                last_name=self.cleaned_data['last_name'],
-                user_type=3
-            )
-        else:
-            user = self.user_instance
-            user.first_name = self.cleaned_data['first_name']
-            user.last_name = self.cleaned_data['last_name']
-            user.email = self.cleaned_data['email']
-
-        # Common user fields
-        user.phone = self.cleaned_data.get('phone', '')
-        user.address = self.cleaned_data.get('address', '')
-        profile_pic = self.cleaned_data.get('profile_pic')
-        if profile_pic:
-            user.profile_pic = profile_pic
-
-        if commit:
-            user.save()
-            student.user = user
-            student.save()
-
-        return student
 # Teacher Management Forms
 class StaffForm(forms.ModelForm):
     password = forms.CharField(

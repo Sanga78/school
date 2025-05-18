@@ -206,9 +206,6 @@ def add_staff_save(request):
             return HttpResponseRedirect(reverse("add_staff"))
     
         
-def add_student(request):
-    form = AddStudentForm()
-    return render(request,"hod_templates/add_student.html",{"form":form})
 
 def add_student_save(request):
     if request.method != "POST":
@@ -813,16 +810,32 @@ def add_student(request):
     if request.method == 'POST':
         form = AddStudentForm(request.POST, request.FILES)
         if form.is_valid():
-            student = form.save(commit=False)
-            student.user.user_type = 3  # Set as student
-            student.user.save()
-            student.save()
-            messages.success(request, 'Student added successfully!')
-            return redirect('manage_students')
+            try:
+                user = form.save()
+                messages.success(request, 'Student added successfully!')
+                SystemLog.create_log(
+                    action='CREATE',
+                    details=f'Added new student: {user.get_full_name()} ({user.student_profile.admission_number})',
+                    user=request.user,
+                    affected_model='Student',
+                    object_id=user.student_profile.id
+                )
+                return redirect('manage_students')
+            except Exception as e:
+                messages.error(request, f'Error adding student: {str(e)}')
+                SystemLog.create_log(
+                    action='ERROR',
+                    details=f'Failed to add student: {str(e)}',
+                    user=request.user,
+                    log_type='ERROR'
+                )
     else:
         form = AddStudentForm()
     
-    context = {'form': form}
+    context = {
+        'form': form,
+        'title': 'Add New Student'
+    }
     return render(request, 'admin/add_edit_student.html', context)
 
 @login_required
@@ -830,25 +843,85 @@ def add_student(request):
 def edit_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     if request.method == 'POST':
-        form = AddStudentForm(request.POST, request.FILES, instance=student)
+        form = AddStudentForm(request.POST, request.FILES, instance=student.user)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Student updated successfully!')
-            return redirect('manage_students')
+            try:
+                user = form.save()
+                messages.success(request, 'Student updated successfully!')
+                SystemLog.create_log(
+                    action='UPDATE',
+                    details=f'Updated student: {user.get_full_name()} ({student.admission_number})',
+                    user=request.user,
+                    affected_model='Student',
+                    object_id=student.id
+                )
+                return redirect('manage_students')
+            except Exception as e:
+                messages.error(request, f'Error updating student: {str(e)}')
     else:
-        form = AddStudentForm(instance=student)
+        form = AddStudentForm(instance=student.user)
     
-    context = {'form': form, 'student': student}
+    context = {
+        'form': form,
+        'student': student,
+        'title': 'Edit Student'
+    }
     return render(request, 'admin/add_edit_student.html', context)
 
 @login_required
 @user_passes_test(is_admin)
 def delete_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    user = student.user
-    student.delete()
-    user.delete()
-    messages.success(request, 'Student deleted successfully!')
+    if request.method == 'POST':
+        try:
+            user = student.user
+            admission_number = student.admission_number
+            student.delete()
+            user.delete()
+            messages.success(request, 'Student deleted successfully!')
+            SystemLog.create_log(
+                action='DELETE',
+                details=f'Deleted student: {user.get_full_name()} ({admission_number})',
+                user=request.user,
+                affected_model='Student',
+                object_id=student_id
+            )
+        except Exception as e:
+            messages.error(request, f'Error deleting student: {str(e)}')
+        return redirect('manage_students')
+    
+    context = {
+        'student': student
+    }
+    return render(request, 'admin/confirm_delete_student.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def view_student(request, student_id):
+    student = get_object_or_404(Student.objects.select_related(
+        'user', 'current_class', 'academic_year'
+    ), id=student_id)
+    
+    context = {'student': student}
+    return render(request, 'admin/view_student.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def activate_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    student.active = True
+    student.save()
+    messages.success(request, 'Student activated successfully!')
+    return redirect('manage_students')
+
+@login_required
+@user_passes_test(is_admin)
+def deactivate_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    student.active = False
+    student.save()
+    messages.success(request, 'Student deactivated successfully!')
     return redirect('manage_students')
 
 @login_required
