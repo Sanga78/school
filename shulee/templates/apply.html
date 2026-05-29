@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply for Admission — AIC Laboret Girls Boarding Primary School</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --maroon:       #6b0f1a;
+  --maroon-mid:   #8b1a28;
+  --maroon-light: #a83248;
+  --maroon-pale:  #f0d4d8;
+  --maroon-ghost: #fdf6f7;
+  --green-dark:   #1a4731;
+  --green-mid:    #2d6a4f;
+  --green-light:  #40916c;
+  --green-pale:   #b7e4c7;
+  --green-ghost:  #f0faf4;
+  --gold:         #c9a84c;
+  --gold-light:   #f0d080;
+  --white:        #ffffff;
+  --cream:        #faf9f7;
+  --text-dark:    #1a1a1a;
+  --text-mid:     #3a4a3e;
+  --text-muted:   #6b7a70;
+  --border:       #e2eee7;
+  --border-focus: #2d6a4f;
+  --shadow-sm:    0 2px 8px rgba(26,71,49,.08);
+  --shadow-md:    0 6px 24px rgba(26,71,49,.13);
+  --radius:       10px;
+  --radius-lg:    16px;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text-dark); font-size: 16px; line-height: 1.6; overflow-x: hidden; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeInDown  { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeInUp    { from{opacity:0;transform:translateY(28px)}  to{opacity:1;transform:translateY(0)} }
+@keyframes shimmer     { 0%{background-position:-200% center} 100%{background-position:200% center} }
+@keyframes pulseRing   { 0%{box-shadow:0 0 0 0 rgba(201,168,76,.5)} 70%{box-shadow:0 0 0 12px rgba(201,168,76,0)} 100%{box-shadow:0 0 0 0 rgba(201,168,76,0)} }
+@keyframes glowPulse   { 0%,100%{opacity:.35} 50%{opacity:.8} }
+@keyframes checkPop    { 0%{transform:scale(0) rotate(-10deg)} 70%{transform:scale(1.15) rotate(3deg)} 100%{transform:scale(1) rotate(0)} }
+@keyframes slideUp     { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes progressFill { from{width:0%} to{width:var(--target-w)} }
+
+.reveal { opacity:0; transform:translateY(28px); transition:opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1); }
+.reveal.visible { opacity:1; transform:translateY(0); }
+.d1{transition-delay:.1s} .d2{transition-delay:.2s} .d3{transition-delay:.3s}
+
+/* ── PROGRESS BAR ── */
+#scroll-bar {
+  position:fixed; top:0; left:0; height:3px; z-index:9999; width:0%;
+  background:linear-gradient(90deg, var(--maroon), var(--gold), var(--green-mid));
+  transition:width .1s linear; box-shadow:0 0 6px rgba(201,168,76,.4);
+}
+
+/* ── NAV ── */
+.main-header {
+  background:var(--white); border-bottom:3px solid var(--maroon-pale);
+  position:sticky; top:0; z-index:90;
+  box-shadow:var(--shadow-sm); animation:fadeInDown .5s ease both;
+  transition:box-shadow .3s;
+}
+.main-header.scrolled { box-shadow:var(--shadow-md); }
+.nav-inner {
+  max-width:1140px; margin:0 auto; padding:0 24px;
+  display:flex; align-items:center; gap:20px; height:74px;
+}
+.school-brand { display:flex; align-items:center; gap:14px; text-decoration:none; flex-shrink:0; }
+.emblem {
+  width:52px; height:52px; border-radius:50%; background:var(--maroon); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 3px var(--gold), 0 0 0 5px var(--maroon);
+  animation:pulseRing 3s ease infinite;
+}
+.emblem-inner { width:38px; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.emblem-cross { color:var(--gold); font-size:18px; font-weight:700; line-height:1; }
+.emblem-text  { color:var(--gold-light); font-size:6px; letter-spacing:.06em; font-weight:600; text-transform:uppercase; text-align:center; line-height:1.2; }
+.brand-name { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; color:var(--maroon); line-height:1.2; }
+.brand-sub  { font-size:10.5px; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; }
+.nav-links  { display:flex; align-items:center; gap:4px; margin-left:auto; list-style:none; }
+.nav-links a {
+  display:flex; align-items:center; gap:5px; padding:7px 12px;
+  color:var(--text-mid); text-decoration:none; font-size:14px; font-weight:500; border-radius:8px;
+  transition:background .2s, color .2s;
+}
+.nav-links a:hover { background:var(--green-ghost); color:var(--green-dark); }
+.nav-links a.active { background:var(--maroon-ghost); color:var(--maroon); font-weight:600; }
+.nav-login {
+  border:1.5px solid var(--border) !important;
+  transition:border-color .2s !important;
+}
+.nav-login:hover { border-color:var(--green-mid) !important; }
+.nav-apply {
+  background:var(--maroon) !important; color:var(--white) !important;
+  font-weight:600 !important; border-radius:8px;
+  box-shadow:0 4px 12px rgba(107,15,26,.3);
+  transition:background .2s, transform .15s !important;
+}
+.nav-apply:hover { background:var(--maroon-mid) !important; transform:translateY(-1px) !important; color:var(--white) !important; }
+.hamburger { display:none; background:none; border:none; cursor:pointer; padding:8px; color:var(--maroon); margin-left:auto; }
+.mobile-menu { display:none; background:var(--white); border-top:1px solid var(--border); padding:12px 24px; }
+.mobile-menu.open { display:block; }
+.mobile-menu a { display:block; padding:11px 0; color:var(--text-mid); text-decoration:none; font-size:15px; border-bottom:1px solid var(--border); transition:color .2s, padding-left .2s; }
+.mobile-menu a:last-child { border-bottom:none; }
+.mobile-menu a:hover { color:var(--maroon); padding-left:8px; }
+
+/* ── HERO BANNER ── */
+.page-hero {
+  background:var(--maroon); position:relative; overflow:hidden;
+  padding:56px 24px 52px;
+}
+.page-hero::before {
+  content:''; position:absolute; inset:0;
+  background-image:repeating-linear-gradient(55deg,transparent,transparent 40px,rgba(255,255,255,.018) 40px,rgba(255,255,255,.018) 41px);
+}
+.page-hero::after {
+  content:''; position:absolute; top:-80px; right:-60px;
+  width:400px; height:400px; border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.15) 0%,transparent 70%);
+  animation:glowPulse 5s ease-in-out infinite;
+}
+.hero-inner {
+  max-width:1140px; margin:0 auto; position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:space-between; gap:40px; flex-wrap:wrap;
+}
+.hero-text { animation:fadeInUp .8s .2s ease both; }
+.hero-breadcrumb {
+  display:inline-flex; align-items:center; gap:8px;
+  color:rgba(255,255,255,.6); font-size:12.5px; margin-bottom:16px;
+}
+.hero-breadcrumb a { color:var(--gold-light); text-decoration:none; transition:color .2s; }
+.hero-breadcrumb a:hover { color:var(--white); }
+.hero-breadcrumb span { color:rgba(255,255,255,.4); }
+.page-hero h1 {
+  font-family:'Playfair Display',serif; font-size:clamp(28px,4vw,46px);
+  font-weight:700; color:var(--white); line-height:1.15; margin-bottom:12px;
+}
+.page-hero h1 em { font-style:italic; color:var(--gold-light); }
+.page-hero p { font-size:16px; color:rgba(255,255,255,.75); max-width:500px; line-height:1.7; }
+.hero-badges { display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; animation:fadeInUp .8s .4s ease both; }
+.hero-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2);
+  color:var(--white); font-size:12px; font-weight:500; padding:5px 12px; border-radius:100px;
+}
+.hero-badge .dot { width:6px; height:6px; border-radius:50%; background:var(--gold); }
+.hero-steps-preview {
+  background:rgba(255,255,255,.08); backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.18); border-radius:var(--radius-lg);
+  padding:24px 28px; min-width:240px;
+  animation:fadeInUp .8s .5s ease both;
+}
+.steps-title { font-size:11px; font-weight:600; color:var(--gold-light); letter-spacing:.08em; text-transform:uppercase; margin-bottom:16px; }
+.step-item { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.step-item:last-child { margin-bottom:0; }
+.step-num {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  background:rgba(201,168,76,.25); border:1px solid rgba(201,168,76,.5);
+  color:var(--gold-light); font-size:12px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.step-text { font-size:13px; color:rgba(255,255,255,.8); line-height:1.3; }
+
+/* ── PROGRESS STEPPER ── */
+.stepper-wrap {
+  background:var(--white); border-bottom:1px solid var(--border);
+  padding:20px 24px; position:sticky; top:74px; z-index:80;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.stepper {
+  max-width:760px; margin:0 auto;
+  display:flex; align-items:center; gap:0;
+}
+.step-node {
+  display:flex; flex-direction:column; align-items:center; flex:1;
+  position:relative;
+}
+.step-node:not(:last-child)::after {
+  content:''; position:absolute; top:16px; left:calc(50% + 16px); right:calc(-50% + 16px);
+  height:2px; background:var(--border); z-index:0; transition:background .4s;
+}
+.step-node.completed:not(:last-child)::after { background:var(--green-mid); }
+.step-circle {
+  width:32px; height:32px; border-radius:50%; z-index:1;
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; border:2px solid var(--border);
+  background:var(--white); color:var(--text-muted);
+  transition:background .3s, border-color .3s, color .3s, transform .3s;
+}
+.step-node.active .step-circle  { background:var(--maroon); border-color:var(--maroon); color:var(--white); transform:scale(1.1); }
+.step-node.completed .step-circle { background:var(--green-mid); border-color:var(--green-mid); color:var(--white); }
+.step-node.completed .step-circle::before { content:'✓'; font-size:14px; }
+.step-label { font-size:11px; color:var(--text-muted); margin-top:6px; text-align:center; font-weight:500; transition:color .3s; white-space:nowrap; }
+.step-node.active .step-label   { color:var(--maroon); font-weight:600; }
+.step-node.completed .step-label { color:var(--green-mid); }
+
+/* ── MAIN LAYOUT ── */
+.app-layout {
+  max-width:1140px; margin:0 auto; padding:48px 24px 80px;
+  display:grid; grid-template-columns:1fr 340px; gap:36px; align-items:start;
+}
+
+/* ── FORM CARD ── */
+.form-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--radius-lg); overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.form-section {
+  display:none; padding:40px;
+  animation:slideUp .4s ease both;
+}
+.form-section.active { display:block; }
+
+.section-head { margin-bottom:32px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+.section-head-top { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.section-icon {
+  width:44px; height:44px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+}
+.icon-maroon { background:var(--maroon-ghost); }
+.icon-green  { background:var(--green-ghost); }
+.icon-gold   { background:rgba(201,168,76,.12); }
+.section-head h2 { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:var(--green-dark); line-height:1.2; }
+.section-head p  { font-size:14px; color:var(--text-muted); }
+
+/* Form grid */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.form-grid.full { grid-template-columns:1fr; }
+.field-group { display:flex; flex-direction:column; gap:6px; }
+.field-group.span2 { grid-column:span 2; }
+
+label {
+  font-size:13px; font-weight:600; color:var(--text-dark);
+  display:flex; align-items:center; gap:4px;
+}
+.req { color:var(--maroon); font-size:11px; }
+
+input[type=text], input[type=email], input[type=tel], input[type=date],
+input[type=number], select, textarea {
+  width:100%; padding:11px 14px;
+  border:1.5px solid var(--border); border-radius:var(--radius);
+  font-family:'DM Sans',sans-serif; font-size:14px; color:var(--text-dark);
+  background:var(--white); outline:none;
+  transition:border-color .2s, box-shadow .2s, background .2s;
+  appearance:none; -webkit-appearance:none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color:var(--green-mid);
+  box-shadow:0 0 0 3px rgba(45,106,79,.12);
+  background:var(--green-ghost);
+}
+input.error, select.error { border-color:var(--maroon); box-shadow:0 0 0 3px rgba(107,15,26,.1); }
+.field-hint { font-size:12px; color:var(--text-muted); }
+.field-error { font-size:12px; color:var(--maroon); display:none; }
+.field-error.show { display:block; }
+
+select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a70' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+
+textarea { resize:vertical; min-height:90px; }
+
+/* Radio & checkbox groups */
+.radio-group, .check-group { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+.radio-opt, .check-opt {
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  background:var(--cream); border:1.5px solid var(--border);
+  border-radius:8px; padding:9px 14px; font-size:14px;
+  transition:background .2s, border-color .2s;
+  user-select:none;
+}
+.radio-opt:hover, .check-opt:hover { background:var(--green-ghost); border-color:var(--green-light); }
+.radio-opt input, .check-opt input { width:15px; height:15px; accent-color:var(--green-mid); cursor:pointer; }
+.radio-opt input:checked ~ span, .check-opt input:checked ~ span { color:var(--green-dark); font-weight:600; }
+.radio-opt:has(input:checked), .check-opt:has(input:checked) { background:var(--green-ghost); border-color:var(--green-mid); }
+
+/* File upload */
+.file-upload-zone {
+  border:2px dashed var(--border); border-radius:var(--radius);
+  padding:28px 20px; text-align:center; cursor:pointer;
+  transition:border-color .2s, background .2s;
+  position:relative;
+}
+.file-upload-zone:hover { border-color:var(--green-mid); background:var(--green-ghost); }
+.file-upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.file-icon { font-size:32px; margin-bottom:8px; }
+.file-label { font-size:14px; color:var(--text-mid); font-weight:500; }
+.file-sub { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.file-name { font-size:13px; color:var(--green-dark); font-weight:600; margin-top:8px; display:none; }
+
+/* Declaration */
+.declaration-box {
+  background:var(--cream); border:1px solid var(--border);
+  border-radius:var(--radius); padding:20px; font-size:13.5px;
+  color:var(--text-mid); line-height:1.7; margin-bottom:20px;
+}
+.declaration-box strong { color:var(--text-dark); }
+
+.sign-field { position:relative; }
+.sign-field input {
+  font-family:'Playfair Display',serif; font-style:italic;
+  font-size:22px; padding:14px 16px; color:var(--green-dark);
+  border-bottom:2px solid var(--green-mid) !important;
+  border-top:none !important; border-left:none !important; border-right:none !important;
+  border-radius:0 !important; background:transparent !important;
+  box-shadow:none !important;
+}
+.sign-field label { font-size:11px; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; }
+
+/* Form nav buttons */
+.form-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:36px; padding-top:24px; border-top:1px solid var(--border);
+  flex-wrap:wrap; gap:12px;
+}
+.btn { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; border-radius:var(--radius); font-size:14px; font-weight:600; cursor:pointer; border:none; text-decoration:none; transition:background .2s, transform .15s, box-shadow .2s; letter-spacing:.01em; }
+.btn-next { background:var(--maroon); color:var(--white); box-shadow:0 4px 12px rgba(107,15,26,.28); }
+.btn-next:hover { background:var(--maroon-mid); transform:translateY(-2px); box-shadow:0 8px 20px rgba(107,15,26,.36); }
+.btn-prev { background:var(--cream); color:var(--text-mid); border:1.5px solid var(--border); }
+.btn-prev:hover { background:var(--green-ghost); border-color:var(--green-mid); color:var(--green-dark); }
+.btn-submit { background:var(--green-dark); color:var(--white); box-shadow:0 4px 12px rgba(26,71,49,.3); }
+.btn-submit:hover { background:var(--green-mid); transform:translateY(-2px); }
+
+/* ── SUCCESS STATE ── */
+.success-screen {
+  display:none; text-align:center; padding:64px 40px;
+  animation:slideUp .5s ease both;
+}
+.success-screen.show { display:block; }
+.success-icon {
+  width:80px; height:80px; border-radius:50%;
+  background:var(--green-ghost); border:3px solid var(--green-pale);
+  display:flex; align-items:center; justify-content:center;
+  font-size:36px; margin:0 auto 24px;
+  animation:checkPop .5s .2s ease both;
+}
+.success-screen h2 { font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--green-dark); margin-bottom:12px; }
+.success-screen p  { font-size:15px; color:var(--text-muted); max-width:400px; margin:0 auto 24px; line-height:1.7; }
+.ref-box {
+  display:inline-block; background:var(--green-ghost);
+  border:1px solid var(--green-pale); border-radius:var(--radius);
+  padding:12px 24px; font-size:18px; font-weight:700;
+  color:var(--green-dark); letter-spacing:.04em; margin-bottom:28px;
+}
+.success-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+/* ── SIDEBAR ── */
+.sidebar { display:flex; flex-direction:column; gap:20px; }
+
+.info-card {
+  background:var(--white); border:1px solid var(--border);
+  border-radius:var(--radius-lg); overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.info-card-head {
+  padding:16px 20px; font-size:13px; font-weight:700;
+  letter-spacing:.04em; text-transform:uppercase;
+  display:flex; align-items:center; gap:8px;
+}
+.info-card-head.maroon { background:var(--maroon); color:var(--white); }
+.info-card-head.green  { background:var(--green-dark); color:var(--white); }
+.info-card-head.gold   { background:var(--gold); color:var(--maroon); }
+.info-card-body { padding:20px; }
+
+.req-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.req-list li { display:flex; align-items:flex-start; gap:10px; font-size:13.5px; color:var(--text-mid); line-height:1.5; }
+.req-list li::before {
+  content:'✓'; width:18px; height:18px; border-radius:50%; flex-shrink:0; margin-top:1px;
+  background:var(--green-pale); color:var(--green-dark); font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+}
+.req-list.maroon li::before { background:var(--maroon-pale); color:var(--maroon); }
+
+.fee-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+.fee-table td { padding:8px 0; color:var(--text-mid); border-bottom:1px solid var(--border); }
+.fee-table td:last-child { text-align:right; font-weight:600; color:var(--text-dark); }
+.fee-table tr:last-child td { border-bottom:none; font-size:15px; color:var(--green-dark); font-weight:700; }
+
+.timeline { display:flex; flex-direction:column; gap:0; }
+.tl-item { display:flex; gap:12px; padding-bottom:16px; position:relative; }
+.tl-item:last-child { padding-bottom:0; }
+.tl-item:not(:last-child)::before { content:''; position:absolute; left:11px; top:26px; bottom:0; width:2px; background:var(--border); }
+.tl-dot {
+  width:24px; height:24px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:11px;
+  font-weight:700; z-index:1;
+}
+.tl-dot.done  { background:var(--green-pale); color:var(--green-dark); }
+.tl-dot.now   { background:var(--maroon); color:var(--white); }
+.tl-dot.later { background:var(--border); color:var(--text-muted); }
+.tl-text { flex:1; }
+.tl-title { font-size:13px; font-weight:600; color:var(--text-dark); }
+.tl-date  { font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+
+.contact-block { display:flex; flex-direction:column; gap:10px; }
+.contact-row { display:flex; align-items:center; gap:10px; font-size:13.5px; color:var(--text-mid); }
+.contact-row svg { color:var(--gold); flex-shrink:0; }
+.contact-row a { color:var(--green-mid); text-decoration:none; }
+.contact-row a:hover { color:var(--green-dark); text-decoration:underline; }
+
+/* ── FOOTER ── */
+footer {
+  background:#1a0a0c; color:rgba(255,255,255,.6);
+  padding:32px 24px; text-align:center; font-size:13px;
+  position:relative;
+}
+footer::before {
+  content:''; position:absolute; top:0; left:0; width:100%; height:3px;
+  background:linear-gradient(90deg, var(--maroon), var(--gold), var(--green-mid));
+  background-size:300% auto; animation:shimmer 6s linear infinite;
+}
+footer a { color:var(--gold-light); text-decoration:none; }
+footer a:hover { text-decoration:underline; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px) {
+  .app-layout { grid-template-columns:1fr; }
+  .sidebar { order:-1; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+}
+@media (max-width:700px) {
+  .form-grid { grid-template-columns:1fr; }
+  .field-group.span2 { grid-column:span 1; }
+  .hero-steps-preview { display:none; }
+  .sidebar { grid-template-columns:1fr; }
+  .hamburger { display:flex; }
+  .nav-links  { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div id="scroll-bar"></div>
+
+<!-- ── NAV ── -->
+<header class="main-header" id="mainHeader">
+  <div class="nav-inner">
+    <a href="aic-laboret-school.html" class="school-brand">
+      <div class="emblem">
+        <div class="emblem-inner">
+          <div class="emblem-cross">✝</div>
+          <div class="emblem-text">AIC<br>LABORET</div>
+        </div>
+      </div>
+      <div>
+        <div class="brand-name">AIC Laboret Girls</div>
+        <div class="brand-sub">Boarding Primary School</div>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="aic-laboret-school.html">Home</a></li>
+      <li><a href="aic-laboret-school.html#welcome">About Us</a></li>
+      <li><a href="apply.html" class="active">Admissions</a></li>
+      <li><a href="aic-laboret-school.html#pillars">Academics</a></li>
+      <li><a href="login.html" class="nav-login">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Login
+      </a></li>
+      <li><a href="apply.html" class="nav-apply">Apply Now</a></li>
+    </ul>
+    <button class="hamburger" onclick="document.getElementById('mob').classList.toggle('open')" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mob">
+    <a href="aic-laboret-school.html">Home</a>
+    <a href="aic-laboret-school.html#welcome">About Us</a>
+    <a href="apply.html">Admissions</a>
+    <a href="login.html">🔐 Login</a>
+  </div>
+</header>
+
+<!-- ── PAGE HERO ── -->
+<section class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-breadcrumb">
+        <a href="aic-laboret-school.html">Home</a>
+        <span>›</span>
+        <span>Admissions</span>
+        <span>›</span>
+        <span style="color:var(--white)">New Student Application</span>
+      </div>
+      <h1>Apply for <em>Admission</em></h1>
+      <p>Complete the form below to apply for a place at AIC Laboret Girls Boarding Primary School for the 2025/2026 academic year.</p>
+      <div class="hero-badges">
+        <div class="hero-badge"><div class="dot"></div>Online Application</div>
+        <div class="hero-badge"><div class="dot"></div>CBC Curriculum</div>
+        <div class="hero-badge"><div class="dot"></div>Grades 1 – 6</div>
+      </div>
+    </div>
+    <div class="hero-steps-preview">
+      <div class="steps-title">Application Steps</div>
+      <div class="step-item"><div class="step-num">1</div><div class="step-text">Student Details</div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-text">Parent / Guardian</div></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-text">Academic Background</div></div>
+      <div class="step-item"><div class="step-num">4</div><div class="step-text">Documents & Declaration</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STEPPER ── -->
+<div class="stepper-wrap">
+  <div class="stepper">
+    <div class="step-node active" id="sn1">
+      <div class="step-circle">1</div>
+      <div class="step-label">Student</div>
+    </div>
+    <div class="step-node" id="sn2">
+      <div class="step-circle">2</div>
+      <div class="step-label">Parent</div>
+    </div>
+    <div class="step-node" id="sn3">
+      <div class="step-circle">3</div>
+      <div class="step-label">Academic</div>
+    </div>
+    <div class="step-node" id="sn4">
+      <div class="step-circle">4</div>
+      <div class="step-label">Docs & Submit</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN LAYOUT ── -->
+<div class="app-layout">
+
+  <!-- FORM CARD -->
+  <div class="form-card">
+
+    <!-- ── STEP 1: STUDENT DETAILS ── -->
+    <div class="form-section active" id="step1">
+      <div class="section-head">
+        <div class="section-head-top">
+          <div class="section-icon icon-maroon">👧</div>
+          <div>
+            <h2>Student Information</h2>
+            <p>Please fill in the prospective student's details accurately as they appear on official documents.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field-group">
+          <label>First Name <span class="req">*</span></label>
+          <input type="text" id="firstName" placeholder="e.g. Amina" required>
+          <div class="field-error" id="e-firstName">Please enter the student's first name.</div>
+        </div>
+        <div class="field-group">
+          <label>Middle Name</label>
+          <input type="text" placeholder="Optional">
+        </div>
+        <div class="field-group">
+          <label>Last Name (Surname) <span class="req">*</span></label>
+          <input type="text" id="lastName" placeholder="e.g. Wanjiru" required>
+          <div class="field-error" id="e-lastName">Please enter the student's surname.</div>
+        </div>
+        <div class="field-group">
+          <label>Date of Birth <span class="req">*</span></label>
+          <input type="date" id="dob" required>
+          <div class="field-error" id="e-dob">Please enter date of birth.</div>
+        </div>
+        <div class="field-group">
+          <label>National ID / Birth Certificate No. <span class="req">*</span></label>
+          <input type="text" id="birthCert" placeholder="e.g. BC-12345678" required>
+          <div class="field-error" id="e-birthCert">Required for NEMIS registration.</div>
+        </div>
+        <div class="field-group">
+          <label>Nationality</label>
+          <select>
+            <option value="">— Select —</option>
+            <option selected>Kenyan</option>
+            <option>Ugandan</option>
+            <option>Tanzanian</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field-group span2">
+          <label>Grade Applying For <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="grade" value="1"><span>Grade 1</span></label>
+            <label class="radio-opt"><input type="radio" name="grade" value="2"><span>Grade 2</span></label>
+            <label class="radio-opt"><input type="radio" name="grade" value="3"><span>Grade 3</span></label>
+            <label class="radio-opt"><input type="radio" name="grade" value="4"><span>Grade 4</span></label>
+            <label class="radio-opt"><input type="radio" name="grade" value="5"><span>Grade 5</span></label>
+            <label class="radio-opt"><input type="radio" name="grade" value="6"><span>Grade 6</span></label>
+          </div>
+          <div class="field-error" id="e-grade">Please select a grade.</div>
+        </div>
+        <div class="field-group span2">
+          <label>Academic Year of Entry <span class="req">*</span></label>
+          <select id="entryYear">
+            <option value="">— Select Year —</option>
+            <option value="2025">2025 (Term 2)</option>
+            <option value="2026" selected>2026 (Term 1)</option>
+          </select>
+        </div>
+        <div class="field-group span2">
+          <label>Does the student have any medical conditions or special educational needs?</label>
+          <textarea placeholder="Please describe any relevant medical history, allergies, or learning support requirements. Write 'None' if not applicable."></textarea>
+        </div>
+        <div class="field-group span2">
+          <label>Religion</label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="religion" value="christian"><span>Christian</span></label>
+            <label class="radio-opt"><input type="radio" name="religion" value="muslim"><span>Muslim</span></label>
+            <label class="radio-opt"><input type="radio" name="religion" value="other"><span>Other</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <span style="font-size:13px;color:var(--text-muted);">Step 1 of 4</span>
+        <button class="btn btn-next" onclick="goTo(2)">
+          Next: Parent Details
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: PARENT / GUARDIAN ── -->
+    <div class="form-section" id="step2">
+      <div class="section-head">
+        <div class="section-head-top">
+          <div class="section-icon icon-green">👨‍👩‍👧</div>
+          <div>
+            <h2>Parent / Guardian Details</h2>
+            <p>This information will be used for official communication and emergency contacts.</p>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:13px;font-weight:600;color:var(--green-dark);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;">Primary Contact (Father / Mother)</p>
+      <div class="form-grid">
+        <div class="field-group">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="parentName" placeholder="e.g. John Kipchoge" required>
+          <div class="field-error" id="e-parentName">Please enter parent's full name.</div>
+        </div>
+        <div class="field-group">
+          <label>Relationship to Student <span class="req">*</span></label>
+          <select id="relationship">
+            <option value="">— Select —</option>
+            <option>Father</option>
+            <option>Mother</option>
+            <option>Guardian</option>
+            <option>Grandparent</option>
+            <option>Sibling (18+)</option>
+          </select>
+          <div class="field-error" id="e-relationship">Please select a relationship.</div>
+        </div>
+        <div class="field-group">
+          <label>Phone Number (Primary) <span class="req">*</span></label>
+          <input type="tel" id="phone" placeholder="e.g. 0712 345 678" required>
+          <div class="field-error" id="e-phone">Please enter a valid phone number.</div>
+        </div>
+        <div class="field-group">
+          <label>Phone Number (Alternative)</label>
+          <input type="tel" placeholder="e.g. 0722 987 654">
+        </div>
+        <div class="field-group span2">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="email" id="parentEmail" placeholder="e.g. john.kipchoge@email.com" required>
+          <div class="field-error" id="e-parentEmail">Please enter a valid email address.</div>
+        </div>
+        <div class="field-group span2">
+          <label>Postal / Physical Address <span class="req">*</span></label>
+          <input type="text" id="address" placeholder="e.g. P.O. Box 123, Kapkatembo, Nandi North" required>
+          <div class="field-error" id="e-address">Please enter your address.</div>
+        </div>
+        <div class="field-group">
+          <label>County of Residence <span class="req">*</span></label>
+          <select id="county">
+            <option value="">— Select County —</option>
+            <option>Nandi</option><option>Uasin Gishu</option><option>Trans Nzoia</option>
+            <option>Kakamega</option><option>Kericho</option><option>Nairobi</option>
+            <option>Kisumu</option><option>Mombasa</option><option>Other</option>
+          </select>
+          <div class="field-error" id="e-county">Please select a county.</div>
+        </div>
+        <div class="field-group">
+          <label>Occupation</label>
+          <input type="text" placeholder="e.g. Teacher, Farmer, Nurse">
+        </div>
+      </div>
+
+      <div style="height:1px;background:var(--border);margin:28px 0;"></div>
+      <p style="font-size:13px;font-weight:600;color:var(--green-dark);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;">Emergency Contact (if different)</p>
+      <div class="form-grid">
+        <div class="field-group">
+          <label>Emergency Contact Name</label>
+          <input type="text" placeholder="Full name">
+        </div>
+        <div class="field-group">
+          <label>Emergency Contact Phone</label>
+          <input type="tel" placeholder="Phone number">
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn btn-prev" onclick="goTo(1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <button class="btn btn-next" onclick="goTo(3)">
+          Next: Academic Background
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: ACADEMIC BACKGROUND ── -->
+    <div class="form-section" id="step3">
+      <div class="section-head">
+        <div class="section-head-top">
+          <div class="section-icon icon-green">📚</div>
+          <div>
+            <h2>Academic Background</h2>
+            <p>Provide details of the student's previous school and academic record.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field-group span2">
+          <label>Name of Previous School <span class="req">*</span></label>
+          <input type="text" id="prevSchool" placeholder="e.g. Kapkatembo Primary School">
+          <div class="field-error" id="e-prevSchool">Please enter the previous school name.</div>
+        </div>
+        <div class="field-group">
+          <label>Last Grade / Class Completed <span class="req">*</span></label>
+          <select id="lastGrade">
+            <option value="">— Select —</option>
+            <option>Pre-Primary 2 (PP2)</option>
+            <option>Grade 1</option><option>Grade 2</option><option>Grade 3</option>
+            <option>Grade 4</option><option>Grade 5</option><option>Grade 6</option>
+            <option>First time enrolment</option>
+          </select>
+          <div class="field-error" id="e-lastGrade">Please select previous class.</div>
+        </div>
+        <div class="field-group">
+          <label>Year of Last Attendance</label>
+          <select>
+            <option value="">— Select Year —</option>
+            <option>2025</option><option>2024</option><option>2023</option><option>2022</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Overall Performance (Last Report)</label>
+          <select>
+            <option value="">— Select —</option>
+            <option>Excellent (80 – 100%)</option>
+            <option>Good (65 – 79%)</option>
+            <option>Average (50 – 64%)</option>
+            <option>Below Average (below 50%)</option>
+            <option>Not Applicable</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Reason for Changing School</label>
+          <select>
+            <option value="">— Select —</option>
+            <option>Relocation</option>
+            <option>Seeking better quality education</option>
+            <option>Boarding preference</option>
+            <option>First enrolment</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field-group span2">
+          <label>Talents, Achievements & Extra-Curricular Interests</label>
+          <textarea placeholder="e.g. Sports (athletics, netball), Music (choir, drama), Academic clubs, Any awards or recognitions..."></textarea>
+        </div>
+        <div class="field-group span2">
+          <label>Languages Spoken at Home</label>
+          <div class="check-group">
+            <label class="check-opt"><input type="checkbox" value="kiswahili"><span>Kiswahili</span></label>
+            <label class="check-opt"><input type="checkbox" value="english"><span>English</span></label>
+            <label class="check-opt"><input type="checkbox" value="nandi"><span>Nandi/Kalenjin</span></label>
+            <label class="check-opt"><input type="checkbox" value="luhya"><span>Luhya</span></label>
+            <label class="check-opt"><input type="checkbox" value="other"><span>Other</span></label>
+          </div>
+        </div>
+        <div class="field-group span2">
+          <label>How did you hear about AIC Laboret? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="source" value="word"><span>Word of mouth</span></label>
+            <label class="radio-opt"><input type="radio" name="source" value="social"><span>Social media</span></label>
+            <label class="radio-opt"><input type="radio" name="source" value="school"><span>Another school</span></label>
+            <label class="radio-opt"><input type="radio" name="source" value="church"><span>Church / AIC</span></label>
+            <label class="radio-opt"><input type="radio" name="source" value="online"><span>Website</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn btn-prev" onclick="goTo(2)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <button class="btn btn-next" onclick="goTo(4)">
+          Next: Documents & Submit
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 4: DOCUMENTS & DECLARATION ── -->
+    <div class="form-section" id="step4">
+      <div class="section-head">
+        <div class="section-head-top">
+          <div class="section-icon icon-gold">📎</div>
+          <div>
+            <h2>Documents & Declaration</h2>
+            <p>Upload required documents and sign the declaration to complete your application.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document uploads -->
+      <div class="form-grid">
+        <div class="field-group span2">
+          <label>Birth Certificate / Birth Notification <span class="req">*</span></label>
+          <div class="file-upload-zone">
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="showFile(this,'bc-name')">
+            <div class="file-icon">📄</div>
+            <div class="file-label">Click to upload or drag & drop</div>
+            <div class="file-sub">PDF, JPG, PNG — max 5MB</div>
+            <div class="file-name" id="bc-name"></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Recent Passport Photo <span class="req">*</span></label>
+          <div class="file-upload-zone">
+            <input type="file" accept=".jpg,.jpeg,.png" onchange="showFile(this,'photo-name')">
+            <div class="file-icon">🖼️</div>
+            <div class="file-label">Upload passport-size photo</div>
+            <div class="file-sub">JPG, PNG — max 2MB</div>
+            <div class="file-name" id="photo-name"></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Last School Report Card</label>
+          <div class="file-upload-zone">
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="showFile(this,'report-name')">
+            <div class="file-icon">📋</div>
+            <div class="file-label">Upload last report</div>
+            <div class="file-sub">PDF, JPG — max 5MB</div>
+            <div class="file-name" id="report-name"></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>National ID of Parent / Guardian <span class="req">*</span></label>
+          <div class="file-upload-zone">
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="showFile(this,'id-name')">
+            <div class="file-icon">🪪</div>
+            <div class="file-label">Upload parent's ID (both sides)</div>
+            <div class="file-sub">JPG, PNG — max 3MB</div>
+            <div class="file-name" id="id-name"></div>
+          </div>
+        </div>
+        <div class="field-group span2">
+          <label>Transfer/Leaving Certificate (if transferring)</label>
+          <div class="file-upload-zone">
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="showFile(this,'transfer-name')">
+            <div class="file-icon">📂</div>
+            <div class="file-label">Upload leaving certificate</div>
+            <div class="file-sub">PDF, JPG — optional for new students</div>
+            <div class="file-name" id="transfer-name"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Declaration -->
+      <div style="margin-top:36px; padding-top:24px; border-top:1px solid var(--border);">
+        <p style="font-size:14px;font-weight:700;color:var(--green-dark);margin-bottom:16px;">📜 Parent / Guardian Declaration</p>
+        <div class="declaration-box">
+          I, the undersigned parent/guardian, hereby declare that:
+          <br><br>
+          <strong>1.</strong> All information provided in this application is true, accurate, and complete to the best of my knowledge.<br>
+          <strong>2.</strong> I understand and agree to the school's code of conduct, fee payment schedule, and boarding regulations as outlined in the school prospectus.<br>
+          <strong>3.</strong> I give my consent for the school to use my child's information for educational and administrative purposes, including NEMIS registration.<br>
+          <strong>4.</strong> I acknowledge that submission of this application does not guarantee admission, and that the school reserves the right to admit or decline any applicant based on available places and assessment results.<br>
+          <strong>5.</strong> I will ensure all school fees are paid before the commencement of each term.
+        </div>
+
+        <div class="form-grid">
+          <div class="field-group">
+            <div class="sign-field">
+              <label>Parent / Guardian Signature (type full name) <span class="req">*</span></label>
+              <input type="text" id="signature" placeholder="Type your full name as signature">
+              <div class="field-error" id="e-signature">Signature is required to proceed.</div>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Date of Signing <span class="req">*</span></label>
+            <input type="date" id="signDate" required>
+          </div>
+          <div class="field-group span2">
+            <label class="check-opt" style="width:fit-content;font-size:14px;font-weight:500;">
+              <input type="checkbox" id="agreeCheck">
+              <span>I have read and agree to the declaration above, and I consent to the school's data use policy.</span>
+            </label>
+            <div class="field-error" id="e-agree">You must agree to the declaration before submitting.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button class="btn btn-prev" onclick="goTo(3)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <button class="btn btn-submit" onclick="submitApp()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Submit Application
+        </button>
+      </div>
+    </div>
+
+    <!-- ── SUCCESS ── -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-icon">✅</div>
+      <h2>Application Submitted!</h2>
+      <p>Thank you for applying to AIC Laboret Girls Boarding Primary School. Your application has been received and is being reviewed by our admissions office.</p>
+      <div class="ref-box" id="refNumber">REF: LAB-2026-0001</div>
+      <p style="font-size:13px;">You will receive a confirmation SMS and email within <strong>2 working days</strong>. Please keep your reference number safe.</p>
+      <div class="success-actions" style="margin-top:24px;">
+        <a href="aic-laboret-school.html" class="btn btn-prev">← Back to Home</a>
+        <button class="btn btn-submit" onclick="window.print()">🖨 Print Confirmation</button>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <!-- Requirements -->
+    <div class="info-card reveal">
+      <div class="info-card-head maroon">📋 Admission Requirements</div>
+      <div class="info-card-body">
+        <ul class="req-list maroon">
+          <li>Original Birth Certificate or Birth Notification</li>
+          <li>Passport-size photographs (2 copies)</li>
+          <li>Last school report card (Term 1 or 2)</li>
+          <li>Leaving / Transfer Certificate from previous school</li>
+          <li>Parent/Guardian National ID copy</li>
+          <li>Immunization card (under 9 years)</li>
+          <li>Completed application form & registration fee</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Fees summary -->
+    <div class="info-card reveal d1">
+      <div class="info-card-head gold">💰 Fee Summary 2025/26</div>
+      <div class="info-card-body">
+        <table class="fee-table">
+          <tr><td>Tuition (per term)</td><td>KSh 12,500</td></tr>
+          <tr><td>Boarding & Meals</td><td>KSh 18,000</td></tr>
+          <tr><td>Activity Fee</td><td>KSh 2,500</td></tr>
+          <tr><td>CBC Materials</td><td>KSh 3,000</td></tr>
+          <tr><td>Registration (once)</td><td>KSh 2,000</td></tr>
+          <tr><td colspan="2" style="padding-top:10px;"><strong>Total per Term</strong></td></tr>
+          <tr><td style="font-weight:700;color:var(--green-dark);">Approx.</td><td>KSh 38,000</td></tr>
+        </table>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">Fees payable via M-Pesa Paybill <strong>123456</strong> (A/C: Student Name) or KCB Bank. Bursary applications available.</p>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="info-card reveal d2">
+      <div class="info-card-head green">📅 Admissions Timeline</div>
+      <div class="info-card-body">
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot done">✓</div>
+            <div class="tl-text"><div class="tl-title">Applications Open</div><div class="tl-date">Jan – Mar 2026</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot now">→</div>
+            <div class="tl-text"><div class="tl-title">Entrance Assessment</div><div class="tl-date">Every Saturday, 9am – 12pm</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot later">3</div>
+            <div class="tl-text"><div class="tl-title">Offer Letters Sent</div><div class="tl-date">Within 2 weeks of assessment</div></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot later">4</div>
+            <div class="tl-text"><div class="tl-title">Term 1 Reporting</div><div class="tl-date">January 2027</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="info-card reveal d3">
+      <div class="info-card-head green">📞 Need Help?</div>
+      <div class="info-card-body">
+        <div class="contact-block">
+          <div class="contact-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 11.9 19.79 19.79 0 0 1 1.61 3.28 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.55a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.45 16z"/></svg>
+            <a href="tel:+254700000000">+254 700 000 000</a>
+          </div>
+          <div class="contact-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <a href="mailto:admissions@aiclaboret.sc.ke">admissions@aiclaboret.sc.ke</a>
+          </div>
+          <div class="contact-row">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Mon – Fri, 8:00am – 5:00pm</span>
+          </div>
+          <div class="contact-row" style="align-items:flex-start;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Near Kapkatembo Shopping Centre, Nandi North</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+</div><!-- /app-layout -->
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 AIC Laboret Girls Boarding Primary School &nbsp;|&nbsp; <a href="aic-laboret-school.html">Home</a> &nbsp;|&nbsp; <a href="#">Safeguarding Policy</a> &nbsp;|&nbsp; <a href="#">Privacy Policy</a></p>
+  <p style="margin-top:6px;font-size:11px;color:rgba(255,255,255,.3);">NEMIS Registered · MoE Approved · AIC Sponsored</p>
+</footer>
+
+<script>
+let currentStep = 1;
+
+function goTo(step) {
+  // Basic validation before advancing
+  if (step > currentStep) {
+    if (!validate(currentStep)) return;
+  }
+  document.getElementById('step' + currentStep).classList.remove('active');
+  document.getElementById('sn' + currentStep).classList.remove('active');
+  if (step > currentStep) document.getElementById('sn' + currentStep).classList.add('completed');
+  currentStep = step;
+  document.getElementById('step' + currentStep).classList.add('active');
+  document.getElementById('sn' + currentStep).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validate(step) {
+  let ok = true;
+  const checks = {
+    1: [
+      { id:'firstName', err:'e-firstName' },
+      { id:'lastName',  err:'e-lastName'  },
+      { id:'dob',       err:'e-dob'       },
+      { id:'birthCert', err:'e-birthCert' },
+    ],
+    2: [
+      { id:'parentName',    err:'e-parentName'    },
+      { id:'relationship',  err:'e-relationship'  },
+      { id:'phone',         err:'e-phone'         },
+      { id:'parentEmail',   err:'e-parentEmail'   },
+      { id:'address',       err:'e-address'       },
+      { id:'county',        err:'e-county'        },
+    ],
+    3: [
+      { id:'prevSchool', err:'e-prevSchool' },
+      { id:'lastGrade',  err:'e-lastGrade'  },
+    ],
+  };
+  if (checks[step]) {
+    checks[step].forEach(({ id, err }) => {
+      const el = document.getElementById(id);
+      const errEl = document.getElementById(err);
+      if (!el || !el.value.trim()) {
+        if (el) el.classList.add('error');
+        if (errEl) errEl.classList.add('show');
+        ok = false;
+      } else {
+        el.classList.remove('error');
+        if (errEl) errEl.classList.remove('show');
+      }
+    });
+  }
+  // Grade check for step 1
+  if (step === 1) {
+    const gradeEl = document.getElementById('e-grade');
+    if (!document.querySelector('input[name="grade"]:checked')) {
+      if (gradeEl) gradeEl.classList.add('show');
+      ok = false;
+    } else {
+      if (gradeEl) gradeEl.classList.remove('show');
+    }
+  }
+  return ok;
+}
+
+function submitApp() {
+  if (!validate(4)) return;
+  const sig = document.getElementById('signature').value.trim();
+  const agree = document.getElementById('agreeCheck').checked;
+  let ok = true;
+  if (!sig) { document.getElementById('signature').classList.add('error'); document.getElementById('e-signature').classList.add('show'); ok = false; }
+  if (!agree) { document.getElementById('e-agree').classList.add('show'); ok = false; }
+  if (!ok) return;
+
+  // Hide form, show success
+  document.getElementById('step4').classList.remove('active');
+  const ref = 'LAB-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
+  document.getElementById('refNumber').textContent = 'REF: ' + ref;
+  document.getElementById('successScreen').classList.add('show');
+
+  // Mark all steps completed
+  [1,2,3,4].forEach(i => {
+    document.getElementById('sn' + i).classList.remove('active');
+    document.getElementById('sn' + i).classList.add('completed');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showFile(input, nameId) {
+  const nameEl = document.getElementById(nameId);
+  if (input.files && input.files[0]) {
+    nameEl.textContent = '✓ ' + input.files[0].name;
+    nameEl.style.display = 'block';
+  }
+}
+
+// Clear errors on input
+document.querySelectorAll('input, select, textarea').forEach(el => {
+  el.addEventListener('input', () => {
+    el.classList.remove('error');
+    const errId = 'e-' + el.id;
+    const err = document.getElementById(errId);
+    if (err) err.classList.remove('show');
+  });
+});
+
+// Set today's date on sign date
+const sd = document.getElementById('signDate');
+if (sd) sd.value = new Date().toISOString().split('T')[0];
+
+// Scroll progress
+window.addEventListener('scroll', () => {
+  const s = window.scrollY, t = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('scroll-bar').style.width = (s / t * 100) + '%';
+  document.getElementById('mainHeader').classList.toggle('scrolled', s > 60);
+}, { passive: true });
+
+// Reveal on scroll
+const obs = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold:.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

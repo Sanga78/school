@@ -2,12 +2,13 @@ from django.utils import timezone
 from typing import Any
 from django import forms
 from django.forms import ChoiceField
-from .models import AcademicYear, Bursar, CustomUser, Expense, FeePayment, LeaveRequest, Notification,SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,Class
+from .models import AcademicYear, Bursar, CustomUser, Expense, FeePayment, LeaveRequest, Notification,SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,StudentClass
 from django.apps import apps
 from django.core.validators import FileExtensionValidator
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.contrib.auth.forms import UserCreationForm
+from django.forms import PasswordInput 
+from django.db import transaction # Import transaction for atomic operations
 
 User = get_user_model()
 
@@ -18,29 +19,122 @@ class ChoiceNoValidation(ChoiceField):
     
 class DateInput(forms.DateInput):
     input_type = "date"
+    
+class StudentForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=150, 
+        required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(
+        max_length=150, 
+        required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={'class': 'form-control'}),
+        help_text="Optional, but recommended for communication purposes.")
+    username = forms.CharField(
+        max_length=150, 
+        required=True, 
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        help_text="Unique for each student",
+        label="Admission Number")
+    password = forms.CharField(
+        widget=PasswordInput(attrs={'class': 'form-control'}),
+        label="Password",
+        strip=False, 
+        help_text=("Your password must contain at least 8 characters. "
+                   "Can't be entirely numeric."),
+        required=False)
+    confirm_password = forms.CharField(
+        widget=PasswordInput(attrs={'class': 'form-control'}),
+        label="Confirm Password",
+        strip=False,
+        help_text="Enter the same password as above, for verification.",
+        required=False)
 
-class EditStudentForm(forms.Form):
-    email = forms.EmailField(label="Email",max_length=50,widget=forms.EmailInput(attrs={"class":"form-control"}))
-    first_name = forms.CharField(label="First Name",max_length=50,widget=forms.TextInput(attrs={"class":"form-control"}))
-    last_name = forms.CharField(label="Last Name",max_length=50,widget=forms.TextInput(attrs={"class":"form-control"}))
-    username = forms.CharField(label="Username",max_length=50,widget=forms.TextInput(attrs={"class":"form-control"}))
-    address = forms.CharField(label="Address",max_length=50,widget=forms.TextInput(attrs={"class":"form-control"}))
- 
-    gender_choices=(
-        ("Male","Male"),
-        ("Female","Female")
-    )
+    class Meta:
+        model = Student
+        fields = [
+            'gender', 'date_of_birth', 'current_class', 
+            'academic_year', 'father_name', 'mother_name', 'active'
+        ]
+        widgets = {
+            'gender': forms.Select(attrs={'class': 'form-control'}),
+            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}), 
+            'current_class': forms.Select(attrs={'class': 'form-control'}),
+            'academic_year': forms.Select(attrs={'class': 'form-control'}),
+            'father_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'mother_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
-    sex = forms.ChoiceField(label="Sex",choices=gender_choices,widget=forms.Select(attrs={"class":"form-control"}))
-    session_year_id = forms.ChoiceField(label="Sesssion Year", widget=forms.Select(attrs={"class": "form-control"}))
-    profile_pic = forms.FileField(label="Profile Picture",max_length=50,widget=forms.FileInput(attrs={"class":"form-control"}),required=False) 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        SessionYearModel = apps.get_model('index', 'SessionYearModel')
+        if self.instance and self.instance.pk:
+            self.fields['password'].required = False
+            self.fields['confirm_password'].required = False
+        else:
+            self.fields['password'].required = True
+            self.fields['confirm_password'].required = True
 
-        session_list = [(session.id, str(session.session_start_year) + " TO " + str(session.session_end_year)) for session in SessionYearModel.object.all()]
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if self.instance and self.instance.pk:
+            if Student.objects.filter(user__username=username).exclude(pk=self.instance.pk).exists():
+                raise ValidationError("This username is already taken.")
+        else:
+            if CustomUser.objects.filter(username=username).exists():
+                raise ValidationError("This username is already taken.")
+        return username
 
-        self.fields['session_year_id'].choices = session_list
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if not self.instance.pk and not password:
+            self.add_error('password', "Password is required for new students.")
+        
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', "Passwords do not match.")
+        
+        return cleaned_data
+
+    @transaction.atomic
+    def save(self, commit=True):
+        student = super().save(commit=False)
+        user_data = {
+            'first_name': self.cleaned_data['first_name'],
+            'last_name': self.cleaned_data['last_name'],
+            'email': self.cleaned_data.get('email', ''),
+            'username': self.cleaned_data['username'],
+            'user_type': 3,  # Student
+        }
+
+        if self.instance.pk:
+            # Update existing student
+            user = self.instance.user
+            for attr, value in user_data.items():
+                setattr(user, attr, value)
+            
+            if 'password' in self.cleaned_data and self.cleaned_data['password']:
+                user.set_password(self.cleaned_data['password'])
+            
+            user.save()
+            student.user = user
+        else:
+            # Create new student
+            user = CustomUser.objects.create_user(
+                password=self.cleaned_data['password'],
+                **user_data
+            )
+            student.user = user
+
+        if commit:
+            student.save()
+        
+        return student
 
 class EditResultForm(forms.Form):
     def __init__(self,*args,**kwargs):
@@ -97,7 +191,7 @@ class ResultUploadForm(forms.Form):
 
 class ClassTeacherAssignmentForm(forms.ModelForm):
     class Meta:
-        model = Class
+        model = StudentClass
         fields = ['name', 'class_teacher']
         widgets = {
             'name': forms.Select(attrs={'class': 'form-control'}),
@@ -115,7 +209,7 @@ class ExpenseForm(forms.ModelForm):
         
 class ClassForm(forms.ModelForm):
     class Meta:
-        model = Class
+        model = StudentClass
         fields = ['name', 'academic_year', 'class_teacher']
         widgets = {
             'name': forms.TextInput(attrs={
@@ -153,8 +247,7 @@ class ClassForm(forms.ModelForm):
     def clean_name(self):
         name = self.cleaned_data.get('name')
         academic_year = self.cleaned_data.get('academic_year')       
-        # Check if class with this name already exists in the same academic year
-        if Class.objects.filter(
+        if StudentClass.objects.filter(
             name__iexact=name, 
             academic_year=academic_year
         ).exclude(pk=self.instance.pk if self.instance else None).exists():
@@ -162,7 +255,6 @@ class ClassForm(forms.ModelForm):
                 'A class with this name already exists for the selected academic year.'
             )        
         return name
-
 
 class SystemSettingsForm(forms.Form):
     school_name = forms.CharField(
@@ -255,14 +347,12 @@ class LeaveResponseForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Customize status choices (you can modify this based on your needs)
         self.fields['status'].choices = [
             (0, 'Pending'),
             (1, 'Approve'),
             (2, 'Reject')
         ]
         
-        # Add custom classes based on status
         if self.instance and self.instance.status:
             self.fields['status'].initial = self.instance.status
     
@@ -304,90 +394,6 @@ class AddSubjectForm(forms.ModelForm):
         if Subject.objects.filter(code__iexact=code).exists():
             raise forms.ValidationError("A subject with this code already exists.")
         return code.upper()
-
-class AddStudentForm(UserCreationForm):
-    admission_number = forms.CharField(max_length=20, required=True)
-    gender = forms.ChoiceField(choices=Student.GENDER_CHOICES, required=True)
-    date_of_birth = forms.DateField(required=True, widget=forms.DateInput(attrs={'type': 'date'}))
-    current_class = forms.ModelChoiceField(queryset=Class.objects.all(), required=True)
-    academic_year = forms.ModelChoiceField(queryset=AcademicYear.objects.all(), required=True)
-    date_of_admission = forms.DateField(required=True, widget=forms.DateInput(attrs={'type': 'date'}))
-    father_name = forms.CharField(max_length=100, required=False)
-    mother_name = forms.CharField(max_length=100, required=False)
-    address = forms.CharField(widget=forms.Textarea, required=False)
-    profile_pic = forms.ImageField(required=False)
-    phone = forms.CharField(max_length=20, required=False)
-
-    class Meta:
-        model = User
-        fields = [
-            'first_name', 'last_name', 'email', 'username', 'password1', 'password2',
-            'admission_number', 'gender', 'date_of_birth', 'current_class', 
-            'academic_year', 'date_of_admission', 'father_name', 'mother_name',
-            'address', 'profile_pic', 'phone'
-        ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance.pk:
-            try:
-                student = self.instance.student_profile
-                self.fields['admission_number'].initial = student.admission_number
-                self.fields['gender'].initial = student.gender
-                self.fields['date_of_birth'].initial = student.date_of_birth
-                self.fields['current_class'].initial = student.current_class
-                self.fields['academic_year'].initial = student.academic_year
-                self.fields['date_of_admission'].initial = student.date_of_admission
-                self.fields['father_name'].initial = student.father_name
-                self.fields['mother_name'].initial = student.mother_name
-                self.fields['address'].initial = student.user.address
-                self.fields['phone'].initial = student.user.phone
-            except Student.DoesNotExist:
-                pass
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.user_type = 3  # Student
-        if commit:
-            user.save()
-            
-            student, created = Student.objects.get_or_create(user=user)
-            student.admission_number = self.cleaned_data['admission_number']
-            student.gender = self.cleaned_data['gender']
-            student.date_of_birth = self.cleaned_data['date_of_birth']
-            student.current_class = self.cleaned_data['current_class']
-            student.academic_year = self.cleaned_data['academic_year']
-            student.date_of_admission = self.cleaned_data['date_of_admission']
-            student.father_name = self.cleaned_data['father_name']
-            student.mother_name = self.cleaned_data['mother_name']
-            user.address = self.cleaned_data['address']
-            user.phone = self.cleaned_data['phone']
-            
-            if self.cleaned_data['profile_pic']:
-                student.profile_pic = self.cleaned_data['profile_pic']
-            
-            student.save()
-            user.save()
-            
-        return user
-
-    def clean_admission_number(self):
-        admission_number = self.cleaned_data['admission_number']
-        if Student.objects.filter(admission_number=admission_number).exclude(user=self.instance).exists():
-            raise ValidationError("A student with this admission number already exists.")
-        return admission_number
-
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
-            raise ValidationError("A user with this email already exists.")
-        return email
-
-    def clean_username(self):
-        username = self.cleaned_data['username']
-        if User.objects.filter(username=username).exclude(pk=self.instance.pk).exists():
-            raise ValidationError("A user with this username already exists.")
-        return username
 
 # Teacher Management Forms
 class StaffForm(forms.ModelForm):
@@ -453,7 +459,7 @@ class StaffSubjectAssignmentForm(forms.ModelForm):
         staff = kwargs.pop('staff', None)
         super().__init__(*args, **kwargs)
         if staff:
-            self.fields['classes'].queryset = Class.objects.filter(
+            self.fields['classes'].queryset = StudentClass.objects.filter(
                 academic_year__is_current=True
             )
 
@@ -570,3 +576,255 @@ class NotificationForm(forms.ModelForm):
         labels = {
             'priority': 'Priority Level'
         }
+
+# class StudentForm(forms.ModelForm):
+#     first_name = forms.CharField(
+#         max_length=150, 
+#         required=True, 
+#         widget=forms.TextInput(attrs={'class': 'form-control'})
+#     )
+#     last_name = forms.CharField(
+#         max_length=150, 
+#         required=True, 
+#         widget=forms.TextInput(attrs={'class': 'form-control'})
+#     )
+#     email = forms.EmailField(
+#         required=False,
+#         widget=forms.EmailInput(attrs={'class': 'form-control'}),
+#         help_text="Optional, but recommended for user communication."
+#     )
+#     username = forms.CharField(
+#         max_length=150, 
+#         required=True, 
+#         widget=forms.TextInput(attrs={'class': 'form-control'}),
+#         help_text="Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+#     )
+#     profile_pic = forms.ImageField(
+#         required=False, 
+#         widget=forms.FileInput(attrs={'class': 'form-control-file'}),
+#         help_text="Optional. Upload a profile picture for the student."
+#     )
+#     phone = forms.CharField(
+#         max_length=20, 
+#         required=False, 
+#         widget=forms.TextInput(attrs={'class': 'form-control'}),
+#         help_text="Optional. Student's contact phone number."
+#     )
+#     address = forms.CharField(
+#         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), 
+#         required=False,
+#         help_text="Optional. Student's residential address."
+#     )
+#     password = forms.CharField(
+#         widget=PasswordInput(attrs={'class': 'form-control'}),
+#         label="Password",
+#         strip=False, 
+#         help_text=("Your password must contain at least 8 characters. "
+#                    "Can't be entirely numeric."),
+#         required=False 
+#     )
+#     confirm_password = forms.CharField(
+#         widget=PasswordInput(attrs={'class': 'form-control'}),
+#         label="Confirm Password",
+#         strip=False,
+#         help_text="Enter the same password as above, for verification.",
+#         required=False 
+#     )
+#     class Meta:
+#         model = Student
+#         fields = [
+#             'admission_number', 'gender', 'date_of_birth',
+#             'current_class', 'academic_year', 'father_name',
+#             'mother_name', 'active'
+#         ]     
+#         widgets = {
+#             'admission_number': forms.TextInput(attrs={'class': 'form-control'}),
+#             'gender': forms.Select(attrs={'class': 'form-control'}),
+#             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}), 
+#             'current_class': forms.Select(attrs={'class': 'form-control'}),
+#             'academic_year': forms.Select(attrs={'class': 'form-control'}),
+#             'father_name': forms.TextInput(attrs={'class': 'form-control'}),
+#             'mother_name': forms.TextInput(attrs={'class': 'form-control'}),
+#             'active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+#         }       
+#         labels = {
+#             'admission_number': 'Admission Number',
+#             'gender': 'Gender',
+#             'date_of_birth': 'Date of Birth',
+#             'current_class': 'Current Class',
+#             'academic_year': 'Academic Year',
+#             'father_name': 'Father\'s Name',
+#             'mother_name': 'Mother\'s Name',
+#             'active': 'Is Active?',
+#         }
+
+#     def __init__(self, *args, **kwargs):
+#         self.student_instance = kwargs.get('instance')
+#         self.user_instance = self.student_instance.user if self.student_instance else None
+
+#         super().__init__(*args, **kwargs)
+
+#         if self.user_instance:
+#             self.fields['first_name'].initial = self.user_instance.first_name
+#             self.fields['last_name'].initial = self.user_instance.last_name
+#             self.fields['email'].initial = self.user_instance.email
+#             self.fields['username'].initial = self.user_instance.username
+#             self.fields['profile_pic'].initial = self.user_instance.profile_pic
+#             self.fields['phone'].initial = self.user_instance.phone
+#             self.fields['address'].initial = self.user_instance.address
+
+#             self.fields['password'].required = False
+#             self.fields['password'].help_text = "Leave blank if you don't want to change the password."
+#             self.fields['confirm_password'].required = False
+#             self.fields['confirm_password'].help_text = "" 
+#         else:
+#             self.fields['password'].required = True
+#             self.fields['confirm_password'].required = True
+            
+#         for field_name, field in self.fields.items():
+#             if isinstance(field.widget, (forms.TextInput, forms.EmailInput, 
+#                                         forms.Textarea, forms.DateInput, 
+#                                         forms.Select, forms.PasswordInput)):
+#                 field.widget.attrs['class'] = 'form-control'
+#             elif isinstance(field.widget, forms.FileInput):
+#                 field.widget.attrs['class'] = 'form-control-file'
+#             elif isinstance(field.widget, forms.CheckboxInput):
+#                 field.widget.attrs['class'] = 'form-check-input'
+
+#     def clean_username(self):
+#         username = self.cleaned_data['username']
+#         if self.user_instance and self.user_instance.username == username:
+#             return username
+
+#         existing_user = CustomUser.objects.filter(username=username).first()
+#         if existing_user:
+#             if hasattr(existing_user, 'student_profile'):
+#                 raise ValidationError("This username is already taken and belongs to an existing student. Please choose a different username.")
+#             else:
+#                 raise ValidationError("This username is already taken by another user. Please choose a different username.")
+#         return username
+
+#     def clean_email(self):
+#         email = self.cleaned_data['email']
+#         if not email:
+#             return email
+        
+#         if self.user_instance and self.user_instance.email == email:
+#             return email
+
+#         existing_user = CustomUser.objects.filter(email=email).first()
+#         if existing_user:
+#             if hasattr(existing_user, 'student_profile'):
+#                 raise ValidationError("This email address is already in use and belongs to an existing student. Please use a different one.")
+#             else:
+#                 raise ValidationError("This email address is already in use by another user. Please use a different one.")
+#         return email
+
+#     def clean_admission_number(self):
+#         admission_number = self.cleaned_data['admission_number']
+#         if self.instance and self.instance.admission_number == admission_number:
+#             return admission_number
+#         if Student.objects.filter(admission_number=admission_number).exists():
+#             raise ValidationError("This admission number is already taken. Please choose a unique one.")
+#         return admission_number
+
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         password = cleaned_data.get('password')
+#         confirm_password = cleaned_data.get('confirm_password')
+
+#         if not self.user_instance:
+#             if not password:
+#                 self.add_error('password', "Password is required for new students.")
+#             if not confirm_password:
+#                 self.add_error('confirm_password', "Confirm Password is required for new students.")
+        
+#         if password and confirm_password and password != confirm_password:
+#             self.add_error('confirm_password', "Passwords do not match.")
+        
+#         return cleaned_data
+
+#     @transaction.atomic
+#     def save(self, commit=True):
+#         first_name = self.cleaned_data['first_name']
+#         last_name = self.cleaned_data['last_name']
+#         email = self.cleaned_data['email']
+#         username = self.cleaned_data['username']
+#         profile_pic = self.cleaned_data.get('profile_pic')
+#         phone = self.cleaned_data['phone']
+#         address = self.cleaned_data['address']
+#         password = self.cleaned_data.get('password')
+
+#         if self.user_instance:
+#             user = self.user_instance
+#             user.first_name = first_name
+#             user.last_name = last_name
+#             user.email = email
+#             user.username = username
+#             user.phone = phone
+#             user.address = address
+
+#             if 'profile_pic' in self.changed_data:
+#                 user.profile_pic = profile_pic
+#             elif 'profile_pic' in self.fields and not profile_pic and user.profile_pic: 
+#                  user.profile_pic.delete(save=False)
+#                  user.profile_pic = None
+                 
+#             if password: 
+#                 user.set_password(password)
+#             user.save()
+            
+#             student = super().save(commit=False) 
+#             student.user = user 
+
+#         else:
+#             user = CustomUser.objects.create_user(
+#                 username=username,
+#                 email=email,
+#                 password=password,
+#                 first_name=first_name,
+#                 last_name=last_name,
+#                 user_type=3, 
+#                 phone=phone,
+#                 address=address,
+#             )
+#             if profile_pic:
+#                 user.profile_pic = profile_pic
+#             user.save()
+
+#             student = super().save(commit=False)
+#             student.user = user 
+        
+#         if commit:
+#             student.save()
+#         return student
+    
+# Add these forms if they are missing from your forms.py, as indicated by your traceback
+# class FeePaymentForm(forms.ModelForm):
+#     class Meta:
+#         model = FeePayment
+#         fields = '__all__' # Or specify your fields
+#         widgets = {
+#             'payment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+#             'student': forms.Select(attrs={'class': 'form-control'}),
+#             'fee_structure': forms.Select(attrs={'class': 'form-control'}),
+#             'amount': forms.NumberInput(attrs={'class': 'form-control'}),
+#             'payment_method': forms.Select(attrs={'class': 'form-control'}),
+#             'transaction_code': forms.TextInput(attrs={'class': 'form-control'}),
+#             'received_by': forms.Select(attrs={'class': 'form-control'}),
+#             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+#         }
+
+# class ExpenseForm(forms.ModelForm):
+#     class Meta:
+#         model = Expense
+#         fields = '__all__' # Or specify your fields
+#         widgets = {
+#             'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+#             'bursar': forms.Select(attrs={'class': 'form-control'}),
+#             'amount': forms.NumberInput(attrs={'class': 'form-control'}),
+#             'category': forms.Select(attrs={'class': 'form-control'}),
+#             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+#             'receipt_number': forms.TextInput(attrs={'class': 'form-control'}),
+#             'approved_by': forms.Select(attrs={'class': 'form-control'}),
+#         }

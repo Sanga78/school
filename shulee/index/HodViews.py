@@ -15,6 +15,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
+from django.db import transaction # For atomic operations
 import csv
 import os
 from xhtml2pdf import pisa
@@ -24,19 +25,19 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, Spacer
 
 from .models import (
-    Bursar, Class,CustomUser, Expense, FeePayment, Notification, Subject, Staff, Student,
+    Bursar, StudentClass,CustomUser, Expense, FeePayment, Notification, Subject, Staff, Student,
     Attendance, AttendanceReport, 
     LeaveRequest, Feedback,SessionYearModel,
     AcademicYear,StaffSubjectAssignment, SystemLog,
 )
 from .forms import (
+    StudentForm,
     SystemSettingsForm,
     LeaveResponseForm, 
-    AddSubjectForm, AddStudentForm,
+    AddSubjectForm,
     AddAdministratorForm, AddBursarForm,
     ClassForm, NotificationForm, StaffForm, 
-    StaffSubjectAssignmentForm, ClassTeacherAssignmentForm,
-    EditStudentForm
+    StaffSubjectAssignmentForm, ClassTeacherAssignmentForm
 )
 
 User = get_user_model()
@@ -114,7 +115,7 @@ def teacher_subjects(request, teacher_id):
 @login_required
 @user_passes_test(admin_check)
 def assign_class_teachers(request):
-    classes = Class.objects.all()
+    classes = StudentClass.objects.all()
     
     if request.method == 'POST':
         form = ClassTeacherAssignmentForm(request.POST)
@@ -205,45 +206,6 @@ def add_staff_save(request):
             messages.error(request,"Failed to Add staff")
             return HttpResponseRedirect(reverse("add_staff"))
     
-        
-
-def add_student_save(request):
-    if request.method != "POST":
-        return HttpResponse("Method Not Allowed")
-    else:
-        form = AddStudentForm(request.POST,request.FILES)
-        if form.is_valid():
-            first_name = form.cleaned_data["first_name"]
-            last_name = form.cleaned_data["last_name"]
-            username = form.cleaned_data["username"]
-            email = form.cleaned_data["email"] 
-            password = form.cleaned_data["password"]
-            address = form.cleaned_data["address"]
-            session_year_id = form.cleaned_data["session_year_id"]
-            sex = form.cleaned_data["sex"]
-
-            profile_pic = request.FILES['profile_pic']
-            fs = FileSystemStorage()
-            filename = fs.save(profile_pic.name,profile_pic)
-            profile_pic_url = fs.url(filename)
-
-            try:
-                user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
-                user.students.address = address
-                session_year =SessionYearModel.object.get(id=session_year_id)
-                user.students.session_year_id = session_year
-                user.students.gender = sex
-                user.students.profile_pic = profile_pic_url
-                user.save()
-                messages.success(request,"Successfully added student")
-                return HttpResponseRedirect(reverse("add_student"))
-            except:
-                messages.error(request,"Failed to Add student")
-                return HttpResponseRedirect(reverse("add_student"))
-        else:
-            form=AddStudentForm(request.POST)
-            return render(request,"hod_templates/add_student.html",{"form":form})
-
 def add_subject(request):
     staffs = CustomUser.objects.filter(user_type=2)
     return render(request, 'hod_templates/add_subject.html',{"staffs":staffs})
@@ -307,73 +269,6 @@ def edit_staff_save(request):
         except:
             messages.error(request,"Failed to Edit Staff")
             return HttpResponseRedirect(reverse("edit_staff",kwargs={"staff_id":staff_id}))
-    
-def edit_student(request,student_id):
-    request.session['student_id']=student_id
-    student=Student.objects.get(admin=student_id)
-    form = EditStudentForm()
-    form.fields['email'].initial=student.admin.email
-    form.fields['first_name'].initial=student.admin.first_name
-    form.fields['last_name'].initial=student.admin.last_name
-    form.fields['username'].initial=student.admin.username
-    form.fields['address'].initial=student.address
-    form.fields['sex'].initial=student.gender
-    form.fields['session_year_id'].initial=student.session_year_id.id
-    return render(request,"hod_templates/edit_student.html",{"form":form,"id":student_id,"username":student.admin.username})
-
-def edit_student_save(request):
-    if request.method != "POST":
-        return HttpResponse("<h2>Method Not Allowed</h2>")
-    else:
-        student_id = request.session.get("student_id")
-        if student_id == None:
-            return HttpResponseRedirect(reverse("manage_student"))
-        form = EditStudentForm(request.POST,request.FILES)
-        if form.is_valid():
-            first_name = form.cleaned_data["first_name"]
-            last_name = form.cleaned_data["last_name"]
-            username = form.cleaned_data["username"]
-            email = form.cleaned_data["email"] 
-            address = form.cleaned_data["address"]
-            session_year_id = form.cleaned_data["session_year_id"]
-            sex = form.cleaned_data["sex"]
-
-            if request.FILES.get('profile_pic',False):
-                profile_pic = request.FILES('profile_pic')
-                fs = FileSystemStorage()
-                filename = fs.save(profile_pic.name,profile_pic)
-                profile_pic_url = fs.url(filename)
-            else:
-                profile_pic_url = None 
-
-            try:
-                user=CustomUser.objects.get(id=student_id)
-                user.first_name = first_name
-                user.last_name = last_name
-                user.username = username
-                user.email = email
-                user.save()
-
-                student = Student.objects.get(admin=student_id)
-                student.address=address
-                session_year =SessionYearModel.object.get(id=session_year_id)
-                student.session_year_id = session_year
-                student.gender=sex
-                if profile_pic_url != None:
-                    student.profile_pic = profile_pic_url
-                student.save() 
-                del request.session['student_id']
-                messages.success(request,"Successfully Edited Student")
-                return HttpResponseRedirect(reverse("edit_student",kwargs={"student_id":student_id}))
-            except:
-                messages.error(request,"Failed to Edit Student")
-                return HttpResponseRedirect(reverse("edit_student",kwargs={"student_id":student_id}))
-        else:
-            form = EditStudentForm(request.POST)
-            student = Student.objects.get(admin=student_id)
-            return render(request,"hod_templates/edit_student.html",{"form":form,"id":student_id,"username":student.admin.username})
-        
-
 
 def edit_subject(request,subject_id):
     subject=Subject.objects.get(id=subject_id)
@@ -563,7 +458,7 @@ def admin_profile_save(request):
 
 
 def manage_classes(request):
-    classes = Class.objects.select_related('academic_year', 'class_teacher').all()
+    classes = StudentClass.objects.select_related('academic_year', 'class_teacher').all()
     return render(request, 'admin/manage_classes.html', {'classes': classes})
 
 def add_class(request):
@@ -577,7 +472,7 @@ def add_class(request):
     return render(request, 'admin/add_edit_class.html', {'form': form})
 
 def edit_class(request, class_id):
-    class_obj = get_object_or_404(Class, id=class_id)
+    class_obj = get_object_or_404(StudentClass, id=class_id)
     if request.method == 'POST':
         form = ClassForm(request.POST, instance=class_obj)
         if form.is_valid():
@@ -588,7 +483,7 @@ def edit_class(request, class_id):
     return render(request, 'admin/add_edit_class.html', {'form': form, 'class': class_obj})
 
 def delete_class(request, class_id):
-    class_obj = get_object_or_404(Class, id=class_id)
+    class_obj = get_object_or_404(StudentClass, id=class_id)
     class_obj.delete()
     return redirect('manage_classes')
 
@@ -599,11 +494,11 @@ def admin_dashboard(request):
     stats = {
         'students_count': Student.objects.count(),
         'teachers_count': Staff.objects.count(),
-        'classes_count': Class.objects.count(),
+        'classes_count': StudentClass.objects.count(),
         'pending_requests': LeaveRequest.objects.filter(status=0).count()
     }
     
-    recent_activities = []  # Add your recent activities logic here
+    recent_activities = []
     
     context = {
         'stats': stats,
@@ -615,7 +510,7 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(is_admin)
 def manage_attendance(request):
-    classes = Class.objects.all()
+    classes = StudentClass.objects.all()
     attendance_list = []
     search_query = ""
     
@@ -763,7 +658,6 @@ def settings(request):
         
         form = SystemSettingsForm(request.POST, request.FILES)
         if form.is_valid():
-            # Save settings logic here
             messages.success(request, 'Settings updated successfully!')
             return redirect('settings')
     else:
@@ -791,10 +685,10 @@ def manage_students(request):
         students = students.filter(
             Q(user__first_name__icontains=search_query) |
             Q(user__last_name__icontains=search_query) |
-            Q(admission_number__icontains=search_query)
+            Q(username__icontains=search_query)
         )
     
-    classes = Class.objects.all()
+    classes = StudentClass.objects.all()
     
     context = {
         'students': students,
@@ -804,68 +698,42 @@ def manage_students(request):
     }
     return render(request, 'admin/manage_students.html', context)
 
-@login_required
-@user_passes_test(is_admin)
 def add_student(request):
     if request.method == 'POST':
-        form = AddStudentForm(request.POST, request.FILES)
+        form = StudentForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                user = form.save()
-                messages.success(request, 'Student added successfully!')
-                SystemLog.create_log(
-                    action='CREATE',
-                    details=f'Added new student: {user.get_full_name()} ({user.student_profile.admission_number})',
-                    user=request.user,
-                    affected_model='Student',
-                    object_id=user.student_profile.id
-                )
+                with transaction.atomic():
+                    form.save()
+                messages.success(request, "Student added successfully!")
                 return redirect('manage_students')
             except Exception as e:
-                messages.error(request, f'Error adding student: {str(e)}')
-                SystemLog.create_log(
-                    action='ERROR',
-                    details=f'Failed to add student: {str(e)}',
-                    user=request.user,
-                    log_type='ERROR'
-                )
+                messages.error(request, f"Error adding student: {e}")
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
-        form = AddStudentForm()
-    
-    context = {
-        'form': form,
-        'title': 'Add New Student'
-    }
-    return render(request, 'admin/add_edit_student.html', context)
+        form = StudentForm()
+    context = {'form': form}
+    return render(request, 'admin/add_edit_student.html', context) 
 
-@login_required
-@user_passes_test(is_admin)
 def edit_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     if request.method == 'POST':
-        form = AddStudentForm(request.POST, request.FILES, instance=student.user)
+        form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
             try:
-                user = form.save()
-                messages.success(request, 'Student updated successfully!')
-                SystemLog.create_log(
-                    action='UPDATE',
-                    details=f'Updated student: {user.get_full_name()} ({student.admission_number})',
-                    user=request.user,
-                    affected_model='Student',
-                    object_id=student.id
-                )
+                with transaction.atomic():
+                    form.save()
+                messages.success(request, "Student updated successfully!")
                 return redirect('manage_students')
             except Exception as e:
-                messages.error(request, f'Error updating student: {str(e)}')
+                messages.error(request, f"Error updating student: {e}")
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
-        form = AddStudentForm(instance=student.user)
-    
-    context = {
-        'form': form,
-        'student': student,
-        'title': 'Edit Student'
-    }
+        form = StudentForm(instance=student)
+
+    context = {'form': form, 'student': student}
     return render(request, 'admin/add_edit_student.html', context)
 
 @login_required
@@ -875,7 +743,7 @@ def delete_student(request, student_id):
     if request.method == 'POST':
         try:
             user = student.user
-            admission_number = student.admission_number
+            admission_number = user.username
             student.delete()
             user.delete()
             messages.success(request, 'Student deleted successfully!')
@@ -1208,7 +1076,7 @@ def generate_student_report(request, report_type):
         data = [['Admission No', 'Full Name', 'Class', 'Gender', 'Date of Birth']]
         for student in students:
             data.append([
-                student.admission_number,
+                student.user.username,
                 student.user.get_full_name(),
                 student.current_class.name if student.current_class else '',
                 student.get_gender_display(),
@@ -1248,7 +1116,7 @@ def generate_student_report(request, report_type):
         
         for student in students:
             writer.writerow([
-                student.admission_number,
+                student.user.username,
                 student.user.get_full_name(),
                 student.current_class.name if student.current_class else '',
                 student.get_gender_display(),
@@ -1295,7 +1163,7 @@ def generate_attendance_report(request):
             return HttpResponse('Error generating PDF', status=500)
         return response
     
-    classes = Class.objects.all()
+    classes = StudentClass.objects.all()
     return render(request, 'admin/attendance_report_form.html', {'classes': classes})
 
 @login_required

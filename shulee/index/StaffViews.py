@@ -1,7 +1,7 @@
 from django.http import HttpResponse,JsonResponse,HttpResponseRedirect
 from django.core import serializers
 from django.shortcuts import render, redirect
-from index.models import Class,CustomUser, Feedback, Notification, SubjectResult, Subject,SessionYearModel,Attendance,AttendanceReport, LeaveRequest,Staff, SubjectResult, Student, AcademicYear
+from index.models import StudentClass,CustomUser, Feedback, Notification, SubjectResult, Subject,SessionYearModel,Attendance,AttendanceReport, LeaveRequest,Staff, SubjectResult, Student, AcademicYear
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib import messages
@@ -343,7 +343,7 @@ def class_teacher_dashboard(request):
     current_year = AcademicYear.objects.get(is_current=True)
     
     # Get classes where this teacher is class teacher
-    classes = Class.objects.filter(class_teacher=staff)
+    classes = StudentClass.objects.filter(class_teacher=staff)
     
     context = {
         'classes': classes,
@@ -357,7 +357,7 @@ def view_class_results(request, class_id):
     current_year = AcademicYear.objects.get(is_current=True)
     
     # Verify the teacher is the class teacher for this class
-    if not Class.objects.filter(id=class_id, class_teacher=staff).exists():
+    if not StudentClass.objects.filter(id=class_id, class_teacher=staff).exists():
         return redirect('class_teacher_dashboard')
     
     students = Student.objects.filter(
@@ -385,7 +385,7 @@ def view_class_results(request, class_id):
         organized_results[result.student.id]['terms'][result.term].append(result)
     
     context = {
-        'class': Class.objects.get(id=class_id),
+        'class': StudentClass.objects.get(id=class_id),
         'organized_results': organized_results,
         'current_year': current_year,
     }

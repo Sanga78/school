@@ -24,6 +24,10 @@ def contact(request):
     return render(request,'contact.html')
 def loginPage(request):
     return render(request,'n_log.html')
+def home(request):
+    return render(request,'home.html')
+def apply(request):
+    return render(request,'apply.html')
 
 def Login(request):
     if request.method!="POST":
