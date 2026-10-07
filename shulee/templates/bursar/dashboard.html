@@ -1,91 +1,34 @@
-{% extends 'base.html' %}
-
-{% block title %}Bursar Dashboard{% endblock %}
-
+{% extends 'bursar/base.html' %}
+{% block title %}Bursar dashboard{% endblock %}
 {% block content %}
 <div class="container-fluid">
-    <h2 class="mb-4">Bursar Dashboard</h2>
-    
-    <div class="row">
-        <!-- Fee Summary Card -->
-        <div class="col-md-4 mb-4">
-            <div class="card border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">Fee Collection</h5>
-                </div>
-                <div class="card-body">
-                    <h1 class="display-4">Ksh {{ total_paid|default:"0" }}</h1>
-                    <p class="card-text">Total fees collected this term</p>
-                    <a href="{% url 'fee_records' %}" class="btn btn-primary">View Records</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Expense Summary Card -->
-        <div class="col-md-4 mb-4">
-            <div class="card border-success">
-                <div class="card-header bg-success text-white">
-                    <h5 class="card-title mb-0">Expenses</h5>
-                </div>
-                <div class="card-body">
-                    <h1 class="display-4">Ksh {{ total_expenses|default:"0" }}</h1>
-                    <p class="card-text">Total expenses this term</p>
-                    <a href="{% url 'expense_management' %}" class="btn btn-success">Manage Expenses</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Balance Summary Card -->
-        <div class="col-md-4 mb-4">
-            <div class="card border-info">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">Account Balance</h5>
-                </div>
-                <div class="card-body">
-                    <h1 class="display-4">Ksh {{ balance|default:"0" }}</h1>
-                    <p class="card-text">Current school balance</p>
-                    <a href="{% url 'payment_reports' %}" class="btn btn-info">View Reports</a>
-                </div>
-            </div>
-        </div>
+    <div class="mb-4">
+        <h1 class="h3 mb-1">Finance dashboard</h1>
+        <p class="text-muted mb-0">School fee collections and recorded expenses.</p>
     </div>
-
-    <!-- Recent Transactions -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Recent Transactions</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Fees collected</div><div class="display-6 fw-semibold">Ksh {{ total_paid|floatformat:2 }}</div><a href="{% url 'fee_records' %}" class="btn btn-sm btn-outline-primary mt-3">Fee records</a></div></div></div>
+        <div class="col-md-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Expenses recorded</div><div class="display-6 fw-semibold">Ksh {{ total_expenses|floatformat:2 }}</div><a href="{% url 'expense_management' %}" class="btn btn-sm btn-outline-primary mt-3">Manage expenses</a></div></div></div>
+        <div class="col-md-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Net recorded cash flow</div><div class="display-6 fw-semibold">Ksh {{ balance|floatformat:2 }}</div><a href="{% url 'payment_reports' %}" class="btn btn-sm btn-outline-primary mt-3">View reports</a></div></div></div>
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <section class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between"><h2 class="h5 mb-0">Recent payments</h2><a href="{% url 'payment_reports' %}">All transactions</a></div>
+                <div class="table-responsive"><table class="table align-middle mb-0"><thead class="table-light"><tr><th>Date</th><th>Student</th><th>Amount</th></tr></thead><tbody>
+                    {% for payment in recent_payments %}<tr><td>{{ payment.payment_date|date:"d M Y" }}</td><td>{{ payment.student.user.get_full_name|default:payment.student.user.username }}</td><td class="text-success">+ Ksh {{ payment.amount }}</td></tr>
+                    {% empty %}<tr><td colspan="3" class="text-muted text-center py-4">No payments recorded.</td></tr>{% endfor %}
+                </tbody></table></div>
+            </section>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Type</th>
-                            <th>Description</th>
-                            <th>Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for payment in recent_payments %}
-                        <tr>
-                            <td>{{ payment.payment_date|date:"d M Y" }}</td>
-                            <td><span class="badge bg-success">Payment</span></td>
-                            <td>{{ payment.student.user.get_full_name }}</td>
-                            <td class="text-success">+Ksh {{ payment.amount }}</td>
-                        </tr>
-                        {% endfor %}
-                        {% for expense in recent_expenses %}
-                        <tr>
-                            <td>{{ expense.date|date:"d M Y" }}</td>
-                            <td><span class="badge bg-danger">Expense</span></td>
-                            <td>{{ expense.description|truncatechars:30 }}</td>
-                            <td class="text-danger">-Ksh {{ expense.amount }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="col-lg-6">
+            <section class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between"><h2 class="h5 mb-0">Recent expenses</h2><a href="{% url 'expense_management' %}">All expenses</a></div>
+                <div class="table-responsive"><table class="table align-middle mb-0"><thead class="table-light"><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead><tbody>
+                    {% for expense in recent_expenses %}<tr><td>{{ expense.date|date:"d M Y" }}</td><td>{{ expense.description|truncatechars:40 }}</td><td class="text-danger">- Ksh {{ expense.amount }}</td></tr>
+                    {% empty %}<tr><td colspan="3" class="text-muted text-center py-4">No expenses recorded.</td></tr>{% endfor %}
+                </tbody></table></div>
+            </section>
         </div>
     </div>
 </div>

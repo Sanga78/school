@@ -61,9 +61,8 @@
             </a>
           </li>
           <li class="nav-item">
-            {% url 'manage_student' as manage_student %}
-            {% url 'edit_student' student_id=id as edit_student %}
-            <a href="{{ 'manage_student' }}" class="nav-link {% if request.path == manage_student %} active {% endif %}{% if request.path == edit_student %} active {% endif %}">
+            {% url 'manage_students' as manage_students %}
+            <a href="{{ manage_students }}" class="nav-link {% if request.resolver_match.url_name == 'manage_students' %} active {% endif %}">
               <i class="nav-icon fas fa-users"></i>
               <p>
                 Manage Students

@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Student Management System | Staff Panel</title>
+    <title>Teacher portal | AIC Laboret Girls</title>
     <meta charset="utf-8">
 
   <!-- Google Font: Source Sans Pro -->
@@ -27,8 +27,25 @@
   <!-- summernote -->
   <link rel="stylesheet" href="{% static 'plugins/summernote/summernote-bs4.min.css' %}">
   {% block custom_css %}       {% endblock custom_css %}
+  <style>
+    :root { --teacher-green: #1a4731; --teacher-maroon: #6b0f1a; --teacher-gold: #c9a84c; }
+    .main-sidebar { background-color: var(--teacher-green) !important; }
+    .brand-link { border-bottom: 1px solid rgba(240,208,128,.35) !important; }
+    .nav-sidebar .nav-link { color: rgba(255,255,255,.82) !important; }
+    .nav-sidebar .nav-link.active { background-color: var(--teacher-maroon) !important; color: #fff !important; box-shadow: inset 3px 0 var(--teacher-gold); }
+    .nav-sidebar .nav-link:hover { background-color: rgba(255,255,255,.1) !important; color: #fff !important; }
+    .nav-sidebar .nav-icon { color: #f0d080 !important; }
+    .main-header.navbar { border-bottom: 3px solid #f0d4d8; }
+    .content-wrapper { background-color: #faf9f7; }
+    .content-header h1 { color: var(--teacher-green); font-family: 'Playfair Display', serif; }
+    .card { border-color: #e2eee7; border-radius: 10px; box-shadow: 0 3px 14px rgba(26,71,49,.05); }
+    .card-primary:not(.card-outline) > .card-header { background-color: var(--teacher-maroon); }
+    .btn-primary { border-color: var(--teacher-maroon); background-color: var(--teacher-maroon); }
+    .btn-primary:hover { border-color: #8b1a28; background-color: #8b1a28; }
+  </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
+<form class="d-none" aria-hidden="true">{% csrf_token %}</form>
 <div class="wrapper">
 
   <!-- Preloader -->
@@ -44,7 +61,7 @@
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
       </li>
     </ul>
-      <h4 style="margin-left: 10px; margin-top: 5px;">Student Management System | Staff Panel</h4>
+      <h4 class="mb-0 ms-2">AIC Laboret Girls | Teacher portal</h4>
     <!-- Right navbar links -->
       <!-- Messages Dropdown Menu -->
       <ul class="navbar-nav ml-auto">
@@ -90,6 +107,23 @@
 
 <!-- jQuery -->
 <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
+<script>
+  (function ($) {
+    function getCookie(name) {
+      const cookie = document.cookie.split(';').map(function (value) { return value.trim(); })
+        .find(function (value) { return value.startsWith(name + '='); });
+      return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : null;
+    }
+
+    $.ajaxSetup({
+      beforeSend: function (xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader('X-CSRFToken', getCookie('csrftoken'));
+        }
+      }
+    });
+  }(jQuery));
+</script>
 <!-- jQuery UI 1.11.4 -->
 <script src="{% static 'plugins/jquery-ui/jquery-ui.min.js' %}"></script>
 <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->

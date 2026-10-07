@@ -1,75 +1,47 @@
 {% extends 'staff_template/base.html' %}
-{% block page_title %}
-Feedback
-{% endblock page_title %}
-{% load static %}
+{% block page_title %}Feedback{% endblock page_title %}
 {% block main_content %}
-
 <section class="content">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <!-- general form elements -->
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Leave a Feedback Message</h3>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}" role="status">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <div class="card card-primary">
+            <div class="card-header"><h2 class="card-title">Send feedback</h2></div>
+            <form action="{% url 'staff_feedback_save' %}" method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    <div class="form-group mb-0">
+                        <label for="feedback_msg">Message</label>
+                        <textarea class="form-control" id="feedback_msg" name="feedback_msg" rows="4" required></textarea>
                     </div>
-                  <!-- /.card-header -->
-                    <form action="{% url 'staff_feedback_save' %}" method="post">
-                        {% csrf_token %}
-                        <!-- form start -->
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label>Feedback Message</label>
-                                <textarea class="form-control" name="feedback_msg" id="" rows="6"></textarea>
-                            </div>                   
-                            <div class="form-group">
-                                {% if messages %}
-                                {% for message in messages %}
-                                {% if message.tags == 'error' %}
-                                <div class="alert alert-danger" style="margin-top: 10px;">{{ message }}</div>
-                                {% endif %}
-                                {% if message.tags == 'success' %}
-                                <div class="alert alert-success" style="margin-top: 10px;">{{ message }}</div>
-                                {% endif %}
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <!-- /.card-body -->
-        
-                        <div class="card-footer">
-                        <button type="submit" class="btn btn-primary btn-block" id="">Leave a Feedback Message</button>
-                        </div>
-                
-                    </form>
                 </div>
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Feedback History</h3>
-                    </div>
-                    <div class="table">
-                    <table class="table">
-                        <tr>
-                            <th>ID</th>
-                            <th>Feedback Message</th>
-                            <th>Feedback Reply</th>
-                        </tr>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-primary">Submit feedback</button>
+                </div>
+            </form>
+        </div>
+        <div class="card card-primary">
+            <div class="card-header"><h2 class="card-title">Your feedback history</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Submitted</th><th>Message</th><th>Reply</th></tr></thead>
+                    <tbody>
                         {% for row in feedback_data %}
-                        <tr>
-                            <td>{{ row.id }}</td>
-                            <td>{{ row.feedback }}</td>
-                            <td>{{ row.feedback_reply }}</td>
-                        </tr>
+                            <tr>
+                                <td>{{ row.created_at|date:"M j, Y" }}</td>
+                                <td>{{ row.message }}</td>
+                                <td>{{ row.reply|default:"Awaiting a response" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="text-center text-muted py-4">You have not submitted any feedback.</td></tr>
                         {% endfor %}
-                    </table>
-                </div>
-                </div>
-            </div>
-                <!-- /.card -->         
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div><!-- /.container-fluid -->
-  </section>
-  <!-- /.content -->
+    </div>
+</section>
 {% endblock main_content %}

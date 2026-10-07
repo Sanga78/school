@@ -3,289 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}School Admin{% endblock %}</title>
+    <title>{% block title %}School administration{% endblock %} | AIC Laboret Girls</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #800000; /* Maroon */
-            --primary-light: #a00000;
-            --primary-dark: #600000;
-            --accent: #ffcc00; /* Gold */
+            --school-maroon: #6b0f1a;
+            --school-maroon-mid: #8b1a28;
+            --school-green: #1a4731;
+            --school-green-mid: #2d6a4f;
+            --school-gold: #c9a84c;
+            --school-gold-pale: #fdf6e3;
+            --school-cream: #faf9f7;
+            --school-ink: #1a1a1a;
+            --school-muted: #6b7a70;
+            --school-border: #e2eee7;
+            --panel-header-height: 114px;
         }
-        
+        * { box-sizing: border-box; }
         body {
-            padding-top: 60px;
-            background-color: #f8f9fa;
+            margin: 0;
+            padding-top: var(--panel-header-height);
+            background: var(--school-cream);
+            color: var(--school-ink);
+            font: 15px/1.65 'DM Sans', sans-serif;
         }
-        
-        .sidebar {
-            background-color: var(--primary-dark);
-            color: white;
-            height: 100vh;
+        a { color: var(--school-maroon); }
+        .panel-utility {
             position: fixed;
-            width: 250px;
-            transition: all 0.3s;
-            z-index: 1000;
-            overflow-y: auto;
+            z-index: 1040;
+            inset: 0 0 auto;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 28px;
+            background: var(--school-maroon);
+            color: #f0d4d8;
+            font-size: 12px;
+            letter-spacing: .025em;
         }
-        
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            border-radius: 5px;
-            margin: 2px 5px;
-            padding: 10px 15px;
-            transition: all 0.2s;
+        .panel-utility a { color: #f0d080; text-decoration: none; }
+        .panel-utility a:hover { color: #fff; }
+        .panel-masthead {
+            position: fixed;
+            z-index: 1030;
+            top: 36px;
+            right: 0;
+            left: 0;
+            height: 78px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 0 28px;
+            border-bottom: 3px solid #f0d4d8;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(26,71,49,.08);
         }
-        
-        .sidebar .nav-link:hover, 
-        .sidebar .nav-link.active {
-            background-color: var(--primary-light);
-            color: white;
+        .school-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 13px;
+            color: inherit;
+            text-decoration: none;
         }
-        
-        .sidebar .nav-link i {
-            width: 20px;
+        .school-emblem {
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+            display: grid;
+            place-content: center;
+            border: 3px solid var(--school-gold);
+            border-radius: 50%;
+            outline: 2px solid var(--school-maroon);
+            background: var(--school-maroon);
+            color: #f0d080;
             text-align: center;
-            margin-right: 10px;
         }
-        
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-            transition: all 0.3s;
-            min-height: calc(100vh - 60px);
+        .school-emblem .cross { font-size: 17px; line-height: 1; }
+        .school-emblem .initials { font-size: 6px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; }
+        .school-brand-name { display: block; color: var(--school-maroon); font: 700 17px/1.2 'Playfair Display', serif; }
+        .school-brand-sub { display: block; margin-top: 3px; color: var(--school-muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+        .panel-masthead-actions { display: flex; align-items: center; gap: 14px; }
+        .panel-toggle {
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--school-border);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--school-green);
         }
-        
-        .navbar {
-            background-color: var(--primary);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .bg-primary {
-            background-color: var(--primary) !important;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
-        }
-        
-        .card-header {
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        /* Sidebar collapsed state */
-        .sidebar-collapsed {
-            width: 80px;
+        .panel-toggle:hover { border-color: var(--school-gold); background: var(--school-gold-pale); }
+        .panel-user { display: flex; align-items: center; gap: 9px; color: var(--school-green); }
+        .panel-avatar {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            display: grid;
+            place-items: center;
             overflow: hidden;
+            border: 2px solid var(--school-gold);
+            border-radius: 50%;
+            background: var(--school-green);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
         }
-        
-        .sidebar-collapsed .nav-link span,
-        .sidebar-collapsed .brand-text {
-            display: none;
+        .panel-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .panel-user-name { display: block; max-width: 190px; overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .panel-user-role { display: block; color: var(--school-muted); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
+        .panel-logout {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 13px;
+            border: 1px solid var(--school-border);
+            border-radius: 8px;
+            color: var(--school-green);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
         }
-        
-        .sidebar-collapsed .nav-link {
-            text-align: center;
-            padding: 10px 5px;
+        .panel-logout:hover { border-color: var(--school-maroon); background: #fdf6f7; color: var(--school-maroon); }
+        .panel-sidebar {
+            position: fixed;
+            z-index: 1020;
+            top: var(--panel-header-height);
+            bottom: 0;
+            left: 0;
+            width: 252px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            padding: 22px 14px;
+            border-right: 3px solid rgba(201,168,76,.55);
+            background: var(--school-green);
+            transition: width .25s, transform .25s;
         }
-        
-        .sidebar-collapsed .nav-link i {
-            margin-right: 0;
-            font-size: 1.25rem;
+        .panel-sidebar-label {
+            margin: 0 12px 12px;
+            color: #b7e4c7;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .12em;
+            text-transform: uppercase;
         }
-        
-        .sidebar-collapsed + .main-content {
-            margin-left: 80px;
-        }
-        
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-                width: 250px;
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0 !important;
-            }
-        }
-        
-        /* Table styling */
-        .table-responsive {
-            overflow-x: auto;
-        }
-        
-        .table-hover tbody tr:hover {
-            background-color: rgba(0, 0, 0, 0.03);
-        }
-        
-        /* Badge styling */
-        .badge {
+        .panel-sidebar .nav { gap: 4px; }
+        .panel-sidebar .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 42px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: rgba(255,255,255,.78);
+            font-size: 13px;
             font-weight: 500;
-            padding: 5px 8px;
+            text-decoration: none;
+            transition: color .2s, background .2s, transform .2s;
         }
+        .panel-sidebar .nav-link i { width: 19px; flex: 0 0 19px; color: #f0d080; text-align: center; }
+        .panel-sidebar .nav-link:hover { transform: translateX(2px); background: rgba(255,255,255,.09); color: #fff; }
+        .panel-sidebar .nav-link.active {
+            background: var(--school-maroon);
+            box-shadow: inset 3px 0 var(--school-gold);
+            color: #fff;
+            font-weight: 700;
+        }
+        .panel-main {
+            min-height: calc(100vh - var(--panel-header-height));
+            margin-left: 252px;
+            padding: 30px clamp(18px, 3vw, 42px) 42px;
+            transition: margin-left .25s;
+        }
+        .panel-main-inner { width: min(100%, 1500px); margin: 0 auto; }
+        .panel-main h1, .panel-main h2, .panel-main h3, .panel-main h4 {
+            color: var(--school-green);
+            font-family: 'Playfair Display', serif;
+        }
+        .panel-main .text-primary { color: var(--school-maroon) !important; }
+        .panel-main .text-success { color: var(--school-green-mid) !important; }
+        .panel-main .text-info { color: var(--school-green-mid) !important; }
+        .panel-main .text-warning { color: #8a6b19 !important; }
+        .panel-main .text-danger { color: var(--school-maroon-mid) !important; }
+        .panel-main .border-primary, .panel-main .border-danger { border-color: var(--school-maroon) !important; }
+        .panel-main .border-success, .panel-main .border-info { border-color: var(--school-green-mid) !important; }
+        .panel-main .border-warning { border-color: var(--school-gold) !important; }
+        .panel-main .bg-primary { background-color: var(--school-maroon) !important; }
+        .panel-main .btn-primary {
+            border-color: var(--school-maroon);
+            background: var(--school-maroon);
+            color: #fff;
+        }
+        .panel-main .btn-primary:hover, .panel-main .btn-primary:focus {
+            border-color: var(--school-maroon-mid);
+            background: var(--school-maroon-mid);
+            color: #fff;
+        }
+        .panel-main .btn-outline-primary { border-color: var(--school-maroon); color: var(--school-maroon); }
+        .panel-main .btn-outline-primary:hover { border-color: var(--school-maroon); background: var(--school-maroon); color: #fff; }
+        .panel-main .btn-success { border-color: var(--school-green-mid); background: var(--school-green-mid); }
+        .panel-main .btn-info, .panel-main .btn-dark { border-color: var(--school-green); background: var(--school-green); color: #fff; }
+        .panel-main .btn-info:hover, .panel-main .btn-dark:hover { border-color: var(--school-green-mid); background: var(--school-green-mid); color: #fff; }
+        .panel-main .btn-warning { border-color: var(--school-gold); background: var(--school-gold); color: #241d0c; }
+        .panel-main .btn-secondary { border-color: var(--school-muted); background: var(--school-muted); color: #fff; }
+        .panel-main .btn-danger { border-color: var(--school-maroon); background: var(--school-maroon); color: #fff; }
+        .panel-main .btn-outline-danger { border-color: var(--school-maroon); color: var(--school-maroon); }
+        .panel-main .btn-outline-danger:hover { border-color: var(--school-maroon); background: var(--school-maroon); color: #fff; }
+        .panel-main .card {
+            overflow: hidden;
+            border: 1px solid var(--school-border) !important;
+            border-radius: 13px;
+            background: #fff;
+            box-shadow: 0 4px 18px rgba(26,71,49,.07) !important;
+        }
+        .panel-main .card-header {
+            border-bottom: 1px solid var(--school-border);
+            background: #fff;
+            color: var(--school-green);
+        }
+        .panel-main .card-header.bg-primary { border-color: var(--school-maroon); background: var(--school-maroon) !important; color: #fff; }
+        .panel-main .table { --bs-table-hover-bg: #f0faf4; --bs-table-striped-bg: #fafcfb; }
+        .panel-main .table thead th {
+            border-bottom-color: var(--school-border);
+            background-color: #f0faf4;
+            color: var(--school-green);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .panel-main .table td { border-color: #edf2ee; color: #34453a; vertical-align: middle; }
+        .panel-main .form-label { color: var(--school-green); font-size: 13px; font-weight: 600; }
+        .panel-main .form-control, .panel-main .form-select {
+            min-height: 42px;
+            border-color: #d8e5dc;
+            border-radius: 8px;
+            background-color: #fff;
+            color: var(--school-ink);
+            font: 14px 'DM Sans', sans-serif;
+        }
+        .panel-main .form-control:focus, .panel-main .form-select:focus {
+            border-color: var(--school-gold);
+            box-shadow: 0 0 0 .2rem rgba(201,168,76,.18);
+        }
+        .panel-footer {
+            margin-left: 252px;
+            padding: 22px 30px;
+            border-top: 3px solid var(--school-gold);
+            background: #1a0a0c;
+            color: rgba(255,255,255,.68);
+            font-size: 12px;
+            transition: margin-left .25s;
+        }
+        .panel-footer strong { color: #fff; font-family: 'Playfair Display', serif; }
+        .panel-footer a { color: #f0d080; text-decoration: none; }
+        .panel-collapsed .panel-sidebar { width: 78px; }
+        .panel-collapsed .panel-sidebar-label,
+        .panel-collapsed .panel-sidebar .nav-link span { display: none; }
+        .panel-collapsed .panel-sidebar .nav-link { justify-content: center; padding-inline: 0; }
+        .panel-collapsed .panel-sidebar .nav-link i { width: auto; flex-basis: auto; font-size: 16px; }
+        .panel-collapsed .panel-main, .panel-collapsed .panel-footer { margin-left: 78px; }
+        @media (max-width: 900px) {
+            .panel-sidebar { width: 220px; }
+            .panel-main, .panel-footer { margin-left: 220px; }
+        }
+        @media (max-width: 767.98px) {
+            :root { --panel-header-height: 98px; }
+            .panel-utility { height: 30px; padding: 0 14px; font-size: 10px; }
+            .panel-masthead { top: 30px; height: 68px; padding: 0 14px; }
+            .school-emblem { width: 40px; height: 40px; flex-basis: 40px; }
+            .school-brand-name { font-size: 14px; }
+            .school-brand-sub { font-size: 8px; }
+            .panel-user-info, .panel-logout span { display: none; }
+            .panel-masthead-actions { gap: 9px; }
+            .panel-sidebar { top: var(--panel-header-height); bottom: auto; width: 100%; max-height: 0; padding: 0 12px; border: 0; overflow: hidden; transform: none; }
+            .panel-sidebar.is-open { max-height: 70vh; padding: 14px 12px; overflow-y: auto; border-bottom: 3px solid var(--school-gold); }
+            .panel-sidebar .nav { display: flex; flex-direction: column; }
+            .panel-sidebar .nav-link { min-height: 40px; padding: 8px; font-size: 12px; }
+            .panel-sidebar-label { margin: 2px 8px 9px; }
+            .panel-main, .panel-collapsed .panel-main { min-height: calc(100vh - var(--panel-header-height)); margin-left: 0; padding: 22px 14px 30px; }
+            .panel-footer, .panel-collapsed .panel-footer { margin-left: 0; padding: 18px 14px; }
+            .panel-collapsed .panel-sidebar { width: 100%; }
+            .panel-collapsed .panel-sidebar-label, .panel-collapsed .panel-sidebar .nav-link span { display: block; }
+            .panel-collapsed .panel-sidebar .nav-link { justify-content: flex-start; padding: 8px; }
+            .panel-collapsed .panel-sidebar .nav-link i { width: 19px; flex-basis: 19px; }
+        }
+        {% block extra_css %}{% endblock %}
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container-fluid">
-            <button class="btn btn-link text-white me-3" id="sidebarToggle">
+    <div class="panel-utility">
+        <span><i class="fas fa-school me-2"></i>AIC Laboret Girls Boarding Primary School</span>
+        <a href="{% url 'home' %}"><i class="fas fa-arrow-up-right-from-square me-1"></i>Visit school website</a>
+    </div>
+    <header class="panel-masthead">
+        <div class="d-flex align-items-center gap-3">
+            <button class="panel-toggle" id="sidebarToggle" type="button" aria-label="Toggle navigation" aria-expanded="true">
                 <i class="fas fa-bars"></i>
             </button>
-            <a class="navbar-brand" href="{% url 'admin_dashboard' %}">
-                <i class="fas fa-school me-2"></i>
-                <span class="brand-text">School Admin</span>
+            <a class="school-brand" href="{% url 'admin_dashboard' %}">
+                <span class="school-emblem" aria-hidden="true"><span class="cross">✝</span><span class="initials">AIC<br>LABORET</span></span>
+                <span><span class="school-brand-name">AIC Laboret Girls</span><span class="school-brand-sub">Boarding Primary School · Administration</span></span>
             </a>
-            <div class="d-flex align-items-center text-white">
-                <div class="dropdown">
-                    <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" 
-                       id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% if request.user.profile_pic %}
-                            <img src="{{ request.user.profile_pic.url }}" 
-                                 alt="Profile" width="32" height="32" class="rounded-circle me-2">
-                        {% else %}
-                            <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center" 
-                                 style="width: 32px; height: 32px;">
-                                {{ request.user.get_initials }}
-                            </div>
-                        {% endif %}
-                        <span>{{ request.user.get_full_name }}</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="{% url 'admin_profile' %}">
-                            <i class="fas fa-user me-2"></i>Profile
-                        </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'logout' %}">
-                            <i class="fas fa-sign-out-alt me-2"></i>Logout
-                        </a></li>
-                    </ul>
-                </div>
+        </div>
+        <div class="panel-masthead-actions">
+            <div class="panel-user">
+                <span class="panel-avatar">{% if request.user.profile_pic %}<img src="{{ request.user.profile_pic.url }}" alt="">{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}</span>
+                <span class="panel-user-info"><span class="panel-user-name">{{ request.user.get_full_name|default:request.user.username }}</span><span class="panel-user-role">School administrator</span></span>
             </div>
+            <a href="{% url 'logout' %}" class="panel-logout"><i class="fas fa-right-from-bracket"></i><span>Logout</span></a>
         </div>
-    </nav>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="p-3">
-            <h4 class="text-center mb-4">
-                <i class="fas fa-user-shield me-2"></i>
-                <span class="brand-text">Admin Panel</span>
-            </h4>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" 
-                    href="{% url 'admin_dashboard' %}">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'teacher' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'manage_teachers' %}">
-                        <i class="fas fa-chalkboard-teacher"></i>
-                        <span>Teachers</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'student' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'manage_students' %}">
-                        <i class="fas fa-user-graduate"></i>
-                        <span>Students</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'class' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'manage_classes' %}">
-                        <i class="fas fa-door-open"></i>
-                        <span>Classes</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'subject' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'manage_subject' %}">
-                        <i class="fas fa-book"></i>
-                        <span>Subjects</span>
-                    </a>
-                </li>
-                <!-- Add Academic Years menu item here -->
-                <li class="nav-item">
-                    <a class="nav-link {% if 'academic_year' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'manage_academic_years' %}">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Academic Years</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'manage_attendance' %}">
-                        <i class="fas fa-calendar-check"></i>
-                        <span>Attendance</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'finance' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'manage_finance' %}">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <span>Finance</span>
-                    </a>
-                </li>
-                <li class="nav-item mt-3">
-                    <a class="nav-link {% if 'settings' in request.resolver_match.url_name %}active{% endif %}" 
-                    href="{% url 'settings' %}">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </a>
-                </li>
-            </ul>
+    </header>
+    <aside class="panel-sidebar" id="sidebar" aria-label="Administration navigation">
+        <p class="panel-sidebar-label">School management</p>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}"><i class="fas fa-gauge-high"></i><span>Dashboard</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'teacher' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_teachers' %}"><i class="fas fa-chalkboard-teacher"></i><span>Teachers</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'student' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_students' %}"><i class="fas fa-user-graduate"></i><span>Students</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'class' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_classes' %}"><i class="fas fa-door-open"></i><span>Classes</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'subject' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_subject' %}"><i class="fas fa-book-open"></i><span>Subjects</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'academic_year' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_academic_years' %}"><i class="fas fa-calendar-alt"></i><span>Academic years</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'attendance' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_attendance' %}"><i class="fas fa-calendar-check"></i><span>Attendance</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'finance' in request.resolver_match.url_name or 'fee_payment' in request.resolver_match.url_name or request.resolver_match.url_name == 'expenses' %}active{% endif %}" href="{% url 'manage_finance' %}"><i class="fas fa-coins"></i><span>Finance</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'administrator' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_administrators' %}"><i class="fas fa-user-shield"></i><span>Administrators</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'bursar' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_bursars' %}"><i class="fas fa-calculator"></i><span>Bursars</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'leave' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_leaves' %}"><i class="fas fa-calendar-minus"></i><span>Leave requests</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'feedback' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_feedback' %}"><i class="fas fa-comment-dots"></i><span>Feedback</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'report' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'generate_reports' %}"><i class="fas fa-chart-column"></i><span>Reports</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'event' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'manage_events' %}"><i class="fas fa-calendar-day"></i><span>School calendar</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'notification' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'notification_history' %}"><i class="fas fa-bell"></i><span>Notifications</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'system_log' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'system_logs' %}"><i class="fas fa-clipboard-list"></i><span>System logs</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if 'settings' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'settings' %}"><i class="fas fa-gear"></i><span>Settings</span></a></li>
+        </ul>
+    </aside>
+    <main class="panel-main" id="mainContent">
+        <div class="panel-main-inner">
+            {% include 'includes/messages.html' %}
+            {% block content %}{% endblock %}
         </div>
-    </div>
-    <!-- Main Content -->
-    <div class="main-content" id="mainContent">
-        {% include 'includes/messages.html' %}
-        {% block content %}{% endblock %}
-    </div>
-
+    </main>
+    <footer class="panel-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span><strong>AIC Laboret Girls Boarding Primary School</strong> · School administration</span>
+        <a href="{% url 'home' %}">Return to school website <i class="fas fa-arrow-right ms-1"></i></a>
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Toggle sidebar
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
+        (function () {
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            
-            if (window.innerWidth > 768) {
-                sidebar.classList.toggle('sidebar-collapsed');
-                mainContent.classList.toggle('sidebar-collapsed');
-            } else {
-                sidebar.classList.toggle('show');
-            }
-        });
+            const toggle = document.getElementById('sidebarToggle');
+            if (!sidebar || !toggle) return;
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(event.target) && 
-                !sidebarToggle.contains(event.target)) {
-                sidebar.classList.remove('show');
+            if (window.matchMedia('(max-width: 767.98px)').matches) {
+                toggle.setAttribute('aria-expanded', 'false');
             }
-        });
+            toggle.addEventListener('click', function () {
+                if (window.matchMedia('(max-width: 767.98px)').matches) {
+                    sidebar.classList.toggle('is-open');
+                    toggle.setAttribute('aria-expanded', sidebar.classList.contains('is-open'));
+                    return;
+                }
+                document.body.classList.toggle('panel-collapsed');
+                toggle.setAttribute('aria-expanded', !document.body.classList.contains('panel-collapsed'));
+            });
+        }());
     </script>
     {% block extra_js %}{% endblock %}
 </body>

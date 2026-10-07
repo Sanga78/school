@@ -1,104 +1,255 @@
-{% load static %}
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shulee | Log in</title>
+{% block title %}Sign In | AIC Laboret Girls Boarding Primary School{% endblock %}
 
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
-  <!-- icheck bootstrap -->
-  <link rel="stylesheet" href="{% static 'plugins/icheck-bootstrap/icheck-bootstrap.min.css' %}">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="{% static 'dist/css/adminlte.min.css' %}">
-</head>
-<body class="hold-transition login-page">
-<div class="login-box">
-  <div class="login-logo">
-    <a href="../../index2.html"><b>Student</b>Management System</a>
-  </div>
-  <!-- /.login-logo -->
-  <div class="card">
-    <div class="card-body login-card-body">
-      <p class="login-box-msg">Sign in to Student Management System</p>
+{% block extra_head %}
+<style>
+    .portal-login {
+        --login-maroon: #6b0f1a;
+        --login-green: #1a4731;
+        --login-gold: #c9a84c;
+        --login-text: #1a1a1a;
+        --login-muted: #6b7a70;
+        --login-border: #e2eee7;
+        min-height: 560px;
+        padding: clamp(48px, 8vw, 92px) 24px;
+        display: grid;
+        place-items: center;
+        background:
+            radial-gradient(ellipse at 8% 10%, rgba(201,168,76,.1), transparent 34%),
+            linear-gradient(135deg, #faf9f7, #f0faf4);
+    }
+    .portal-login__layout {
+        position: relative;
+        width: min(100%, 540px);
+        margin: 0 auto;
+        overflow: hidden;
+        border: 1px solid rgba(26,71,49,.1);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 20px 54px rgba(26,71,49,.12);
+    }
+    .portal-login__layout::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--login-maroon), var(--login-gold), #2d6a4f);
+    }
+    .portal-login__form-panel {
+        padding: clamp(32px, 7vw, 54px);
+    }
+    .portal-login__form-wrap { width: 100%; margin: 0 auto; }
+    .portal-login__form-heading { margin-bottom: 30px; }
+    .portal-login__eyebrow {
+        margin: 0 0 10px;
+        color: var(--login-maroon);
+        font: 600 11px 'DM Sans', sans-serif;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+    .portal-login__form-heading h2 {
+        margin: 0 0 10px;
+        color: var(--login-green);
+        font: 700 clamp(30px, 5vw, 36px)/1.2 'Playfair Display', serif;
+    }
+    .portal-login__form-heading p {
+        margin: 0;
+        color: var(--login-muted);
+        font: 14px/1.6 'DM Sans', sans-serif;
+    }
+    .portal-login__field { margin-bottom: 20px; }
+    .portal-login__field label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--login-text);
+        font: 600 13px 'DM Sans', sans-serif;
+    }
+    .portal-login__input-wrap { position: relative; }
+    .portal-login__input-icon {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+        color: #829087;
+        font-size: 15px;
+        pointer-events: none;
+    }
+    .portal-login__input {
+        width: 100%;
+        min-height: 50px;
+        padding: 12px 44px 12px 44px;
+        border: 1px solid var(--login-border);
+        border-radius: 9px;
+        outline: none;
+        background: #fff;
+        color: var(--login-text);
+        font: 14px 'DM Sans', sans-serif;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .portal-login__input::placeholder { color: #9ba79f; }
+    .portal-login__input:focus {
+        border-color: #2d6a4f;
+        box-shadow: 0 0 0 3px rgba(45,106,79,.12);
+    }
+    .portal-login__password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 12px;
+        transform: translateY(-50%);
+        padding: 6px;
+        border: 0;
+        background: transparent;
+        color: #6b7a70;
+        cursor: pointer;
+    }
+    .portal-login__password-toggle:hover { color: var(--login-maroon); }
+    .portal-login__submit {
+        width: 100%;
+        min-height: 50px;
+        margin-top: 4px;
+        border: 0;
+        border-radius: 9px;
+        background: var(--login-maroon);
+        color: #fff;
+        font: 600 14px 'DM Sans', sans-serif;
+        letter-spacing: .02em;
+        cursor: pointer;
+        box-shadow: 0 5px 14px rgba(107,15,26,.2);
+        transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    .portal-login__submit:hover {
+        transform: translateY(-1px);
+        background: #8b1a28;
+        box-shadow: 0 8px 18px rgba(107,15,26,.25);
+    }
+    .portal-login__reset {
+        display: block;
+        margin: 18px 0 0;
+        color: var(--login-green);
+        font: 600 13px 'DM Sans', sans-serif;
+        text-align: center;
+        text-decoration: none;
+    }
+    .portal-login__reset:hover { color: var(--login-maroon); text-decoration: underline; }
+    .portal-login__divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 28px 0 16px;
+        color: #89958d;
+        font: 11px 'DM Sans', sans-serif;
+    }
+    .portal-login__divider::before, .portal-login__divider::after {
+        content: "";
+        height: 1px;
+        flex: 1;
+        background: var(--login-border);
+    }
+    .portal-login__test-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px 16px;
+    }
+    .portal-login__test-links a {
+        color: var(--login-muted);
+        font: 12px 'DM Sans', sans-serif;
+        text-decoration: none;
+    }
+    .portal-login__test-links a:hover { color: var(--login-maroon); text-decoration: underline; }
+    .portal-login__alerts { margin-top: 20px; }
+    .portal-login__alert {
+        margin: 0 0 8px;
+        padding: 11px 13px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font: 13px/1.5 'DM Sans', sans-serif;
+    }
+    .portal-login__alert--error { border-color: #f2c9cd; background: #fdf0f1; color: #8a1c26; }
+    .portal-login__alert--success { border-color: #c7e6d1; background: #effaf2; color: #1a5a34; }
+    @media (max-width: 760px) {
+        .portal-login { padding: 36px 16px; }
+        .portal-login { min-height: 480px; }
+    }
+    @media (max-width: 420px) {
+        .portal-login__form-panel { padding: 32px 22px; }
+    }
+</style>
+{% endblock %}
 
-      <form action="/login" method="post">
-        {% csrf_token %}
-        <div class="input-group mb-3">
-          <input type="email" class="form-control" name="email" placeholder="Email">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-envelope"></span>
+{% block content %}
+<main class="portal-login">
+    <div class="portal-login__layout">
+        <section class="portal-login__form-panel" aria-labelledby="login-title">
+            <div class="portal-login__form-wrap">
+                <div class="portal-login__form-heading">
+                    <p class="portal-login__eyebrow">School Portal</p>
+                    <h2 id="login-title">Welcome back</h2>
+                    <p>Sign in with your account details to continue.</p>
+                </div>
+
+                <form action="{% url 'do_login' %}" method="post">
+                    {% csrf_token %}
+                    <div class="portal-login__field">
+                        <label for="login-email">Email address</label>
+                        <div class="portal-login__input-wrap">
+                            <i class="fas fa-envelope portal-login__input-icon" aria-hidden="true"></i>
+                            <input class="portal-login__input" id="login-email" type="email" name="email" placeholder="you@example.com" autocomplete="username" required>
+                        </div>
+                    </div>
+                    <div class="portal-login__field">
+                        <label for="login-password">Password</label>
+                        <div class="portal-login__input-wrap">
+                            <i class="fas fa-lock portal-login__input-icon" aria-hidden="true"></i>
+                            <input class="portal-login__input" id="login-password" type="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                            <button class="portal-login__password-toggle" type="button" aria-label="Show password" aria-pressed="false">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="portal-login__submit" type="submit">Sign In</button>
+                    <a class="portal-login__reset" href="{% url 'password_reset' %}">Forgot your password?</a>
+                </form>
+
+                {% if messages %}
+                <div class="portal-login__alerts" aria-live="polite">
+                    {% for message in messages %}
+                        {% if message.tags == 'error' %}
+                        <p class="portal-login__alert portal-login__alert--error">{{ message }}</p>
+                        {% elif message.tags == 'success' %}
+                        <p class="portal-login__alert portal-login__alert--success">{{ message }}</p>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="portal-login__divider">Testing account registration</div>
+                <nav class="portal-login__test-links" aria-label="Testing account registration">
+                    <a href="{% url 'signup_admin' %}">Admin</a>
+                    <a href="{% url 'signup_staff' %}">Staff</a>
+                    <a href="{% url 'signup_student' %}">Student</a>
+                </nav>
             </div>
-          </div>
-        </div>
-        <div class="input-group mb-3">
-          <input type="password" class="form-control" name="password" placeholder="Password">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-lock"></span>
-            </div>
-          </div>
-        </div>
-        <!-- <div class="input-group mb-3">
-          <div class="g-recaptcha" data-sitekey="6LeWtqUZAAAAAM06YmxX5_XWe19hLWrb_iEiff26"></div>
-        </div> -->
-        <div class="row">
-          <!-- /.col -->
-          <div class="col-12">
-            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-          </div>
-          <!-- /.col -->
-          <div class="col-12 text-center">
-            <a href="{% url 'password_reset' %}">Reset Password</a>
-          </div>
-          <!-- /.col -->
-          <div class="col-12 text-center">
-            <a href="{% url 'signup_admin' %}">Admin SignUp FOR TESTING</a>
-          </div>
-          <!-- /.col -->
-          <div class="col-12 text-center">
-            <a href="{% url 'signup_staff' %}">Staff SignUp FOR TESTING</a>
-          </div>
-          <!-- /.col -->
-          <div class="col-12 text-center">
-            <a href="{% url 'signup_student' %}">Student SignUp FOR TESTING</a>
-          </div>
-          <!-- /.col -->
-        </div>
-        
-
-      </form>
-      <div class="row">
-        {% if messages %}
-        <div class="col-12">
-          {% for message in messages %}
-          {% if message.tags == 'error' %}
-          <span class="alert alert-danger" style="margin-top: 10px">{{ message }}</span>
-          {% endif %}
-          {% if message.tags == 'success' %}
-          <span class="alert alert-success" style="margin-top: 10px">{{ message }}</span>
-          {% endif %}
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
-    
+        </section>
     </div>
-    <!-- /.login-card-body -->
-  </div>
-</div>
-<!-- /.login-box -->
+</main>
+{% endblock %}
 
-<!-- jQuery -->
-<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
-<!-- Bootstrap 4 -->
-<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<!-- AdminLTE App -->
-<script src="{% static 'dist/js/adminlte.min.js' %}"></script>
-</body>
-</html>
+{% block extra_scripts %}
+<script>
+    const passwordToggle = document.querySelector('.portal-login__password-toggle');
+    const passwordInput = document.getElementById('login-password');
+
+    passwordToggle.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        passwordToggle.setAttribute('aria-pressed', String(isPassword));
+        passwordToggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+        passwordToggle.querySelector('i').classList.toggle('fa-eye', !isPassword);
+        passwordToggle.querySelector('i').classList.toggle('fa-eye-slash', isPassword);
+    });
+</script>
+{% endblock %}

@@ -30,7 +30,7 @@
           </div>
           {% endif %}
           <h4>{{ student.user.get_full_name }}</h4>
-          <p class="text-muted">{{ student.current_class.name }}</p>
+          <p class="text-muted">{{ student.current_class|default:"Class not assigned" }}</p>
         </div>
       </div>
     </div>
@@ -47,7 +47,7 @@
               <ul class="list-group list-group-flush mb-4">
                 <li class="list-group-item d-flex justify-content-between">
                   <span>Admission No.</span>
-                  <span>{{ student.admission_number }}</span>
+                  <span>{{ student.user.username }}</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between">
                   <span>Gender</span>
@@ -87,11 +87,11 @@
               <ul class="list-group list-group-flush mb-4">
                 <li class="list-group-item d-flex justify-content-between">
                   <span>Class</span>
-                  <span>{{ student.current_class.name }}</span>
+                  <span>{{ student.current_class|default:"Not assigned" }}</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between">
                   <span>Academic Year</span>
-                  <span>{{ student.academic_year.name }}</span>
+                  <span>{{ student.academic_year|default:"Not assigned" }}</span>
                 </li>
               </ul>
             </div>

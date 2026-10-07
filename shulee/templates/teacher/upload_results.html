@@ -1,63 +1,67 @@
-{% extends 'base.html' %}
-{% block title %}Upload Results{% endblock %}
+{% extends 'teacher/base.html' %}
+{% block title %}Enter results{% endblock %}
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2>Upload Results</h2>
-            <p class="lead">{{ subject.name }} - {{ class.name }}</p>
-        </div>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <p class="text-uppercase small fw-bold text-primary mb-1">Assessment</p>
+        <h1 class="h2 mb-1">Enter student results</h1>
+        <p class="text-muted mb-0">{{ subject.name }} · {{ class.name }} · {{ current_year.name }}</p>
     </div>
+    <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Back to dashboard</a>
+</div>
 
-    <form method="post">
-        {% csrf_token %}
-        <div class="row mb-3">
-            <div class="col-md-3">
-                {{ form.term.label_tag }}
+<form method="post" novalidate>
+    {% csrf_token %}
+    <section class="card">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2 py-3">
+            <h2 class="h5 mb-0">Assessment scores</h2>
+            <div class="d-flex align-items-center gap-2">
+                <label class="form-label mb-0" for="{{ form.term.id_for_label }}">Term</label>
                 {{ form.term }}
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Students Results</h3>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
+        <div class="card-body">
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <p class="small text-muted">Enter both scores for each student. Each score must be between 0 and 100. Leave both blank to skip a student.</p>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead><tr><th scope="col">Student</th><th scope="col">Exam score</th><th scope="col">Assignment score</th><th scope="col">Total</th></tr></thead>
+                    <tbody>
+                        {% for student in students %}
                             <tr>
-                                <th>Student</th>
-                                <th>Exam Score</th>
-                                <th>Assignment Score</th>
-                                <th>Total</th>
+                                <td><strong>{{ student.user.get_full_name|default:student.user.username }}</strong><small class="d-block text-muted">{{ student.user.username }}</small></td>
+                                <td><label class="visually-hidden" for="exam_{{ student.id }}">Exam score for {{ student.user.get_full_name|default:student.user.username }}</label><input id="exam_{{ student.id }}" class="form-control score-input" type="number" name="exam_{{ student.id }}" min="0" max="100" step="0.01" inputmode="decimal"></td>
+                                <td><label class="visually-hidden" for="assignment_{{ student.id }}">Assignment score for {{ student.user.get_full_name|default:student.user.username }}</label><input id="assignment_{{ student.id }}" class="form-control score-input" type="number" name="assignment_{{ student.id }}" min="0" max="100" step="0.01" inputmode="decimal"></td>
+                                <td class="text-muted total-score">—</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in students %}
-                            <tr>
-                                <td>{{ student.user.get_full_name }}</td>
-                                <td>
-                                    <input type="number" name="exam_{{ student.id }}" 
-                                           class="form-control" min="0" max="100" step="0.01">
-                                </td>
-                                <td>
-                                    <input type="number" name="assignment_{{ student.id }}" 
-                                           class="form-control" min="0" max="100" step="0.01">
-                                </td>
-                                <td class="text-center">
-                                    <span class="font-weight-bold">-</span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card-footer">
-                <button type="submit" class="btn btn-primary">Save Results</button>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-5">There are no active students in this class for the current academic year.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    </form>
-</div>
+        <div class="card-footer bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <small class="text-muted">Scores are saved for the selected term and academic year.</small>
+            <button class="btn btn-primary" type="submit" {% if not students %}disabled{% endif %}><i class="fas fa-floppy-disk me-2"></i>Save results</button>
+        </div>
+    </section>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.score-input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            const row = input.closest('tr');
+            const exam = row.querySelector('[name^="exam_"]').value;
+            const assignment = row.querySelector('[name^="assignment_"]').value;
+            const total = row.querySelector('.total-score');
+            total.textContent = exam !== '' && assignment !== ''
+                ? (Number(exam) + Number(assignment)).toFixed(2)
+                : '—';
+        });
+    });
+</script>
 {% endblock %}

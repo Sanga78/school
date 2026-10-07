@@ -28,8 +28,11 @@
 
       <form action="/student_signup" method="post" id="demo-form" enctype="multipart/form-data">
         {% csrf_token %}
+        {% if form.errors %}
+          <div class="alert alert-danger" role="alert">{{ form.errors }}</div>
+        {% endif %}
         <div class="input-group mb-3">
-          <input type="text" class="form-control" name="first_name" placeholder="First Name">
+          <input type="text" class="form-control" name="first_name" placeholder="First Name" maxlength="150" required>
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-user"></span>
@@ -37,7 +40,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <input type="text" class="form-control" name="last_name" placeholder="Last name">
+          <input type="text" class="form-control" name="last_name" placeholder="Last name" maxlength="150" required>
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-user"></span>
@@ -45,7 +48,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <input type="text" class="form-control" name="username" placeholder="Username">
+          <input type="text" class="form-control" name="username" placeholder="Username" maxlength="150" required>
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-user"></span>
@@ -61,7 +64,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <input type="text" class="form-control" name="address" placeholder="Address">
+          <input type="text" class="form-control" name="address" placeholder="Address" maxlength="500">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-map"></span>
@@ -69,9 +72,10 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <select class="form-control" name="course">
-            {% for course in courses %}
-                <option value="{{ course.id }}">{{ course.course_name }}</option>
+          <select class="form-control" name="academic_year" required>
+            <option value="">Select academic year</option>
+            {% for year in academic_years %}
+                <option value="{{ year.id }}">{{ year.name }}</option>
             {% endfor %}
           </select>
           <div class="input-group-append">
@@ -81,9 +85,19 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <select class="form-control" name="sex">
-              <option value="{{ Male }}">Male</option> 
-              <option value="{{ Female }}">Female</option>   
+          <select class="form-control" name="current_class" required>
+            <option value="">Select class</option>
+            {% for class in classes %}
+              <option value="{{ class.id }}">{{ class.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="input-group mb-3">
+          <select class="form-control" name="gender" required>
+              <option value="">Select gender</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="O">Other</option>
           </select>
           <div class="input-group-append">
             <div class="input-group-text">
@@ -92,19 +106,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <select class="form-control" name="session_year_id">
-            {% for session in  session_year %}
-                <option value="{{ session.id }}">{{ session.session_start_year }} TO {{ session.session_end_year }}</option>
-            {% endfor %}
-          </select>
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-calendar"></span>
-            </div>
-          </div>
-        </div>
-        <div class="input-group mb-3">
-            <input type="file" class="form-control" name="profile_pic" placeholder="Profile Picture">
+            <input type="file" class="form-control" name="profile_pic" accept="image/jpeg,image/png,image/webp">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-image"></span>
@@ -112,7 +114,7 @@
           </div>
         </div>
         <div class="input-group mb-3">
-          <input type="password" class="form-control" name="password" placeholder="Password">
+          <input type="password" class="form-control" name="password" placeholder="Password" required>
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-lock"></span>

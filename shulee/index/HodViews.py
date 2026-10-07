@@ -1,17 +1,16 @@
 import json
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse,HttpResponseRedirect, JsonResponse
 from django.contrib import messages
-from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.db.models import Q, Count, Sum
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from django.template.loader import render_to_string
 from io import BytesIO
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
@@ -32,6 +31,7 @@ from .models import (
 )
 from .forms import (
     StudentForm,
+    EditBursarForm,
     SystemSettingsForm,
     LeaveResponseForm, 
     AddSubjectForm,
@@ -43,19 +43,14 @@ from .forms import (
 User = get_user_model()
 # Helper function to check if user is admin
 def is_admin(user):
-    return user.user_type == 1
-def admin_check(user):
     return user.is_authenticated and user.user_type == 1
 
 @login_required
-@user_passes_test(admin_check)
-def admin_dashboard(request):
-    return render(request, 'admin/admin_dashboard.html')
-
-@login_required
-@user_passes_test(admin_check)
+@user_passes_test(is_admin)
 def manage_teachers(request):
-    teachers = Staff.objects.all()
+    teachers = Staff.objects.select_related('user').order_by(
+        'user__last_name', 'user__first_name',
+    )
     context = {
         'teachers': teachers,
     }
@@ -75,9 +70,9 @@ def add_teacher(request):
     return render(request, 'admin/add_edit_teacher.html', {'form': form})
 
 @login_required
-@user_passes_test(admin_check)
+@user_passes_test(is_admin)
 def assign_subjects(request, teacher_id):
-    teacher = Staff.objects.get(id=teacher_id)
+    teacher = get_object_or_404(Staff, id=teacher_id)
     
     if request.method == 'POST':
         form = StaffSubjectAssignmentForm(request.POST)
@@ -101,10 +96,12 @@ def assign_subjects(request, teacher_id):
     return render(request, 'admin/assign_subjects.html', context)
 
 @login_required
-@user_passes_test(admin_check)
+@user_passes_test(is_admin)
 def teacher_subjects(request, teacher_id):
-    teacher = Staff.objects.get(id=teacher_id)
-    assignments = teacher.staffsubjectassignment_set.all()
+    teacher = get_object_or_404(Staff, id=teacher_id)
+    assignments = teacher.staffsubjectassignment_set.select_related(
+        'subject', 'academic_year',
+    ).prefetch_related('classes')
     
     context = {
         'teacher': teacher,
@@ -113,7 +110,7 @@ def teacher_subjects(request, teacher_id):
     return render(request, 'admin/teacher_subjects.html', context)
 
 @login_required
-@user_passes_test(admin_check)
+@user_passes_test(is_admin)
 def assign_class_teachers(request):
     classes = StudentClass.objects.all()
     
@@ -133,59 +130,27 @@ def assign_class_teachers(request):
     return render(request, 'admin/assign_class_teachers.html', context)
 
 @login_required
-@user_passes_test(admin_check)
+@user_passes_test(is_admin)
+@require_POST
 def remove_subject_assignment(request, assignment_id):
-    assignment = StaffSubjectAssignment.objects.get(id=assignment_id)
+    assignment = get_object_or_404(StaffSubjectAssignment, id=assignment_id)
     teacher_id = assignment.staff.id
     assignment.delete()
     messages.success(request, 'Subject assignment removed successfully!')
     return redirect('teacher_subjects', teacher_id=teacher_id)
 
+@login_required
+@user_passes_test(is_admin)
 def admin_home(request):
-    student_count=Student.objects.all().count()
-    staff_count=Staff.objects.all().count()
-    subject_count=Subject.objects.all().count()
+    return redirect('admin_dashboard')
 
-    subject_count_list=[]
-
-
-    subjects_all=Subject.objects.all() 
-    subjects_list=[]
-    student_count_list_in_subject=[]
-    for subject in subjects_all:
-        student_count=Student.objects.count()
-        subjects_list.append(subject.subject_name)
-        student_count_list_in_subject.append(student_count)
-    
-    staffs=Staff.objects.all()
-    attendance_present_list_staff=[]
-    attendance_absent_list_staff=[]
-    staff_name_list=[]
-    for staff in staffs:
-        subject_ids=Subject.objects.filter(staff_id=staff.admin.id)
-        attendance=Attendance.objects.filter(subject_id__in=subject_ids).count()
-        leaves= LeaveRequest.objects.filter(staff_id=staff.id,leave_status=1).count()
-        attendance_absent_list_staff.append(leaves)
-        attendance_present_list_staff.append(attendance)
-        staff_name_list.append(staff.admin.username)
-
-    students_all=Student.objects.all()
-    attendance_present_list_student=[]
-    attendance_absent_list_student=[]
-    student_name_list=[]
-    for student in students_all:
-        attendance=AttendanceReport.objects.filter(student_id=student.id,status=True).count()
-        absent=AttendanceReport.objects.filter(student_id=student.id,status=False).count()
-        leaves= LeaveRequest.objects.filter(student_id=student.id,leave_status=1).count()
-        attendance_absent_list_student.append(leaves+absent)
-        attendance_present_list_student.append(attendance)
-        student_name_list.append(student.admin.username)
-
-    return render(request, "hod_templates/home.html",{"student_count":student_count,"staff_count":staff_count,"subject_count":subject_count,"subject_count_list":subject_count_list,"student_count_list_in_subject":student_count_list_in_subject,"subjects_list":subjects_list,"staff_name_list":staff_name_list,"attendance_absent_list_staff":attendance_absent_list_staff,"attendance_present_list_staff":attendance_present_list_staff,"student_name_list":student_name_list,"attendance_absent_list_student":attendance_absent_list_student,"attendance_present_list_student":attendance_present_list_student})
-
+@login_required
+@user_passes_test(is_admin)
 def add_staff(request):
     return render(request,"hod_templates/add_staff.html")
 
+@login_required
+@user_passes_test(is_admin)
 def add_staff_save(request):
     if request.method != "POST":
         return HttpResponse("Method Not Allowed")
@@ -206,26 +171,8 @@ def add_staff_save(request):
             messages.error(request,"Failed to Add staff")
             return HttpResponseRedirect(reverse("add_staff"))
     
-def add_subject(request):
-    staffs = CustomUser.objects.filter(user_type=2)
-    return render(request, 'hod_templates/add_subject.html',{"staffs":staffs})
-
-def add_subject_save(request):
-    if request.method != 'POST':
-        return HttpResponseRedirect("Method Not Allowed")
-    else:
-        subject_name = request.POST.get("subject_name")
-        staff_id = request.POST.get("staff")
-        staff = CustomUser.objects.get(id=staff_id)
-        try:
-            subject = Subject(subject_name=subject_name,staff_id=staff)
-            subject.save()
-            messages.success(request,"Successfully Added Subject")
-            return HttpResponseRedirect(reverse("add_subject"))
-        except:
-            messages.error(request,"Failed to Add Subject")
-            return HttpResponseRedirect(reverse("add_subject"))
- 
+@login_required
+@user_passes_test(is_admin)
 def manage_staff(request):
     staffs=Staff.objects.all()
     return render(request,"hod_templates/manage_staff.html",{"staffs":staffs})
@@ -235,14 +182,20 @@ def manage_staff(request):
 #     return render(request,"hod_templates/manage_student.html",{"students":students})
 
 
+@login_required
+@user_passes_test(is_admin)
 def manage_subject(request):
-    subjects=Subject.objects.all()
-    return render(request,"admin/manage_subjects.html",{"subjects":subjects})
+    subjects = Subject.objects.order_by('name')
+    return render(request, 'admin/manage_subjects.html', {'subjects': subjects})
 
+@login_required
+@user_passes_test(is_admin)
 def edit_staff(request,staff_id):
     staff=Staff.objects.get(admin=staff_id)
     return render(request,"hod_templates/edit_staff.html",{"staff":staff,"id":staff_id})
 
+@login_required
+@user_passes_test(is_admin)
 def edit_staff_save(request):
     if request.method != "POST":
         return HttpResponse("<h2>Method Not Allowed</h2>")
@@ -270,33 +223,27 @@ def edit_staff_save(request):
             messages.error(request,"Failed to Edit Staff")
             return HttpResponseRedirect(reverse("edit_staff",kwargs={"staff_id":staff_id}))
 
-def edit_subject(request,subject_id):
-    subject=Subject.objects.get(id=subject_id)
-    staffs = CustomUser.objects.filter(user_type=2)
-    return render(request,"hod_templates/edit_subject.html",{"subject":subject,"staffs":staffs,"id":subject_id})
-
-def edit_subject_save(request):
-    if request.method != 'POST':
-        return HttpResponseRedirect("Method Not Allowed")
+@login_required
+@user_passes_test(is_admin)
+def edit_subject(request, subject_id):
+    subject = get_object_or_404(Subject, id=subject_id)
+    if request.method == 'POST':
+        form = AddSubjectForm(request.POST, instance=subject)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Subject updated successfully.')
+            return redirect('manage_subject')
     else:
-        subject_id = request.POST.get("subject_id")
-        subject_name = request.POST.get("subject_name")
-        staff_id = request.POST.get("staff")
-        try:
-            subject = Subject.objects.get(id=subject_id)
-            staff = CustomUser.objects.get(id=staff_id)
-            subject.staff_id = staff
-            subject.subject_name = subject_name
-            subject.save()
-            messages.success(request,"Successfully Edited Subject")
-            return HttpResponseRedirect(reverse("edit_subject",kwargs={"subject_id":subject_id}))
-        except:
-            messages.error(request,"Failed to Edit Subject")
-            return HttpResponseRedirect(reverse("edit_subject",kwargs={"subject_id":subject_id}))
+        form = AddSubjectForm(instance=subject)
+    return render(request, 'admin/add_subject.html', {'form': form})
 
+@login_required
+@user_passes_test(is_admin)
 def manage_session(request):
    return render(request,"hod_templates/manage_session.html")
 
+@login_required
+@user_passes_test(is_admin)
 def add_session_save(request):
     if request.method != 'POST':
         return HttpResponseRedirect(reverse("manage_session"))
@@ -313,7 +260,9 @@ def add_session_save(request):
             messages.error(request,"Failed to Add session")
             return HttpResponseRedirect(reverse("manage_session"))
 
-@csrf_exempt     
+@login_required
+@user_passes_test(is_admin)
+@csrf_exempt
 def check_email_exist(request):
     email=request.POST.get("email")
     user_obj=CustomUser.objects.filter(email=email).exists()
@@ -322,7 +271,9 @@ def check_email_exist(request):
     else:
         return HttpResponse(False)
     
-@csrf_exempt     
+@login_required
+@user_passes_test(is_admin)
+@csrf_exempt
 def check_username_exist(request):
     username=request.POST.get("username")
     user_obj=CustomUser.objects.filter(username=username).exists()
@@ -331,10 +282,14 @@ def check_username_exist(request):
     else:
         return HttpResponse(False)
     
+@login_required
+@user_passes_test(is_admin)
 def staff_feedback_message(request):
     feedbacks=Feedback.objects.all()
     return render(request,"hod_templates/staff_feedback.html",{"feedbacks":feedbacks})
 
+@login_required
+@user_passes_test(is_admin)
 @csrf_exempt
 def staff_feedback_message_replied(request):
     feedback_id = request.POST.get("id")
@@ -348,10 +303,14 @@ def staff_feedback_message_replied(request):
     except:
         return HttpResponse("False")
     
+@login_required
+@user_passes_test(is_admin)
 def student_feedback_message(request):
     feedbacks=Feedback.objects.all()
     return render(request,"hod_templates/student_feedback.html",{"feedbacks":feedbacks})
 
+@login_required
+@user_passes_test(is_admin)
 @csrf_exempt
 def student_feedback_message_replied(request):
     feedback_id = request.POST.get("id")
@@ -365,44 +324,60 @@ def student_feedback_message_replied(request):
     except:
         return HttpResponse("False")
     
+@login_required
+@user_passes_test(is_admin)
 def student_leave_view(request):
     leaves =  LeaveRequest.objects.all()
     return render(request,"hod_templates/student_leave_view.html",{"leaves":leaves})
 
+@login_required
+@user_passes_test(is_admin)
 def student_approve_leave(request,leave_id):
     leave= LeaveRequest.objects.get(id=leave_id)
     leave.leave_status=1
     leave.save()
     return HttpResponseRedirect(reverse("student_leave_view"))
 
+@login_required
+@user_passes_test(is_admin)
 def student_disapprove_leave(request,leave_id):
     leave= LeaveRequest.objects.get(id=leave_id)
     leave.leave_status=2
     leave.save()
     return HttpResponseRedirect(reverse("student_leave_view"))
 
+@login_required
+@user_passes_test(is_admin)
 def staff_leave_view(request):
     leaves =  LeaveRequest.objects.all()
     return render(request,"hod_templates/staff_leave_view.html",{"leaves":leaves})
 
+@login_required
+@user_passes_test(is_admin)
 def staff_approve_leave(request,leave_id):
     leave= LeaveRequest.objects.get(id=leave_id)
     leave.leave_status=1
     leave.save()
     return HttpResponseRedirect(reverse("staff_leave_view"))
 
+@login_required
+@user_passes_test(is_admin)
 def staff_disapprove_leave(request,leave_id):
     leave= LeaveRequest.objects.get(id=leave_id)
     leave.leave_status=2
     leave.save()    
     return HttpResponseRedirect(reverse("staff_leave_view"))
 
+@login_required
+@user_passes_test(is_admin)
 def admin_view_atendance(request):
     subjects = Subject.objects.all()
     session_year_id = SessionYearModel.object.all()
     return render(request,"hod_templates/admin_view_attendance.html",{"subjects":subjects,"session_year_id":session_year_id})
 
 
+@login_required
+@user_passes_test(is_admin)
 @csrf_exempt
 def admin_get_attendance_dates(request):
     subject = request.POST.get("subject")
@@ -417,6 +392,8 @@ def admin_get_attendance_dates(request):
 
     return JsonResponse(json.dumps(attendance_obj),safe=False)
 
+@login_required
+@user_passes_test(is_admin)
 @csrf_exempt
 def admin_get_attendance_student(request):
     attendance_date = request.POST.get("attendance_date")
@@ -431,10 +408,14 @@ def admin_get_attendance_student(request):
         list_data.append(data_small)
     return JsonResponse(json.dumps(list_data),content_type="application/json",safe=False)
 
+@login_required
+@user_passes_test(is_admin)
 def admin_profile(request):
     user = CustomUser.objects.get(id=request.user.id)
     return render(request,"hod_templates/admin_profile.html",{"user":user})
 
+@login_required
+@user_passes_test(is_admin)
 def admin_profile_save(request):
     if request.method != "POST":
         return HttpResponseRedirect(reverse("admin_profile"))
@@ -457,10 +438,18 @@ def admin_profile_save(request):
 
 
 
+@login_required
+@user_passes_test(is_admin)
 def manage_classes(request):
-    classes = StudentClass.objects.select_related('academic_year', 'class_teacher').all()
+    classes = StudentClass.objects.select_related(
+        'academic_year', 'class_teacher__user',
+    ).annotate(student_count=Count('students')).order_by(
+        'academic_year__start_date', 'name',
+    )
     return render(request, 'admin/manage_classes.html', {'classes': classes})
 
+@login_required
+@user_passes_test(is_admin)
 def add_class(request):
     if request.method == 'POST':
         form = ClassForm(request.POST)
@@ -471,6 +460,8 @@ def add_class(request):
         form = ClassForm()
     return render(request, 'admin/add_edit_class.html', {'form': form})
 
+@login_required
+@user_passes_test(is_admin)
 def edit_class(request, class_id):
     class_obj = get_object_or_404(StudentClass, id=class_id)
     if request.method == 'POST':
@@ -482,6 +473,9 @@ def edit_class(request, class_id):
         form = ClassForm(instance=class_obj)
     return render(request, 'admin/add_edit_class.html', {'form': form, 'class': class_obj})
 
+@login_required
+@user_passes_test(is_admin)
+@require_POST
 def delete_class(request, class_id):
     class_obj = get_object_or_404(StudentClass, id=class_id)
     class_obj.delete()
@@ -498,7 +492,9 @@ def admin_dashboard(request):
         'pending_requests': LeaveRequest.objects.filter(status=0).count()
     }
     
-    recent_activities = []
+    recent_activities = SystemLog.objects.select_related('user').order_by(
+        '-timestamp',
+    )[:6]
     
     context = {
         'stats': stats,
@@ -534,7 +530,7 @@ def manage_attendance(request):
         ).distinct().order_by('-attendance_date')
         
         if 'search' in request.GET:
-            search_query = request.GET.get('search')
+            search_query = request.GET.get('search', '').strip()
             attendance_list = attendance_list.filter(
                 Q(class_obj__name__icontains=search_query) |
                 Q(subject__name__icontains=search_query) |
@@ -676,16 +672,19 @@ def manage_students(request):
         'user', 'current_class', 'academic_year'
     ).order_by('current_class__name', 'user__last_name')
     
-    class_filter = request.GET.get('class')
-    if class_filter:
+    class_filter = request.GET.get('class', '')
+    if class_filter.isdecimal():
+        class_filter = int(class_filter)
         students = students.filter(current_class_id=class_filter)
+    else:
+        class_filter = ''
     
-    search_query = request.GET.get('search')
+    search_query = request.GET.get('search', '').strip()
     if search_query:
         students = students.filter(
             Q(user__first_name__icontains=search_query) |
             Q(user__last_name__icontains=search_query) |
-            Q(username__icontains=search_query)
+            Q(user__username__icontains=search_query)
         )
     
     classes = StudentClass.objects.all()
@@ -693,11 +692,22 @@ def manage_students(request):
     context = {
         'students': students,
         'classes': classes,
-        'class_filter': int(class_filter) if class_filter else None,
-        'search_query': search_query or ''
+        'class_filter': class_filter,
+        'search_query': search_query
     }
     return render(request, 'admin/manage_students.html', context)
 
+@login_required
+@user_passes_test(is_admin)
+def view_student(request, student_id):
+    student = get_object_or_404(
+        Student.objects.select_related('user', 'current_class', 'academic_year'),
+        id=student_id,
+    )
+    return render(request, 'admin/view_student.html', {'student': student})
+
+@login_required
+@user_passes_test(is_admin)
 def add_student(request):
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES)
@@ -716,6 +726,8 @@ def add_student(request):
     context = {'form': form}
     return render(request, 'admin/add_edit_student.html', context) 
 
+@login_required
+@user_passes_test(is_admin)
 def edit_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     if request.method == 'POST':
@@ -765,17 +777,7 @@ def delete_student(request, student_id):
 
 @login_required
 @user_passes_test(is_admin)
-def view_student(request, student_id):
-    student = get_object_or_404(Student.objects.select_related(
-        'user', 'current_class', 'academic_year'
-    ), id=student_id)
-    
-    context = {'student': student}
-    return render(request, 'admin/view_student.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
+@require_POST
 def activate_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     student.active = True
@@ -785,23 +787,13 @@ def activate_student(request, student_id):
 
 @login_required
 @user_passes_test(is_admin)
+@require_POST
 def deactivate_student(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     student.active = False
     student.save()
     messages.success(request, 'Student deactivated successfully!')
     return redirect('manage_students')
-
-@login_required
-@user_passes_test(is_admin)
-def view_student(request, student_id):
-    student = get_object_or_404(Student.objects.select_related(
-        'user', 'current_class', 'academic_year'
-    ), id=student_id)
-    
-    context = {'student': student}
-    return render(request, 'admin/view_student.html', context)
-
 
 @login_required
 @user_passes_test(is_admin)
@@ -817,7 +809,7 @@ def manage_finance(request):
     ).order_by('-payment_date')[:5]
     
     recent_expenses = Expense.objects.select_related(
-        'bursar', 'approved_by'
+        'recorded_by_bursar__user', 'approved_by'
     ).order_by('-date')[:5]
     
     context = {
@@ -833,7 +825,8 @@ def manage_finance(request):
 @user_passes_test(is_admin)
 def fee_payments(request):
     payments = FeePayment.objects.select_related(
-        'student', 'student__user', 'fee_structure', 'received_by'
+        'student', 'student__user', 'fee_structure', 'received_by',
+        'recorded_by_bursar__user',
     ).order_by('-payment_date')
     
     student_filter = request.GET.get('student')
@@ -842,8 +835,10 @@ def fee_payments(request):
     
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
-    if date_from and date_to:
-        payments = payments.filter(payment_date__range=[date_from, date_to])
+    if date_from:
+        payments = payments.filter(payment_date__gte=date_from)
+    if date_to:
+        payments = payments.filter(payment_date__lte=date_to)
     
     students = Student.objects.all()
     
@@ -860,7 +855,7 @@ def fee_payments(request):
 @user_passes_test(is_admin)
 def expenses(request):
     expenses = Expense.objects.select_related(
-        'bursar', 'approved_by'
+        'recorded_by_bursar__user', 'approved_by'
     ).order_by('-date')
     
     category_filter = request.GET.get('category')
@@ -869,12 +864,15 @@ def expenses(request):
     
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
-    if date_from and date_to:
-        expenses = expenses.filter(date__range=[date_from, date_to])
+    if date_from:
+        expenses = expenses.filter(date__gte=date_from)
+    if date_to:
+        expenses = expenses.filter(date__lte=date_to)
     
     context = {
         'expenses': expenses,
         'category_filter': category_filter,
+        'categories': Expense.CATEGORIES,
         'date_from': date_from,
         'date_to': date_to
     }
@@ -910,7 +908,15 @@ def add_administrator(request):
 @login_required
 @user_passes_test(is_admin)
 def manage_bursars(request):
-    bursars = Bursar.objects.all()
+    bursars = Bursar.objects.select_related('user').order_by(
+        'user__last_name', 'user__first_name',
+    )
+    status = request.GET.get('status')
+    if status == 'active':
+        bursars = bursars.filter(user__is_active=True)
+    elif status == 'inactive':
+        bursars = bursars.filter(user__is_active=False)
+    bursars = Paginator(bursars, 20).get_page(request.GET.get('page'))
     context = {'bursars': bursars}
     return render(request, 'admin/manage_bursars.html', context)
 
@@ -1181,7 +1187,7 @@ def generate_finance_report(request):
         )
         
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'finance_report.pdf'
+        response['Content-Disposition'] = 'attachment; filename="finance_report.pdf"'
         
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -1198,11 +1204,12 @@ def generate_finance_report(request):
         
         # Summary Data
         story.append(Paragraph("Summary", styles['Heading2']))
+        total_payments = payments.aggregate(total=Sum('amount'))['total'] or 0
+        total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or 0
         data = [
-            ['Total Payments', payments.aggregate(Sum('amount'))['amount__sum'] or 0],
-            ['Total Expenses', expenses.aggregate(Sum('amount'))['amount__sum'] or 0],
-            ['Balance', (payments.aggregate(Sum('amount'))['amount__sum'] or 0) - 
-                      (expenses.aggregate(Sum('amount'))['amount__sum'] or 0)]
+            ['Total Payments', total_payments],
+            ['Total Expenses', total_expenses],
+            ['Balance', total_payments - total_expenses],
         ]
         
         t = Table(data, colWidths=[2*inch, 2*inch])
@@ -1305,62 +1312,27 @@ def delete_academic_year(request, year_id):
 @user_passes_test(is_admin)
 def edit_bursar(request, bursar_id):
     bursar = get_object_or_404(Bursar, id=bursar_id)
-    user = bursar.user
-    
     if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        gender = request.POST.get('gender')
-        qualification = request.POST.get('qualification')
-        date_of_joining = request.POST.get('date_of_joining')
-        is_active = request.POST.get('is_active') == 'on'
-        
-        try:
-            user.first_name = first_name
-            user.last_name = last_name
-            user.email = email
-            user.phone = phone
-            user.is_active = is_active
-            user.save()
-            
-            bursar.gender = gender
-            bursar.qualification = qualification
-            bursar.date_of_joining = date_of_joining
-            bursar.save()
-            
-            messages.success(request, 'Bursar updated successfully!')
+        form = EditBursarForm(request.POST, request.FILES, instance=bursar.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Bursar account updated successfully.')
             return redirect('manage_bursars')
-        except Exception as e:
-            messages.error(request, f'Error updating bursar: {str(e)}')
-    
-    context = {
-        'bursar': bursar,
-        'user': user
-    }
-    return render(request, 'admin/edit_bursar.html', context)
+    else:
+        form = EditBursarForm(instance=bursar.user)
+    return render(request, 'admin/edit_bursar.html', {'bursar': bursar, 'form': form})
 
 @login_required
 @user_passes_test(is_admin)
+@require_POST
 def deactivate_bursar(request, bursar_id):
     bursar = get_object_or_404(Bursar, id=bursar_id)
-    
-    if request.method == 'POST':
-        try:
-            user = bursar.user
-            user.is_active = False
-            user.save()
-            messages.success(request, 'Bursar deactivated successfully!')
-        except Exception as e:
-            messages.error(request, f'Error deactivating bursar: {str(e)}')
-        
-        return redirect('manage_bursars')
-    
-    context = {
-        'bursar': bursar
-    }
-    return render(request, 'admin/confirm_deactivate.html', context)
+    user = bursar.user
+    user.is_active = not user.is_active
+    user.save(update_fields=['is_active'])
+    state = 'activated' if user.is_active else 'deactivated'
+    messages.success(request, f'Bursar account {state}.')
+    return redirect('manage_bursars')
 @login_required
 @user_passes_test(is_admin)
 def set_current_academic_year(request):
@@ -1412,6 +1384,7 @@ def edit_teacher(request, teacher_id):
 
 @login_required
 @user_passes_test(is_admin)
+@require_POST
 def delete_teacher(request, teacher_id):
     teacher = get_object_or_404(Staff, id=teacher_id)
     teacher.user.delete()

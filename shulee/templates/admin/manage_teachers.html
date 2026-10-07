@@ -52,15 +52,11 @@
                             <td>{{ teacher.user.phone|default:"-" }}</td>
                             <td>{{ teacher.qualification|default:"-" }}</td>
                             <td>{{ teacher.date_of_joining|date:"Y-m-d" }}</td>
-                            <td>
-                                <a href="{% url 'edit_teacher' teacher.id %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'delete_teacher' teacher.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Deleted Teachers will be lost forever. Still want to delete?')">
-                                    <span class="icon text-white" title="Delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </span>
-                                </a>
+                            <td class="text-end">
+                                <a href="{% url 'edit_teacher' teacher.id %}" class="btn btn-sm btn-outline-primary" aria-label="Edit {{ teacher.user.username }}"><i class="fas fa-edit"></i></a>
+                                <form method="post" action="{% url 'delete_teacher' teacher.id %}" class="d-inline" onsubmit="return confirm('Permanently delete this teacher account?');">
+                                    {% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete {{ teacher.user.username }}"><i class="fas fa-trash-alt"></i></button>
+                                </form>
                             </td>
                         </tr>
                         {% empty %}
@@ -75,28 +71,4 @@
     </div>
 </div>
 
-<style>
-    .messages-container {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-    }
-    .alert {
-        border-radius: 0;
-        margin-bottom: 0;
-    }
-</style>
-
-<script>
-    // Auto-dismiss alerts after 5 seconds
-    document.addEventListener('DOMContentLoaded', function() {
-        var alerts = document.querySelectorAll('.alert');
-        alerts.forEach(function(alert) {
-            setTimeout(function() {
-                var bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            }, 5000);
-        });
-    });
-</script>
 {% endblock %}

@@ -1,116 +1,147 @@
-{% extends 'base.html' %}
-
+{% extends 'bursar/base.html' %}
 {% block title %}Fee Records{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Student Fee Records</h2>
-        <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeeStructureModal">
-            <i class="fas fa-plus me-2"></i>Add Fee Structure
-        </a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Student fee records</h1>
+            <p class="text-muted mb-0">Review collections and record payments.</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeeStructureModal">
+            <i class="fas fa-plus me-2"></i>Add fee structure
+        </button>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5 class="mb-0">All Students</h5>
+    <section class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h2 class="h5 mb-0">Students</h2>
+                    <small class="text-muted">{{ students|length }} matching record{{ students|length|pluralize }}</small>
                 </div>
-                <div class="col-md-6">
-                    <form class="d-flex">
-                        <input class="form-control me-2" type="search" placeholder="Search students..." aria-label="Search">
-                        <button class="btn btn-outline-primary" type="submit">Search</button>
-                    </form>
-                </div>
+                {% if search or class_filter or academic_year_filter or status_filter %}
+                <a href="{% url 'fee_records' %}" class="btn btn-sm btn-outline-secondary">Clear filters</a>
+                {% endif %}
             </div>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Adm No.</th>
-                            <th>Student Name</th>
-                            <th>Class</th>
-                            <th>Fee Balance</th>
-                            <th>Last Payment</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for student in students %}
-                        <tr>
-                            <td>{{ student.admission_number }}</td>
-                            <td>{{ student.user.get_full_name }}</td>
-                            <td>{{ student.current_class.name }}</td>
-                            <td class="{% if student.get_fee_balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                Ksh {{ student.get_fee_balance|default:"0" }}
-                            </td>
-                            <td>
-                                {% with last_payment=student.feepayment_set.last %}
-                                    {% if last_payment %}
-                                        {{ last_payment.payment_date|date:"d M Y" }}
-                                    {% else %}
-                                        Never
-                                    {% endif %}
-                                {% endwith %}
-                            </td>
-                            <td>
-                                <a href="{% url 'record_payment' student.id %}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-money-bill-wave"></i> Record Payment
-                                </a>
-                                <a href="#" class="btn btn-sm btn-info">
-                                    <i class="fas fa-history"></i> History
-                                </a>
-                            </td>
-                        </tr>
+            <form method="get" class="row g-2 align-items-end" role="search">
+                <div class="col-md-4">
+                    <label class="form-label" for="studentSearch">Search student</label>
+                    <input id="studentSearch" class="form-control" type="search" name="q" value="{{ search }}" placeholder="Name or username">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="classFilter">Class</label>
+                    <select id="classFilter" class="form-select" name="class">
+                        <option value="">All classes</option>
+                        {% for class in classes %}
+                        <option value="{{ class.id }}" {% if class_filter == class.id|stringformat:"s" %}selected{% endif %}>{{ class.name }} — {{ class.academic_year.name }}</option>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="yearFilter">Academic year</label>
+                    <select id="yearFilter" class="form-select" name="academic_year">
+                        <option value="">All years</option>
+                        {% for year in academic_years %}
+                        <option value="{{ year.id }}" {% if academic_year_filter == year.id|stringformat:"s" %}selected{% endif %}>{{ year.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="statusFilter">Account</label>
+                    <select id="statusFilter" class="form-select" name="status">
+                        <option value="">All students</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="sortOrder">Sort by</label>
+                    <select id="sortOrder" class="form-select" name="sort">
+                        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name (A–Z)</option>
+                        <option value="-name" {% if sort == '-name' %}selected{% endif %}>Name (Z–A)</option>
+                        <option value="class" {% if sort == 'class' %}selected{% endif %}>Class (A–Z)</option>
+                        <option value="-class" {% if sort == '-class' %}selected{% endif %}>Class (Z–A)</option>
+                        <option value="-paid" {% if sort == '-paid' %}selected{% endif %}>Highest total paid</option>
+                        <option value="paid" {% if sort == 'paid' %}selected{% endif %}>Lowest total paid</option>
+                        <option value="-last_payment" {% if sort == '-last_payment' %}selected{% endif %}>Most recent payment</option>
+                        <option value="last_payment" {% if sort == 'last_payment' %}selected{% endif %}>Oldest payment</option>
+                    </select>
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button class="btn btn-outline-primary" type="submit"><i class="fas fa-filter me-1"></i>Apply filters</button>
+                </div>
+            </form>
         </div>
-    </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr><th>Student</th><th>Username</th><th>Class / year</th><th>Account</th><th>Total paid</th><th>Last payment</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.user.get_full_name|default:student.user.username }}</td>
+                        <td>{{ student.user.username }}</td>
+                        <td>{% if student.current_class %}{{ student.current_class.name }}<small class="d-block text-muted">{{ student.current_class.academic_year.name }}</small>{% else %}Not assigned{% endif %}</td>
+                        <td>{% if student.active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+                        <td>Ksh {{ student.total_paid|default:"0.00" }}</td>
+                        <td>{{ student.last_payment_date|date:"d M Y"|default:"None" }}</td>
+                        <td><a href="{% url 'record_payment' student.id %}" class="btn btn-sm btn-success"><i class="fas fa-money-bill-wave me-1"></i>Record payment</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No students match the selected filters.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card shadow-sm">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Active fee structures</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Name</th><th>Class</th><th>Academic year</th><th>Amount</th><th>Due date</th></tr></thead>
+                <tbody>
+                    {% for structure in fee_structures %}
+                    <tr><td>{{ structure.name }}</td><td>{{ structure.class_obj }}</td><td>{{ structure.academic_year }}</td><td>Ksh {{ structure.amount }}</td><td>{{ structure.due_date|date:"d M Y" }}</td></tr>
+                    {% empty %}<tr><td colspan="5" class="text-center text-muted py-4">No active fee structures.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 
-<!-- Add Fee Structure Modal -->
-<div class="modal fade" id="addFeeStructureModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="addFeeStructureModal" tabindex="-1" aria-labelledby="addFeeStructureTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Fee Structure</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Fee Name</label>
-                        <input type="text" class="form-control" name="fee_name" required>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-header"><h2 class="modal-title h5" id="addFeeStructureTitle">Add fee structure</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body">
+                    {% if fee_structure_form.non_field_errors %}<div class="alert alert-danger">{{ fee_structure_form.non_field_errors }}</div>{% endif %}
+                    <div class="row g-3">
+                        {% for field in fee_structure_form %}
+                        <div class="col-md-6">
+                            {% if field.field.widget.input_type == 'checkbox' %}
+                            <div class="form-check mt-4">{{ field }}<label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label></div>
+                            {% else %}
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+                            {% endif %}
+                            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Amount</label>
-                        <input type="number" class="form-control" name="amount" step="0.01" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Class</label>
-                        <select class="form-select" name="class" required>
-                            {% for class in classes %}
-                            <option value="{{ class.id }}">{{ class.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Due Date</label>
-                        <input type="date" class="form-control" name="due_date" required>
-                    </div>
-                    <div class="text-end">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Fee Structure</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save fee structure</button></div>
+            </form>
         </div>
     </div>
 </div>
+{% if fee_structure_form.errors %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('addFeeStructureModal')).show();
+    });
+</script>
+{% endif %}
 {% endblock %}

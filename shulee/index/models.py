@@ -104,7 +104,7 @@ class Bursar(models.Model):
         ('F', 'Female'),
         ('O', 'Other'),
     )
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='O')
 
     class Meta:
         verbose_name = "Bursar"
@@ -387,6 +387,37 @@ class Notification(models.Model):
     # which is problematic for multiple recipients. It should be on NotificationReadStatus.
     # Removed the method from here.
 
+class SchoolEvent(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField(blank=True, null=True)
+    location = models.CharField(max_length=200, blank=True)
+    is_published = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='school_events',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['starts_at', 'title']
+        verbose_name = 'School event'
+        verbose_name_plural = 'School events'
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.ends_at and self.starts_at and self.ends_at < self.starts_at:
+            raise ValidationError({'ends_at': 'The end time must be after the start time.'})
+
+    def __str__(self):
+        return f'{self.title} ({self.starts_at:%Y-%m-%d %H:%M})'
+
 class NotificationReadStatus(models.Model):
     notification = models.ForeignKey(
         Notification,
@@ -443,7 +474,14 @@ class FeePayment(models.Model):
     payment_date = models.DateField(default=timezone.now)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
     transaction_code = models.CharField(max_length=50, blank=True, help_text="Reference/Transaction ID for the payment") # Added help_text
-    received_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_payments') # Added blank=True
+    received_by = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True, blank=True, related_name='received_payments')
+    recorded_by_bursar = models.ForeignKey(
+        'Bursar',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recorded_payments',
+    )
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True) # Added created_at
     updated_at = models.DateTimeField(auto_now=True) # Added updated_at
@@ -475,7 +513,7 @@ class Expense(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORIES)
     description = models.TextField()
     date = models.DateField(default=timezone.now)
-    receipt_number = models.CharField(max_length=50, blank=True, unique=True) # Receipt numbers should be unique
+    receipt_number = models.CharField(max_length=50, blank=True, null=True, unique=True)
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_expenses') # Using User model
     created_at = models.DateTimeField(auto_now_add=True) # Added created_at
     updated_at = models.DateTimeField(auto_now=True) # Added updated_at

@@ -1,239 +1,331 @@
 {% extends 'base.html' %}
-{%block content%}
 
-    <!-- Events Hero Section -->
-    <section class="page-hero" style="background-image: url('assets/events-hero.jpg');">
-        <div class="container">
-            <h1>School Events</h1>
-            <p>Join our vibrant community activities and celebrations</p>
+{% block title %}Events | AIC Laboret Girls Boarding Primary School{% endblock %}
+
+{% block extra_head %}
+<style>
+    .events-page {
+        --events-maroon: #6b0f1a;
+        --events-green: #1a4731;
+        --events-gold: #c9a84c;
+        --events-muted: #6b7a70;
+        --events-border: #e2eee7;
+        color: #1a1a1a;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .events-hero {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(58px, 8vw, 96px) 24px;
+        background:
+            radial-gradient(circle at 88% 12%, rgba(201,168,76,.2), transparent 24rem),
+            linear-gradient(125deg, #5b0c17, #7b1724 58%, #1a4731);
+        color: #fff;
+    }
+    .events-hero::after {
+        position: absolute;
+        right: -150px;
+        bottom: -260px;
+        width: 500px;
+        height: 500px;
+        border: 1px solid rgba(240,208,128,.2);
+        border-radius: 50%;
+        box-shadow: 0 0 0 38px rgba(240,208,128,.035), 0 0 0 80px rgba(240,208,128,.025);
+        content: "";
+        pointer-events: none;
+    }
+    .events-page .container { width: min(100%, 1100px); margin: 0 auto; padding: 0; }
+    .events-hero__inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; text-align: center; }
+    .events-hero__eyebrow { margin: 0 0 14px; color: #f0d080; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .events-hero h1 { margin: 0 0 16px; color: #fff; font: 700 clamp(36px, 5vw, 58px)/1.1 'Playfair Display', serif; }
+    .events-hero__intro { max-width: 650px; margin: 0 auto; color: rgba(255,255,255,.8); font: 17px/1.75 'Source Serif 4', serif; }
+    .events-page section:not(.events-hero) { padding: clamp(46px, 7vw, 74px) 24px; }
+    .events-overview { background: #fff; }
+    .events-section-heading { max-width: 700px; margin: 0 auto 34px; text-align: center; }
+    .events-section-heading h2 { margin: 0 0 10px; color: var(--events-green); font: 700 clamp(27px, 3vw, 36px)/1.2 'Playfair Display', serif; }
+    .events-section-heading p { margin: 0; color: var(--events-muted); font-size: 15px; line-height: 1.7; }
+    .events-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        max-width: 820px;
+        margin: 0 auto 32px;
+        padding: 20px 22px;
+        border: 1px solid #eadcae;
+        border-radius: 14px;
+        background: #fffaf0;
+        color: #594919;
+    }
+    .events-note__icon { flex: 0 0 38px; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: rgba(201,168,76,.18); color: #80651f; }
+    .events-note h3 { margin: 1px 0 5px; color: #594919; font: 700 16px/1.35 'Playfair Display', serif; }
+    .events-note p { margin: 0; color: #706239; font-size: 13px; line-height: 1.65; }
+    .events-types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 17px; }
+    .events-type {
+        padding: 24px;
+        border: 1px solid var(--events-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(26,71,49,.055);
+    }
+    .events-type__icon { width: 42px; height: 42px; display: grid; place-items: center; margin-bottom: 16px; border-radius: 12px; background: #f0faf4; color: var(--events-green); }
+    .events-type h3 { margin: 0 0 8px; color: var(--events-green); font: 700 18px/1.35 'Playfair Display', serif; }
+    .events-type p { margin: 0; color: var(--events-muted); font-size: 13px; line-height: 1.7; }
+    .events-contact { background: #f0faf4; }
+    .events-contact__panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 24px;
+        padding: clamp(24px, 5vw, 42px);
+        border: 1px solid var(--events-border);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 10px 32px rgba(26,71,49,.07);
+    }
+    .events-contact__panel h2 { margin: 0 0 9px; color: var(--events-green); font: 700 clamp(23px, 3vw, 30px)/1.2 'Playfair Display', serif; }
+    .events-contact__panel p { max-width: 650px; margin: 0; color: var(--events-muted); font-size: 14px; line-height: 1.7; }
+    .events-contact__button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 46px;
+        padding: 12px 19px;
+        border: 1px solid var(--events-maroon);
+        border-radius: 9px;
+        background: var(--events-maroon);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .2s, transform .2s;
+    }
+    .events-contact__button:hover { transform: translateY(-2px); background: #8b1a28; color: #fff; }
+    .events-feedback { width: min(1100px, calc(100% - 36px)); margin: 18px auto 0; padding: 13px 16px; border: 1px solid var(--events-border); border-radius: 9px; background: #f0faf4; color: var(--events-green); font-size: 13px; }
+    .events-feedback p { margin: 0; }
+    .events-feedback .error { color: #a32332; }
+    .events-calendar-list { display: grid; gap: 14px; max-width: 860px; margin: 0 auto; }
+    .events-calendar-card {
+        display: grid;
+        grid-template-columns: 100px minmax(0, 1fr);
+        gap: 20px;
+        padding: 20px;
+        border: 1px solid var(--events-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(26,71,49,.045);
+    }
+    .events-calendar-card__date { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 88px; padding: 10px; border-radius: 11px; background: #f0faf4; text-align: center; }
+    .events-calendar-card__date span { color: var(--events-maroon); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .events-calendar-card__date strong { color: var(--events-green); font: 700 27px/1.15 'Playfair Display', serif; }
+    .events-calendar-card__body h3 { margin: 0 0 7px; color: var(--events-green); font: 700 19px/1.3 'Playfair Display', serif; }
+    .events-calendar-card__meta { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 0 0 9px; color: var(--events-maroon); font-size: 12px; font-weight: 600; }
+    .events-calendar-card__meta span { display: inline-flex; align-items: center; gap: 6px; }
+    .events-calendar-card__description { margin: 0; color: var(--events-muted); font-size: 13px; line-height: 1.7; white-space: pre-line; }
+    .events-empty { max-width: 860px; margin: 0 auto; padding: 28px; border: 1px dashed #b9cebf; border-radius: 13px; color: var(--events-muted); text-align: center; font-size: 14px; line-height: 1.7; }
+    .events-manager { background: #f0faf4; }
+    .events-manager__grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: start; gap: 22px; }
+    .events-manager__panel { padding: 24px; border: 1px solid var(--events-border); border-radius: 15px; background: #fff; box-shadow: 0 6px 22px rgba(26,71,49,.05); }
+    .events-manager__panel h2 { margin: 0 0 7px; color: var(--events-green); font: 700 23px/1.25 'Playfair Display', serif; }
+    .events-manager__panel > p { margin: 0 0 19px; color: var(--events-muted); font-size: 13px; line-height: 1.65; }
+    .calendar-form__field { margin-bottom: 14px; }
+    .calendar-form__field label { display: block; margin-bottom: 6px; color: var(--events-green); font-size: 12px; font-weight: 700; }
+    .calendar-form__input { width: 100%; min-height: 42px; padding: 10px 11px; border: 1px solid #cbd9cf; border-radius: 8px; background: #fff; color: #1a1a1a; font: 14px 'DM Sans', sans-serif; }
+    .calendar-form__input:focus { outline: 3px solid rgba(45,106,79,.16); border-color: #2d6a4f; }
+    textarea.calendar-form__input { min-height: 110px; resize: vertical; }
+    .calendar-form__check { display: flex; align-items: center; gap: 9px; margin: 3px 0 18px; color: var(--events-green); font-size: 13px; font-weight: 600; }
+    .calendar-form__checkbox { width: 17px; height: 17px; accent-color: var(--events-green); }
+    .calendar-form__error { display: block; margin-top: 5px; color: #a32332; font-size: 12px; }
+    .calendar-form__button { min-height: 43px; padding: 11px 17px; border: 1px solid var(--events-maroon); border-radius: 8px; background: var(--events-maroon); color: #fff; font: 700 13px 'DM Sans', sans-serif; cursor: pointer; }
+    .calendar-form__button:hover { background: #8b1a28; }
+    .events-manager__list { display: grid; gap: 11px; }
+    .events-manager__item { padding: 16px; border: 1px solid var(--events-border); border-radius: 12px; background: #fff; }
+    .events-manager__item h3 { margin: 0 0 5px; color: var(--events-green); font: 700 16px/1.35 'Playfair Display', serif; }
+    .events-manager__item p { margin: 0 0 12px; color: var(--events-muted); font-size: 12px; line-height: 1.6; }
+    .events-manager__actions { display: flex; align-items: center; gap: 12px; }
+    .events-manager__actions a, .events-manager__actions button { padding: 0; border: 0; background: none; color: var(--events-maroon); font: 700 12px 'DM Sans', sans-serif; text-decoration: underline; cursor: pointer; }
+    .events-manager__status { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 99px; background: #f0faf4; color: var(--events-green); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .events-manager__status--draft { background: #fff5df; color: #755a17; }
+    .events-manager__back { display: inline-flex; margin-top: 22px; color: var(--events-maroon); font-size: 13px; font-weight: 700; text-decoration: none; }
+    .events-manager__back:hover { text-decoration: underline; }
+    @media (max-width: 760px) {
+        .events-types { grid-template-columns: 1fr 1fr; }
+        .events-contact__panel { grid-template-columns: 1fr; }
+        .events-contact__button { justify-self: start; }
+        .events-manager__grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+        .events-page section:not(.events-hero) { padding-right: 18px; padding-left: 18px; }
+        .events-types { grid-template-columns: 1fr; }
+        .events-note { padding: 17px; }
+        .events-calendar-card { grid-template-columns: 74px minmax(0, 1fr); gap: 13px; padding: 14px; }
+        .events-calendar-card__date { min-height: 76px; }
+        .events-manager__panel { padding: 19px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="events-page">
+    <section class="events-hero">
+        <div class="events-hero__inner">
+            <p class="events-hero__eyebrow">Life at AIC Laboret</p>
+            {% if management_mode %}
+                <h1>Manage the school calendar</h1>
+                <p class="events-hero__intro">Publish and update school events for active student accounts.</p>
+            {% else %}
+                <h1>School Calendar</h1>
+                <p class="events-hero__intro">Find upcoming school activities and important dates shared by the headteacher.</p>
+            {% endif %}
         </div>
     </section>
 
-    <!-- Breadcrumb Navigation -->
-    <div class="breadcrumb">
-        <div class="container">
-            <a href="index.html">Home</a>
-            <span>/</span>
-            <a href="events.html">Events</a>
+    {% if messages %}
+        <div class="events-feedback" role="status" aria-live="polite">
+            {% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}
         </div>
-    </div>
+    {% endif %}
 
-    <!-- Upcoming Events Section -->
-    <section class="upcoming-events">
+    <section class="events-overview" aria-labelledby="events-overview-title">
         <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Upcoming Events</h2>
-                <p class="section-subtitle">Mark your calendars for these exciting activities</p>
+            <div class="events-section-heading">
+                {% if management_mode %}
+                    <h2 id="events-overview-title">Calendar administration</h2>
+                    <p>Published events appear to active registered students. Keep details current by editing or removing events when plans change.</p>
+                {% elif can_view_calendar %}
+                    <h2 id="events-overview-title">Upcoming school events</h2>
+                    <p>These are published events for registered students. Check with the school if you need more information.</p>
+                {% else %}
+                    <h2 id="events-overview-title">Events and school life</h2>
+                    <p>School activities bring learning, creativity, and community together.</p>
+                {% endif %}
             </div>
-            <div class="events-filter">
-                <button class="filter-btn active" data-filter="all">All Events</button>
-                <button class="filter-btn" data-filter="academic">Academic</button>
-                <button class="filter-btn" data-filter="arts">Arts</button>
-                <button class="filter-btn" data-filter="sports">Sports</button>
-                <button class="filter-btn" data-filter="community">Community</button>
-            </div>
-            <div class="events-grid">
-                <!-- Event 1 -->
-                <div class="event-card" data-category="academic">
-                    <div class="event-date">
-                        <span class="month">Oct</span>
-                        <span class="day">15</span>
+            {% if can_view_calendar %}
+                {% if calendar_events %}
+                    <div class="events-calendar-list">
+                        {% for event in calendar_events %}
+                            <article class="events-calendar-card">
+                                <div class="events-calendar-card__date" aria-label="{{ event.starts_at|date:'l, j F Y' }}">
+                                    <span>{{ event.starts_at|date:"M" }}</span>
+                                    <strong>{{ event.starts_at|date:"j" }}</strong>
+                                </div>
+                                <div class="events-calendar-card__body">
+                                    <h3>{{ event.title }}</h3>
+                                    <div class="events-calendar-card__meta">
+                                        <span><i class="far fa-clock" aria-hidden="true"></i> {{ event.starts_at|date:"D, j M Y · H:i" }}{% if event.ends_at %}–{{ event.ends_at|date:"H:i" }}{% endif %}</span>
+                                        {% if event.location %}<span><i class="fas fa-location-dot" aria-hidden="true"></i> {{ event.location }}</span>{% endif %}
+                                    </div>
+                                    <p class="events-calendar-card__description">{{ event.description }}</p>
+                                </div>
+                            </article>
+                        {% endfor %}
                     </div>
-                    <div class="event-image">
-                        <img src="assets/science-fair.jpg" alt="Science Fair">
+                {% else %}
+                    <p class="events-empty">There are no published upcoming events at the moment. Please check back later.</p>
+                {% endif %}
+                {% if can_manage_events and not management_mode %}
+                    <div class="view-all" style="margin-top: 26px;">
+                        <a class="events-contact__button" href="{% url 'manage_events' %}">Manage calendar <span aria-hidden="true">→</span></a>
                     </div>
-                    <div class="event-content">
-                        <span class="event-category academic">Academic</span>
-                        <h3>Annual Science Fair</h3>
-                        <p class="event-time"><i class="far fa-clock"></i> 9:00 AM - 3:00 PM | Gymnasium</p>
-                        <p class="event-description">Students showcase their innovative projects in our biggest STEM event of the year. Open to all families and community members.</p>
-                        <div class="event-actions">
-                            <a href="#" class="btn-secondary">Details</a>
-                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
-                        </div>
+                {% endif %}
+            {% else %}
+                <aside class="events-note" aria-label="Student calendar access">
+                    <span class="events-note__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                    <div>
+                        <h3>Calendar for registered students</h3>
+                        {% if request.user.is_authenticated %}
+                            <p>The calendar is available to active student accounts. If you are a registered student and cannot access it, please contact the school.</p>
+                        {% else %}
+                            <p>Sign in with your registered student account to view published school events. Families can contact the school to ask about event information.</p>
+                            <a class="events-contact__button" href="{% url 'show_login' %}">Student login</a>
+                        {% endif %}
                     </div>
+                </aside>
+                <div class="events-types">
+                    <article class="events-type">
+                        <span class="events-type__icon" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+                        <h3>Learning showcases</h3>
+                        <p>Opportunities to celebrate pupils' learning, projects, and achievements with the school community.</p>
+                    </article>
+                    <article class="events-type">
+                        <span class="events-type__icon" aria-hidden="true"><i class="fas fa-music"></i></span>
+                        <h3>Creative experiences</h3>
+                        <p>Activities that invite pupils to explore creative expression and share their interests.</p>
+                    </article>
+                    <article class="events-type">
+                        <span class="events-type__icon" aria-hidden="true"><i class="fas fa-people-group"></i></span>
+                        <h3>Community gatherings</h3>
+                        <p>School occasions that help pupils and families connect and take part in school life.</p>
+                    </article>
                 </div>
-
-                <!-- Event 2 -->
-                <div class="event-card" data-category="arts">
-                    <div class="event-date">
-                        <span class="month">Nov</span>
-                        <span class="day">3</span>
-                    </div>
-                    <div class="event-image">
-                        <img src="assets/fall-concert.jpg" alt="Fall Concert">
-                    </div>
-                    <div class="event-content">
-                        <span class="event-category arts">Arts</span>
-                        <h3>Fall Music Concert</h3>
-                        <p class="event-time"><i class="far fa-clock"></i> 7:00 PM | Auditorium</p>
-                        <p class="event-description">Our orchestra, band, and choir present an evening of musical performances featuring classical and contemporary pieces.</p>
-                        <div class="event-actions">
-                            <a href="#" class="btn-secondary">Details</a>
-                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event 3 -->
-                <div class="event-card" data-category="sports">
-                    <div class="event-date">
-                        <span class="month">Nov</span>
-                        <span class="day">18</span>
-                    </div>
-                    <div class="event-image">
-                        <img src="assets/basketball-game.jpg" alt="Basketball Game">
-                    </div>
-                    <div class="event-content">
-                        <span class="event-category sports">Sports</span>
-                        <h3>Varsity Basketball Championship</h3>
-                        <p class="event-time"><i class="far fa-clock"></i> 6:30 PM | School Gym</p>
-                        <p class="event-description">Cheer on our Eagles as they compete for the regional championship title against rival Jefferson High.</p>
-                        <div class="event-actions">
-                            <a href="#" class="btn-secondary">Details</a>
-                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event 4 -->
-                <div class="event-card" data-category="community">
-                    <div class="event-date">
-                        <span class="month">Dec</span>
-                        <span class="day">5</span>
-                    </div>
-                    <div class="event-image">
-                        <img src="assets/winter-market.jpg" alt="Winter Market">
-                    </div>
-                    <div class="event-content">
-                        <span class="event-category community">Community</span>
-                        <h3>Winter Holiday Market</h3>
-                        <p class="event-time"><i class="far fa-clock"></i> 10:00 AM - 4:00 PM | School Courtyard</p>
-                        <p class="event-description">Local vendors, student crafts, food trucks, and holiday performances. Proceeds benefit our scholarship fund.</p>
-                        <div class="event-actions">
-                            <a href="#" class="btn-secondary">Details</a>
-                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event 5 -->
-                <div class="event-card" data-category="academic">
-                    <div class="event-date">
-                        <span class="month">Jan</span>
-                        <span class="day">12</span>
-                    </div>
-                    <div class="event-image">
-                        <img src="assets/college-fair.jpg" alt="College Fair">
-                    </div>
-                    <div class="event-content">
-                        <span class="event-category academic">Academic</span>
-                        <h3>College Fair</h3>
-                        <p class="event-time"><i class="far fa-clock"></i> 6:00 PM - 8:30 PM | Cafeteria</p>
-                        <p class="event-description">Representatives from 50+ universities will be available to discuss programs, admissions, and financial aid.</p>
-                        <div class="event-actions">
-                            <a href="#" class="btn-secondary">Details</a>
-                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Event 6 -->
-                <div class="event-card" data-category="arts">
-                    <div class="event-date">
-                        <span class="month">Feb</span>
-                        <span class="day">9</span>
-                    </div>
-                    <div class="event-image">
-                        <img src="assets/art-show.jpg" alt="Art Show">
-                    </div>
-                    <div class="event-content">
-                        <span class="event-category arts">Arts</span>
-                        <h3>Student Art Exhibition</h3>
-                        <p class="event-time"><i class="far fa-clock"></i> 5:00 PM - 8:00 PM | Art Gallery</p>
-                        <p class="event-description">Annual showcase of student artwork including paintings, sculptures, photography, and digital media.</p>
-                        <div class="event-actions">
-                            <a href="#" class="btn-secondary">Details</a>
-                            <a href="#" class="btn-calendar"><i class="far fa-calendar-plus"></i> Add to Calendar</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="view-all">
-                <a href="#" class="btn-primary">View Full Calendar</a>
-            </div>
+            {% endif %}
         </div>
     </section>
 
-    <!-- Featured Event Section -->
-    <section class="featured-event">
-        <div class="container">
-            <div class="featured-content">
-                <span class="featured-badge">Featured Event</span>
-                <h2>Greenwood Gala: 25th Anniversary Celebration</h2>
-                <div class="featured-meta">
-                    <span class="featured-date"><i class="far fa-calendar-alt"></i> March 18, 2024</span>
-                    <span class="featured-location"><i class="fas fa-map-marker-alt"></i> Grand Ballroom, City Convention Center</span>
+    {% if management_mode %}
+        <section class="events-manager" aria-labelledby="events-manager-title">
+            <div class="container">
+                <div class="events-manager__grid">
+                    <div class="events-manager__panel">
+                        <h2 id="events-manager-title">{% if editing_event %}Edit event{% else %}Add an event{% endif %}</h2>
+                        <p>Enter the event details. Published events become visible to active student accounts.</p>
+                        <form class="calendar-form" method="post" action="{% if editing_event %}{% url 'edit_school_event' editing_event.id %}{% else %}{% url 'manage_events' %}{% endif %}">
+                            {% csrf_token %}
+                            {% for field in event_form %}
+                                {% if field.name == 'is_published' %}
+                                    <label class="calendar-form__check" for="{{ field.id_for_label }}">{{ field }} Publish to students</label>
+                                {% else %}
+                                    <div class="calendar-form__field">
+                                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                        {{ field }}
+                                        {% for error in field.errors %}<span class="calendar-form__error">{{ error }}</span>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            {% for error in event_form.non_field_errors %}<span class="calendar-form__error">{{ error }}</span>{% endfor %}
+                            <button class="calendar-form__button" type="submit">{% if editing_event %}Save changes{% else %}Add to calendar{% endif %}</button>
+                            {% if editing_event %}<a class="events-manager__back" href="{% url 'manage_events' %}">Cancel editing</a>{% endif %}
+                        </form>
+                    </div>
+                    <div class="events-manager__panel">
+                        <h2>All calendar entries</h2>
+                        <p>Drafts are not visible to students; past events remain here for administration.</p>
+                        {% if managed_events %}
+                            <div class="events-manager__list">
+                                {% for event in managed_events %}
+                                    <article class="events-manager__item">
+                                        <h3>{{ event.title }}<span class="events-manager__status{% if not event.is_published %} events-manager__status--draft{% endif %}">{% if event.is_published %}Published{% else %}Draft{% endif %}</span></h3>
+                                        <p>{{ event.starts_at|date:"D, j M Y · H:i" }}{% if event.location %} · {{ event.location }}{% endif %}</p>
+                                        <div class="events-manager__actions">
+                                            <a href="{% url 'edit_school_event' event.id %}">Edit</a>
+                                            <form method="post" action="{% url 'delete_school_event' event.id %}" onsubmit="return confirm('Remove this event from the school calendar?');">
+                                                {% csrf_token %}
+                                                <button type="submit">Delete</button>
+                                            </form>
+                                        </div>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="events-empty">No events have been added yet.</p>
+                        {% endif %}
+                    </div>
                 </div>
-                <p>Join us for an unforgettable evening celebrating 25 years of educational excellence. The gala will feature dinner, dancing, live auctions, and special performances by our talented students and alumni.</p>
-                <div class="featured-actions">
-                    <a href="#" class="btn-primary">Purchase Tickets</a>
-                    <a href="#" class="btn-secondary">Event Details</a>
+                <a class="events-manager__back" href="{% url 'events' %}">← Return to school calendar</a>
+            </div>
+        </section>
+    {% elif can_view_calendar %}
+        <section class="events-contact">
+            <div class="container">
+                <div class="events-contact__panel">
+                    <div>
+                        <h2>Need more information?</h2>
+                        <p>Contact the school if you have questions about an event or need to confirm arrangements.</p>
+                    </div>
+                    <a class="events-contact__button" href="{% url 'contact' %}">Contact the school <span aria-hidden="true">→</span></a>
                 </div>
             </div>
-            <div class="featured-image">
-                <img src="assets/gala.jpg" alt="Gala Event">
-            </div>
-        </div>
-    </section>
-
-    <!-- Past Events Section -->
-    <section class="past-events">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Past Events Gallery</h2>
-                <p class="section-subtitle">Relive our recent memorable moments</p>
-            </div>
-            <div class="event-gallery">
-                <div class="gallery-item">
-                    <img src="assets/graduation.jpg" alt="Graduation">
-                    <div class="gallery-caption">Class of 2023 Graduation</div>
-                </div>
-                <div class="gallery-item">
-                    <img src="assets/science-olympiad.jpg" alt="Science Olympiad">
-                    <div class="gallery-caption">Regional Science Olympiad Winners</div>
-                </div>
-                <div class="gallery-item">
-                    <img src="assets/spring-musical.jpg" alt="Spring Musical">
-                    <div class="gallery-caption">Spring Musical Performance</div>
-                </div>
-                <div class="gallery-item">
-                    <img src="assets/field-day.jpg" alt="Field Day">
-                    <div class="gallery-caption">Elementary Field Day</div>
-                </div>
-                <div class="gallery-item">
-                    <img src="assets/robotics.jpg" alt="Robotics Competition">
-                    <div class="gallery-caption">State Robotics Competition</div>
-                </div>
-                <div class="gallery-item">
-                    <img src="assets/book-fair.jpg" alt="Book Fair">
-                    <div class="gallery-caption">Annual Book Fair</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Newsletter Section -->
-    <section class="events-newsletter">
-        <div class="container">
-            <div class="newsletter-content">
-                <h2>Stay Updated on School Events</h2>
-                <p>Subscribe to our monthly newsletter for the latest event announcements, photos, and school news.</p>
-                <form class="newsletter-form">
-                    <input type="email" placeholder="Your email address" required>
-                    <button type="submit" class="btn-primary">Subscribe</button>
-                </form>
-            </div>
-        </div>
-    </section>
-{%endblock%}
+        </section>
+    {% endif %}
+</main>
+{% endblock %}

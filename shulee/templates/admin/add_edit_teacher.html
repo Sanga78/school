@@ -88,16 +88,16 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label class="form-label">Qualification</label>
-                                    <input type="text" class="form-control" name="qualification" 
-                                           value="{{ form.qualification.value|default:'' }}">
+                                    <label class="form-label" for="{{ form.qualification.id_for_label }}">Qualification</label>
+                                    {{ form.qualification }}
+                                    {% for error in form.qualification.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label class="form-label">Date of Joining</label>
-                                    <input type="date" class="form-control" name="date_of_joining" 
-                                           value="{{ form.date_of_joining.value|date:'Y-m-d'|default:'' }}">
+                                    <label class="form-label" for="{{ form.date_of_joining.id_for_label }}">Date of Joining</label>
+                                    {{ form.date_of_joining }}
+                                    {% for error in form.date_of_joining.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                                 </div>
                             </div>
                         </div>

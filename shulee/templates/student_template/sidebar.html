@@ -35,6 +35,15 @@
                     </a>
                 </li>
 
+                <!-- School Calendar -->
+                <li class="nav-header mt-2"><i class="far fa-calendar-alt mr-1"></i> SCHOOL LIFE</li>
+                <li class="nav-item">
+                    <a href="{% url 'events' %}" class="nav-link {% if request.resolver_match.url_name == 'events' %} active {% endif %}">
+                        <i class="nav-icon far fa-calendar-alt"></i>
+                        <p>School Calendar</p>
+                    </a>
+                </li>
+
                 <!-- Academics -->
                 <li class="nav-header mt-2"><i class="fas fa-graduation-cap mr-1"></i> ACADEMICS</li>
                 <li class="nav-item">

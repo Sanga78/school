@@ -1,90 +1,69 @@
 {% extends 'staff_template/base.html' %}
-{% block page_title %}
-Leave Report and Apply for Leave
-{% endblock page_title %}
-{% load static %}
+{% block page_title %}Leave requests{% endblock page_title %}
 {% block main_content %}
-
 <section class="content">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <!-- general form elements -->
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Apply for Leave</h3>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}" role="status">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <div class="card card-primary">
+            <div class="card-header"><h2 class="card-title">Submit a leave request</h2></div>
+            <form action="{% url 'staff_apply_leave_save' %}" method="post">
+                {% csrf_token %}
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label for="leave_type">Leave type</label>
+                            <select class="form-control" id="leave_type" name="leave_type" required>
+                                <option value="">Select a type</option>
+                                <option value="Annual">Annual</option>
+                                <option value="Sick">Sick</option>
+                                <option value="Personal">Personal</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="start_date">Start date</label>
+                            <input class="form-control" id="start_date" name="start_date" type="date" required>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="end_date">End date</label>
+                            <input class="form-control" id="end_date" name="end_date" type="date" required>
+                        </div>
                     </div>
-                  <!-- /.card-header -->
-                    <form action="{% url 'staff_apply_leave_save' %}" method="post">
-                        {% csrf_token %}
-                        <!-- form start -->
-                        <div class="card-body">
-                            
-                            <div class="form-group">
-                                <label>Leave Date</label>
-                                <input type="date" name="leave_date" id="" class="form-control" placeholder="Leave Date">
-                            </div> 
-                            <div class="form-group">
-                                <label>Leave Reason</label>
-                                <textarea class="form-control" name="leave_reason" id="" rows="6"></textarea>
-                            </div>                   
-                            <div class="form-group">
-                                {% if messages %}
-                                {% for message in messages %}
-                                {% if message.tags == 'error' %}
-                                <div class="alert alert-danger" style="margin-top: 10px;">{{ message }}</div>
-                                {% endif %}
-                                {% if message.tags == 'success' %}
-                                <div class="alert alert-success" style="margin-top: 10px;">{{ message }}</div>
-                                {% endif %}
-                                {% endfor %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <!-- /.card-body -->
-        
-                        <div class="card-footer">
-                        <button type="submit" class="btn btn-primary btn-block" id="">Apply for Leave</button>
-                        </div>
-                
-                    </form>
+                    <div class="form-group mb-0">
+                        <label for="reason">Reason</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="4" required></textarea>
+                    </div>
                 </div>
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Leave Application History</h3>
-                    </div>
-                    <div class="table">
-                    <table class="table">
-                        <tr>
-                            <th>ID</th>
-                            <th>Leave Date</th>
-                            <th>Leave Message</th>
-                            <th>Leave Status</th>
-                        </tr>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-primary">Submit request</button>
+                </div>
+            </form>
+        </div>
+        <div class="card card-primary">
+            <div class="card-header"><h2 class="card-title">Your request history</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Submitted</th><th>Leave type</th><th>Dates</th><th>Reason</th><th>Status</th></tr></thead>
+                    <tbody>
                         {% for row in leave_data %}
-                        <tr>
-                            <td>{{ row.id }}</td>
-                            <td>{{ row.leave_date }}</td>
-                            <td>{{ row.leave_message}}</td>
-                            <td>
-                                {% if row.leave_status == 1 %}
-                                <span class="alert alert-success">Approved</span>
-                                {% elif row.leave_status == 2 %}
-                                <span class="alert alert-danger">Rejected</span>
-                                {% else %}
-                                <span class="alert alert-info">Pending</span>
-                                {% endif %}
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>{{ row.created_at|date:"M j, Y" }}</td>
+                                <td>{{ row.leave_type }}</td>
+                                <td>{{ row.start_date|date:"M j, Y" }} to {{ row.end_date|date:"M j, Y" }}</td>
+                                <td>{{ row.reason }}</td>
+                                <td><span class="badge {% if row.status == 1 %}badge-success{% elif row.status == 2 %}badge-danger{% else %}badge-warning{% endif %}">{{ row.get_status_display }}</span></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">You have not submitted any leave requests.</td></tr>
                         {% endfor %}
-                    </table>
-                </div>
-                </div>
-            </div>
-                <!-- /.card -->         
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div><!-- /.container-fluid -->
-  </section>
-  <!-- /.content -->
+    </div>
+</section>
 {% endblock main_content %}

@@ -2,15 +2,119 @@ from django.utils import timezone
 from typing import Any
 from django import forms
 from django.forms import ChoiceField
-from .models import AcademicYear, Bursar, CustomUser, Expense, FeePayment, LeaveRequest, Notification,SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,StudentClass
+from .models import AcademicYear, Bursar, CustomUser, Expense, FeePayment, FeeStructure, LeaveRequest, Notification, SchoolEvent,SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,StudentClass
 from django.apps import apps
 from django.core.validators import FileExtensionValidator
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, password_validation
 from django.core.exceptions import ValidationError
 from django.forms import PasswordInput 
 from django.db import transaction # Import transaction for atomic operations
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image, UnidentifiedImageError
+from io import BytesIO
+from uuid import uuid4
 
 User = get_user_model()
+
+
+class AdminSignupForm(forms.Form):
+    username = forms.CharField(max_length=150)
+    email = forms.EmailField()
+    password = forms.CharField(strip=False, widget=forms.PasswordInput)
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if CustomUser.objects.filter(username__iexact=username).exists():
+            raise ValidationError('A user with that username already exists.')
+        return username
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        password_validation.validate_password(password)
+        return password
+
+
+class StudentSignupForm(forms.Form):
+    MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
+    MAX_PROFILE_IMAGE_DIMENSION = 4096
+    first_name = forms.CharField(max_length=150)
+    last_name = forms.CharField(max_length=150)
+    username = forms.CharField(max_length=150)
+    email = forms.EmailField(required=False)
+    address = forms.CharField(required=False, max_length=500)
+    academic_year = forms.ModelChoiceField(
+        queryset=AcademicYear.objects.filter(is_current=True),
+    )
+    current_class = forms.ModelChoiceField(
+        queryset=StudentClass.objects.filter(academic_year__is_current=True),
+    )
+    gender = forms.ChoiceField(choices=Student.GENDER_CHOICES)
+    password = forms.CharField(strip=False, widget=forms.PasswordInput)
+    profile_pic = forms.ImageField(required=False)
+
+    def clean_username(self):
+        username = self.cleaned_data['username']
+        if CustomUser.objects.filter(username__iexact=username).exists():
+            raise ValidationError('A user with that username already exists.')
+        return username
+
+    def clean_password(self):
+        password = self.cleaned_data['password']
+        user = CustomUser(username=self.cleaned_data.get('username', ''))
+        password_validation.validate_password(password, user=user)
+        return password
+
+    def clean_profile_pic(self):
+        upload = self.cleaned_data.get('profile_pic')
+        if upload is None:
+            return None
+        if upload.size > self.MAX_PROFILE_IMAGE_BYTES:
+            raise ValidationError('Profile images must be no larger than 5 MB.')
+
+        try:
+            image = Image.open(upload)
+            image_format = image.format
+            width, height = image.size
+            if image_format not in {'JPEG', 'PNG', 'WEBP'}:
+                raise ValidationError('Upload a JPEG, PNG, or WebP image.')
+            if width > self.MAX_PROFILE_IMAGE_DIMENSION or height > self.MAX_PROFILE_IMAGE_DIMENSION:
+                raise ValidationError('Profile images must be no larger than 4096 by 4096 pixels.')
+            image.verify()
+            upload.seek(0)
+            image = Image.open(upload)
+            image.load()
+        except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as error:
+            raise ValidationError('The uploaded profile image is invalid.') from error
+
+        if image.mode in {'RGBA', 'LA'} or 'transparency' in image.info:
+            rgba_image = image.convert('RGBA')
+            background = Image.new('RGB', rgba_image.size, 'white')
+            background.paste(rgba_image, mask=rgba_image.getchannel('A'))
+            image = background
+        else:
+            image = image.convert('RGB')
+
+        encoded_image = BytesIO()
+        image.save(encoded_image, format='JPEG', quality=85, optimize=True)
+        if encoded_image.tell() > self.MAX_PROFILE_IMAGE_BYTES:
+            raise ValidationError('The processed profile image exceeds the 5 MB limit.')
+        encoded_image.seek(0)
+        return InMemoryUploadedFile(
+            encoded_image,
+            field_name='profile_pic',
+            name=f'{uuid4().hex}.jpg',
+            content_type='image/jpeg',
+            size=encoded_image.getbuffer().nbytes,
+            charset=None,
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        academic_year = cleaned_data.get('academic_year')
+        current_class = cleaned_data.get('current_class')
+        if academic_year and current_class and current_class.academic_year_id != academic_year.pk:
+            self.add_error('current_class', 'Choose a class in the selected academic year.')
+        return cleaned_data
 
 
 class ChoiceNoValidation(ChoiceField):
@@ -166,10 +270,20 @@ class EditResultForm(forms.Form):
     exam_marks=forms.CharField(label="Exam Marks",widget=forms.TextInput(attrs={"class":"form-control"}))
 
 class FeePaymentForm(forms.ModelForm):
+    def __init__(self, *args, student=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['fee_structure'].required = False
+        if student is not None:
+            self.fields['fee_structure'].queryset = FeeStructure.objects.filter(
+                class_obj=student.current_class,
+                is_active=True,
+            ) if student.current_class_id else FeeStructure.objects.none()
+
     class Meta:
         model = FeePayment
-        fields = ['amount', 'payment_date', 'payment_method', 'transaction_code', 'notes']
+        fields = ['fee_structure', 'amount', 'payment_date', 'payment_method', 'transaction_code', 'notes']
         widgets = {
+            'fee_structure': forms.Select(attrs={'class': 'form-control'}),
             'payment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'payment_method': forms.Select(attrs={'class': 'form-control'}),
@@ -177,15 +291,36 @@ class FeePaymentForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-class ResultUploadForm(forms.Form):
-    TERM_CHOICES = (
-        ('Term 1', 'Term 1'),
-        ('Term 2', 'Term 2'),
-        ('Term 3', 'Term 3'),
-    )
-    
-    term = forms.ChoiceField(choices=TERM_CHOICES)
+class FeeStructureForm(forms.ModelForm):
+    class Meta:
+        model = FeeStructure
+        fields = ['name', 'description', 'amount', 'class_obj', 'academic_year', 'due_date', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'min': '0.01', 'step': '0.01'}),
+            'class_obj': forms.Select(attrs={'class': 'form-select'}),
+            'academic_year': forms.Select(attrs={'class': 'form-select'}),
+            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
+class ResultUploadForm(forms.Form):
+    term = forms.ChoiceField(
+        choices=SubjectResult.TERM_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+
+
+class TeacherProfileForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'address']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'given-name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'family-name'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'autocomplete': 'street-address'}),
+        }
 
 
 
@@ -203,8 +338,11 @@ class ExpenseForm(forms.ModelForm):
         model = Expense
         fields = ['amount', 'category', 'description', 'date', 'receipt_number']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'}),
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'min': '0.01', 'step': '0.01'}),
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'receipt_number': forms.TextInput(attrs={'class': 'form-control'}),
         }
         
 class ClassForm(forms.ModelForm):
@@ -391,7 +529,7 @@ class AddSubjectForm(forms.ModelForm):
 
     def clean_code(self):
         code = self.cleaned_data.get('code')
-        if Subject.objects.filter(code__iexact=code).exists():
+        if Subject.objects.filter(code__iexact=code).exclude(pk=self.instance.pk).exists():
             raise forms.ValidationError("A subject with this code already exists.")
         return code.upper()
 
@@ -545,9 +683,21 @@ class AddBursarForm(forms.ModelForm):
             bursar, created = Bursar.objects.get_or_create(user=user)
             bursar.gender = self.cleaned_data['gender']
             bursar.qualification = self.cleaned_data['qualification']
-            bursar.date_of_joining = self.cleaned_data['date_of_joining']
+            bursar.date_of_joining = self.cleaned_data['date_of_joining'] or timezone.localdate()
             bursar.save()
         return user
+
+class EditBursarForm(AddBursarForm):
+    is_active = forms.BooleanField(
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
+
+    def save(self, commit=True):
+        if commit:
+            self.instance.is_active = self.cleaned_data['is_active']
+        return super().save(commit=commit)
 
 class NotificationForm(forms.ModelForm):
     recipients = forms.ModelMultipleChoiceField(
@@ -573,6 +723,45 @@ class NotificationForm(forms.ModelForm):
                 'class': 'form-select'
             }),
         }
+
+
+class SchoolEventForm(forms.ModelForm):
+    class Meta:
+        model = SchoolEvent
+        fields = ['title', 'description', 'starts_at', 'ends_at', 'location', 'is_published']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'calendar-form__input',
+                'autocomplete': 'off',
+                'maxlength': 200,
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'calendar-form__input',
+                'rows': 4,
+            }),
+            'starts_at': forms.DateTimeInput(
+                format='%Y-%m-%dT%H:%M',
+                attrs={'class': 'calendar-form__input', 'type': 'datetime-local'},
+            ),
+            'ends_at': forms.DateTimeInput(
+                format='%Y-%m-%dT%H:%M',
+                attrs={'class': 'calendar-form__input', 'type': 'datetime-local'},
+            ),
+            'location': forms.TextInput(attrs={
+                'class': 'calendar-form__input',
+                'autocomplete': 'off',
+                'maxlength': 200,
+            }),
+            'is_published': forms.CheckboxInput(attrs={'class': 'calendar-form__checkbox'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        starts_at = cleaned_data.get('starts_at')
+        ends_at = cleaned_data.get('ends_at')
+        if starts_at and ends_at and ends_at < starts_at:
+            self.add_error('ends_at', 'The end time must be after the start time.')
+        return cleaned_data
         labels = {
             'priority': 'Priority Level'
         }

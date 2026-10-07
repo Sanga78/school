@@ -1,11 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Apply for Admission — AIC Laboret Girls Boarding Primary School</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+{% extends 'base.html' %}
+
+{% block title %}Apply for Admission | AIC Laboret Girls Boarding Primary School{% endblock %}
+
+{% block extra_head %}
 <style>
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
@@ -57,57 +56,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
   background:linear-gradient(90deg, var(--maroon), var(--gold), var(--green-mid));
   transition:width .1s linear; box-shadow:0 0 6px rgba(201,168,76,.4);
 }
-
-/* ── NAV ── */
-.main-header {
-  background:var(--white); border-bottom:3px solid var(--maroon-pale);
-  position:sticky; top:0; z-index:90;
-  box-shadow:var(--shadow-sm); animation:fadeInDown .5s ease both;
-  transition:box-shadow .3s;
-}
-.main-header.scrolled { box-shadow:var(--shadow-md); }
-.nav-inner {
-  max-width:1140px; margin:0 auto; padding:0 24px;
-  display:flex; align-items:center; gap:20px; height:74px;
-}
-.school-brand { display:flex; align-items:center; gap:14px; text-decoration:none; flex-shrink:0; }
-.emblem {
-  width:52px; height:52px; border-radius:50%; background:var(--maroon); flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  box-shadow:0 0 0 3px var(--gold), 0 0 0 5px var(--maroon);
-  animation:pulseRing 3s ease infinite;
-}
-.emblem-inner { width:38px; height:38px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
-.emblem-cross { color:var(--gold); font-size:18px; font-weight:700; line-height:1; }
-.emblem-text  { color:var(--gold-light); font-size:6px; letter-spacing:.06em; font-weight:600; text-transform:uppercase; text-align:center; line-height:1.2; }
-.brand-name { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; color:var(--maroon); line-height:1.2; }
-.brand-sub  { font-size:10.5px; color:var(--text-muted); letter-spacing:.04em; text-transform:uppercase; }
-.nav-links  { display:flex; align-items:center; gap:4px; margin-left:auto; list-style:none; }
-.nav-links a {
-  display:flex; align-items:center; gap:5px; padding:7px 12px;
-  color:var(--text-mid); text-decoration:none; font-size:14px; font-weight:500; border-radius:8px;
-  transition:background .2s, color .2s;
-}
-.nav-links a:hover { background:var(--green-ghost); color:var(--green-dark); }
-.nav-links a.active { background:var(--maroon-ghost); color:var(--maroon); font-weight:600; }
-.nav-login {
-  border:1.5px solid var(--border) !important;
-  transition:border-color .2s !important;
-}
-.nav-login:hover { border-color:var(--green-mid) !important; }
-.nav-apply {
-  background:var(--maroon) !important; color:var(--white) !important;
-  font-weight:600 !important; border-radius:8px;
-  box-shadow:0 4px 12px rgba(107,15,26,.3);
-  transition:background .2s, transform .15s !important;
-}
-.nav-apply:hover { background:var(--maroon-mid) !important; transform:translateY(-1px) !important; color:var(--white) !important; }
-.hamburger { display:none; background:none; border:none; cursor:pointer; padding:8px; color:var(--maroon); margin-left:auto; }
-.mobile-menu { display:none; background:var(--white); border-top:1px solid var(--border); padding:12px 24px; }
-.mobile-menu.open { display:block; }
-.mobile-menu a { display:block; padding:11px 0; color:var(--text-mid); text-decoration:none; font-size:15px; border-bottom:1px solid var(--border); transition:color .2s, padding-left .2s; }
-.mobile-menu a:last-child { border-bottom:none; }
-.mobile-menu a:hover { color:var(--maroon); padding-left:8px; }
 
 /* ── HERO BANNER ── */
 .page-hero {
@@ -402,20 +350,6 @@ textarea { resize:vertical; min-height:90px; }
 .contact-row a { color:var(--green-mid); text-decoration:none; }
 .contact-row a:hover { color:var(--green-dark); text-decoration:underline; }
 
-/* ── FOOTER ── */
-footer {
-  background:#1a0a0c; color:rgba(255,255,255,.6);
-  padding:32px 24px; text-align:center; font-size:13px;
-  position:relative;
-}
-footer::before {
-  content:''; position:absolute; top:0; left:0; width:100%; height:3px;
-  background:linear-gradient(90deg, var(--maroon), var(--gold), var(--green-mid));
-  background-size:300% auto; animation:shimmer 6s linear infinite;
-}
-footer a { color:var(--gold-light); text-decoration:none; }
-footer a:hover { text-decoration:underline; }
-
 /* ── RESPONSIVE ── */
 @media (max-width:900px) {
   .app-layout { grid-template-columns:1fr; }
@@ -426,66 +360,26 @@ footer a:hover { text-decoration:underline; }
   .field-group.span2 { grid-column:span 1; }
   .hero-steps-preview { display:none; }
   .sidebar { grid-template-columns:1fr; }
-  .hamburger { display:flex; }
-  .nav-links  { display:none; }
 }
+
 </style>
-</head>
-<body>
+{% endblock %}
 
+{% block content %}
 <div id="scroll-bar"></div>
-
-<!-- ── NAV ── -->
-<header class="main-header" id="mainHeader">
-  <div class="nav-inner">
-    <a href="aic-laboret-school.html" class="school-brand">
-      <div class="emblem">
-        <div class="emblem-inner">
-          <div class="emblem-cross">✝</div>
-          <div class="emblem-text">AIC<br>LABORET</div>
-        </div>
-      </div>
-      <div>
-        <div class="brand-name">AIC Laboret Girls</div>
-        <div class="brand-sub">Boarding Primary School</div>
-      </div>
-    </a>
-    <ul class="nav-links">
-      <li><a href="aic-laboret-school.html">Home</a></li>
-      <li><a href="aic-laboret-school.html#welcome">About Us</a></li>
-      <li><a href="apply.html" class="active">Admissions</a></li>
-      <li><a href="aic-laboret-school.html#pillars">Academics</a></li>
-      <li><a href="login.html" class="nav-login">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Login
-      </a></li>
-      <li><a href="apply.html" class="nav-apply">Apply Now</a></li>
-    </ul>
-    <button class="hamburger" onclick="document.getElementById('mob').classList.toggle('open')" aria-label="Menu">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-  </div>
-  <div class="mobile-menu" id="mob">
-    <a href="aic-laboret-school.html">Home</a>
-    <a href="aic-laboret-school.html#welcome">About Us</a>
-    <a href="apply.html">Admissions</a>
-    <a href="login.html">🔐 Login</a>
-  </div>
-</header>
-
-<!-- ── PAGE HERO ── -->
+<main class="application-page">
 <section class="page-hero">
   <div class="hero-inner">
     <div class="hero-text">
       <div class="hero-breadcrumb">
-        <a href="aic-laboret-school.html">Home</a>
+        <a href="{% url 'home' %}">Home</a>
         <span>›</span>
         <span>Admissions</span>
         <span>›</span>
         <span style="color:var(--white)">New Student Application</span>
       </div>
       <h1>Apply for <em>Admission</em></h1>
-      <p>Complete the form below to apply for a place at AIC Laboret Girls Boarding Primary School for the 2025/2026 academic year.</p>
+      <p>Complete the form below to begin an application for a place at AIC Laboret Girls Boarding Primary School. Contact the school to confirm current intake availability.</p>
       <div class="hero-badges">
         <div class="hero-badge"><div class="dot"></div>Online Application</div>
         <div class="hero-badge"><div class="dot"></div>CBC Curriculum</div>
@@ -593,8 +487,8 @@ footer a:hover { text-decoration:underline; }
           <label>Academic Year of Entry <span class="req">*</span></label>
           <select id="entryYear">
             <option value="">— Select Year —</option>
-            <option value="2025">2025 (Term 2)</option>
-            <option value="2026" selected>2026 (Term 1)</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
           </select>
         </div>
         <div class="field-group span2">
@@ -924,11 +818,9 @@ footer a:hover { text-decoration:underline; }
     <div class="success-screen" id="successScreen">
       <div class="success-icon">✅</div>
       <h2>Application Submitted!</h2>
-      <p>Thank you for applying to AIC Laboret Girls Boarding Primary School. Your application has been received and is being reviewed by our admissions office.</p>
-      <div class="ref-box" id="refNumber">REF: LAB-2026-0001</div>
-      <p style="font-size:13px;">You will receive a confirmation SMS and email within <strong>2 working days</strong>. Please keep your reference number safe.</p>
+      <p>Your application details are complete. This form is currently a preview and does not send or save an application. Please contact the school to submit your details.</p>
       <div class="success-actions" style="margin-top:24px;">
-        <a href="aic-laboret-school.html" class="btn btn-prev">← Back to Home</a>
+        <a href="{% url 'home' %}" class="btn btn-prev">← Back to Home</a>
         <button class="btn btn-submit" onclick="window.print()">🖨 Print Confirmation</button>
       </div>
     </div>
@@ -956,18 +848,10 @@ footer a:hover { text-decoration:underline; }
 
     <!-- Fees summary -->
     <div class="info-card reveal d1">
-      <div class="info-card-head gold">💰 Fee Summary 2025/26</div>
+      <div class="info-card-head gold">💰 Fee Information</div>
       <div class="info-card-body">
-        <table class="fee-table">
-          <tr><td>Tuition (per term)</td><td>KSh 12,500</td></tr>
-          <tr><td>Boarding & Meals</td><td>KSh 18,000</td></tr>
-          <tr><td>Activity Fee</td><td>KSh 2,500</td></tr>
-          <tr><td>CBC Materials</td><td>KSh 3,000</td></tr>
-          <tr><td>Registration (once)</td><td>KSh 2,000</td></tr>
-          <tr><td colspan="2" style="padding-top:10px;"><strong>Total per Term</strong></td></tr>
-          <tr><td style="font-weight:700;color:var(--green-dark);">Approx.</td><td>KSh 38,000</td></tr>
-        </table>
-        <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">Fees payable via M-Pesa Paybill <strong>123456</strong> (A/C: Student Name) or KCB Bank. Bursary applications available.</p>
+        <p style="font-size:13px;color:var(--text-mid);line-height:1.7;">Fee amounts and payment instructions may change. Contact the school office to confirm the current fee schedule before making a payment.</p>
+        <a href="{% url 'contact' %}" class="contact-row">Contact the school office</a>
       </div>
     </div>
 
@@ -977,20 +861,20 @@ footer a:hover { text-decoration:underline; }
       <div class="info-card-body">
         <div class="timeline">
           <div class="tl-item">
-            <div class="tl-dot done">✓</div>
-            <div class="tl-text"><div class="tl-title">Applications Open</div><div class="tl-date">Jan – Mar 2026</div></div>
+            <div class="tl-dot done">1</div>
+            <div class="tl-text"><div class="tl-title">Application received</div><div class="tl-date">After details are submitted to the school</div></div>
           </div>
           <div class="tl-item">
-            <div class="tl-dot now">→</div>
-            <div class="tl-text"><div class="tl-title">Entrance Assessment</div><div class="tl-date">Every Saturday, 9am – 12pm</div></div>
+            <div class="tl-dot now">2</div>
+            <div class="tl-text"><div class="tl-title">Assessment</div><div class="tl-date">Arranged with the admissions office, if required</div></div>
           </div>
           <div class="tl-item">
             <div class="tl-dot later">3</div>
-            <div class="tl-text"><div class="tl-title">Offer Letters Sent</div><div class="tl-date">Within 2 weeks of assessment</div></div>
+            <div class="tl-text"><div class="tl-title">Admission decision</div><div class="tl-date">The school contacts the applicant's family</div></div>
           </div>
           <div class="tl-item">
             <div class="tl-dot later">4</div>
-            <div class="tl-text"><div class="tl-title">Term 1 Reporting</div><div class="tl-date">January 2027</div></div>
+            <div class="tl-text"><div class="tl-title">Enrollment</div><div class="tl-date">Confirm next steps with the school</div></div>
           </div>
         </div>
       </div>
@@ -1025,12 +909,13 @@ footer a:hover { text-decoration:underline; }
 </div><!-- /app-layout -->
 
 <!-- FOOTER -->
-<footer>
-  <p>© 2026 AIC Laboret Girls Boarding Primary School &nbsp;|&nbsp; <a href="aic-laboret-school.html">Home</a> &nbsp;|&nbsp; <a href="#">Safeguarding Policy</a> &nbsp;|&nbsp; <a href="#">Privacy Policy</a></p>
-  <p style="margin-top:6px;font-size:11px;color:rgba(255,255,255,.3);">NEMIS Registered · MoE Approved · AIC Sponsored</p>
-</footer>
 
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
+
 let currentStep = 1;
 
 function goTo(step) {
@@ -1107,8 +992,6 @@ function submitApp() {
 
   // Hide form, show success
   document.getElementById('step4').classList.remove('active');
-  const ref = 'LAB-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 9000) + 1000);
-  document.getElementById('refNumber').textContent = 'REF: ' + ref;
   document.getElementById('successScreen').classList.add('show');
 
   // Mark all steps completed
@@ -1151,6 +1034,6 @@ window.addEventListener('scroll', () => {
 // Reveal on scroll
 const obs = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold:.1 });
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
 </script>
-</body>
-</html>
+{% endblock %}

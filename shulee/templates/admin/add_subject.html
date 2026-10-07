@@ -2,39 +2,39 @@
 {% block title %}{% if form.instance.id %}Edit{% else %}Add{% endif %} Subject{% endblock %}
 {% block content %}
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2>{% if form.instance.id %}Edit{% else %}Add{% endif %} Subject</h2>
-        </div>
-    </div>
+    <div class="mb-4"><a href="{% url 'manage_subject' %}" class="text-decoration-none">&larr; Subjects</a><h1 class="h3 mt-2 mb-0">{% if form.instance.id %}Edit{% else %}Add{% endif %} subject</h1></div>
 
-    <div class="card shadow">
+    <div class="card shadow-sm border-0">
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
+                {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label class="form-label">Subject Name</label>
+                            <label class="form-label" for="{{ form.name.id_for_label }}">Subject name</label>
                             {{ form.name }}
+                            {% for error in form.name.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group mb-3">
-                            <label class="form-label">Subject Code</label>
+                            <label class="form-label" for="{{ form.code.id_for_label }}">Subject code</label>
                             {{ form.code }}
+                            {% for error in form.code.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="form-group mb-3">
-                            <label class="form-label">Description</label>
+                            <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
                             {{ form.description }}
+                            {% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                         </div>
                     </div>
                 </div>
                 <div class="d-flex justify-content-between mt-4">
-                    <a href="{% url 'manage_subject' %}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Save Subject</button>
+                    <a href="{% url 'manage_subject' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save subject</button>
                 </div>
             </form>
         </div>

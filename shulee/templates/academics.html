@@ -1,332 +1,326 @@
 {% extends 'base.html' %}
-{%block content%}
-    <section class="page-hero" style="background-image: url('assets/academics-hero.jpg');">
-        <div class="container">
-            <h1>Academic Excellence</h1>
-            <p>Nurturing young minds, building strong foundations, and preparing for lifelong learning</p>
+
+{% block title %}Academics | AIC Laboret Girls Boarding Primary School{% endblock %}
+
+{% block extra_head %}
+<style>
+    .academics-page {
+        --academics-maroon: #6b0f1a;
+        --academics-green: #1a4731;
+        --academics-green-mid: #2d6a4f;
+        --academics-gold: #c9a84c;
+        --academics-cream: #faf9f7;
+        --academics-border: #e2eee7;
+        color: #1a1a1a;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .academics-hero {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(58px, 8vw, 96px) 24px;
+        background:
+            radial-gradient(circle at 88% 12%, rgba(201,168,76,.2), transparent 24rem),
+            linear-gradient(125deg, #5b0c17, #7b1724 58%, #1a4731);
+        color: #fff;
+    }
+    .academics-hero::after {
+        content: "";
+        position: absolute;
+        right: -120px;
+        bottom: -250px;
+        width: 480px;
+        height: 480px;
+        border: 1px solid rgba(240,208,128,.2);
+        border-radius: 50%;
+        box-shadow: 0 0 0 36px rgba(240,208,128,.035), 0 0 0 76px rgba(240,208,128,.025);
+        pointer-events: none;
+    }
+    .academics-hero__inner {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 1140px);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(240px, .6fr);
+        align-items: center;
+        gap: clamp(28px, 6vw, 72px);
+    }
+    .academics-hero__eyebrow {
+        margin: 0 0 14px;
+        color: #f0d080;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+    }
+    .academics-hero h1 {
+        max-width: 700px;
+        margin: 0 0 16px;
+        color: #fff;
+        font: 700 clamp(36px, 5vw, 58px)/1.08 'Playfair Display', serif;
+    }
+    .academics-hero__intro {
+        max-width: 610px;
+        margin: 0;
+        color: rgba(255,255,255,.78);
+        font: 17px/1.75 'Source Serif 4', serif;
+    }
+    .academics-hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .academics-hero__button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 11px 18px;
+        border: 1px solid #c9a84c;
+        border-radius: 9px;
+        background: #c9a84c;
+        color: #4e1018;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: transform .2s, background .2s;
+    }
+    .academics-hero__button:hover { transform: translateY(-2px); background: #f0d080; color: #4e1018; }
+    .academics-hero__button--secondary { border-color: rgba(255,255,255,.35); background: rgba(255,255,255,.08); color: #fff; }
+    .academics-hero__button--secondary:hover { background: rgba(255,255,255,.16); color: #fff; }
+    .academics-hero__summary {
+        padding: 24px;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 16px;
+        background: rgba(255,255,255,.08);
+        backdrop-filter: blur(8px);
+    }
+    .academics-hero__summary-label { margin: 0 0 14px; color: #f0d080; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .academics-hero__summary-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid rgba(255,255,255,.13); color: rgba(255,255,255,.9); font-size: 13px; }
+    .academics-hero__summary-item span:first-child { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 8px; background: rgba(201,168,76,.18); color: #f0d080; }
+    .academics-page section:not(.academics-hero) { padding: clamp(48px, 7vw, 78px) 24px; }
+    .academics-page .container { width: min(100%, 1140px); margin: 0 auto; padding: 0; }
+    .academics-page .section-header { max-width: 700px; margin: 0 auto 36px; text-align: center; }
+    .academics-page .section-title { margin: 0 0 10px; color: var(--academics-green); font: 700 clamp(27px, 3vw, 36px)/1.2 'Playfair Display', serif; }
+    .academics-page .section-title::after { display: none; }
+    .academics-page .section-subtitle { margin: 0; color: #6b7a70; font: 15px/1.7 'DM Sans', sans-serif; }
+    .academics-overview { background: #fff; }
+    .academics-overview__intro { max-width: 790px; margin: 0 auto 30px; color: #526157; font: 16px/1.85 'Source Serif 4', serif; text-align: center; }
+    .academics-foundations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+    .academics-foundation {
+        padding: 25px;
+        border: 1px solid var(--academics-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(26,71,49,.055);
+    }
+    .academics-foundation__icon { width: 46px; height: 46px; display: grid; place-items: center; margin-bottom: 16px; border-radius: 12px; background: #f0faf4; color: var(--academics-green-mid); font-size: 20px; }
+    .academics-foundation:nth-child(2) .academics-foundation__icon { background: #fdf6e3; color: #856816; }
+    .academics-foundation:nth-child(3) .academics-foundation__icon { background: #fdf6f7; color: var(--academics-maroon); }
+    .academics-foundation h3 { margin: 0 0 8px; color: var(--academics-green); font: 700 18px/1.3 'Playfair Display', serif; }
+    .academics-foundation p { margin: 0; color: #6b7a70; font-size: 13px; line-height: 1.7; }
+    .grade-levels { background: #f0faf4; }
+    .academics-grade-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .academics-grade-card {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(24px, 4vw, 36px);
+        border: 1px solid var(--academics-border);
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(26,71,49,.07);
+    }
+    .academics-grade-card::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 4px; background: var(--academics-maroon); }
+    .academics-grade-card:nth-child(2)::before { background: var(--academics-green-mid); }
+    .academics-grade-card__label { margin: 0 0 9px; color: var(--academics-maroon); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .academics-grade-card:nth-child(2) .academics-grade-card__label { color: var(--academics-green-mid); }
+    .academics-grade-card h3 { margin: 0 0 12px; color: var(--academics-green); font: 700 24px/1.2 'Playfair Display', serif; }
+    .academics-grade-card p { margin: 0 0 18px; color: #6b7a70; font-size: 14px; line-height: 1.75; }
+    .academics-grade-card ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+    .academics-grade-card li { display: flex; align-items: flex-start; gap: 9px; color: #3a4a3e; font-size: 13px; line-height: 1.55; }
+    .academics-grade-card li::before { content: "✓"; color: var(--academics-green-mid); font-weight: 700; }
+    .academics-experiences { background: #fff; }
+    .academics-experiences__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .academics-experience {
+        padding: 22px 18px;
+        border: 1px solid var(--academics-border);
+        border-radius: 13px;
+        background: var(--academics-cream);
+    }
+    .academics-experience__icon { margin-bottom: 13px; color: var(--academics-maroon); font-size: 22px; }
+    .academics-experience h3 { margin: 0 0 8px; color: var(--academics-green); font: 700 17px/1.3 'Playfair Display', serif; }
+    .academics-experience p { margin: 0; color: #6b7a70; font-size: 13px; line-height: 1.65; }
+    .academics-progress { background: #fdf6e3; }
+    .academics-progress__layout { display: grid; grid-template-columns: .8fr 1.2fr; align-items: center; gap: clamp(28px, 6vw, 72px); }
+    .academics-progress__heading h2 { margin: 0 0 12px; color: var(--academics-green); font: 700 clamp(27px, 3vw, 36px)/1.2 'Playfair Display', serif; }
+    .academics-progress__heading p { margin: 0; color: #5e685f; font: 15px/1.8 'Source Serif 4', serif; }
+    .academics-progress__points { display: grid; gap: 12px; }
+    .academics-progress__point { display: flex; gap: 13px; padding: 17px; border: 1px solid rgba(201,168,76,.28); border-radius: 12px; background: rgba(255,255,255,.8); }
+    .academics-progress__point > span { width: 32px; height: 32px; flex: 0 0 32px; display: grid; place-items: center; border-radius: 50%; background: #1a4731; color: #fff; font-size: 13px; }
+    .academics-progress__point h3 { margin: 0 0 4px; color: var(--academics-green); font: 600 14px 'DM Sans', sans-serif; }
+    .academics-progress__point p { margin: 0; color: #6b7a70; font-size: 12px; line-height: 1.6; }
+    .academics-cta { padding: 52px 24px !important; background: linear-gradient(120deg, #6b0f1a, #8b1a28); color: #fff; }
+    .academics-cta__inner { max-width: 850px; margin: 0 auto; text-align: center; }
+    .academics-cta h2 { margin: 0 0 10px; color: #fff; font: 700 clamp(26px, 3vw, 34px)/1.2 'Playfair Display', serif; }
+    .academics-cta p { margin: 0 auto 22px; color: rgba(255,255,255,.76); font-size: 14px; line-height: 1.7; }
+    .academics-cta__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+    .academics-cta__button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 11px 18px; border: 1px solid #c9a84c; border-radius: 8px; background: #c9a84c; color: #4e1018; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .academics-cta__button:hover { background: #f0d080; color: #4e1018; }
+    .academics-cta__button--secondary { border-color: rgba(255,255,255,.45); background: transparent; color: #fff; }
+    .academics-cta__button--secondary:hover { background: rgba(255,255,255,.12); color: #fff; }
+    @media (max-width: 900px) {
+        .academics-hero__inner { grid-template-columns: 1fr; }
+        .academics-hero__summary { max-width: 560px; }
+        .academics-experiences__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+        .academics-hero { padding: 52px 20px; }
+        .academics-page section:not(.academics-hero) { padding: 48px 20px; }
+        .academics-foundations, .academics-grade-grid, .academics-experiences__grid, .academics-progress__layout { grid-template-columns: 1fr; }
+        .academics-cta { padding: 44px 20px !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="academics-page">
+    <section class="academics-hero">
+        <div class="academics-hero__inner">
+            <div>
+                <p class="academics-hero__eyebrow">Learning at AIC Laboret</p>
+                <h1>Strong foundations. Confident learners.</h1>
+                <p class="academics-hero__intro">Our primary programme supports girls as they build knowledge, discover their strengths, and grow in confidence through learning.</p>
+                <div class="academics-hero__actions">
+                    <a class="academics-hero__button" href="{% url 'admissions' %}">Explore admissions <span aria-hidden="true">→</span></a>
+                    <a class="academics-hero__button academics-hero__button--secondary" href="{% url 'contact' %}">Ask about academics</a>
+                </div>
+            </div>
+            <div class="academics-hero__summary" aria-label="Academic programme overview">
+                <p class="academics-hero__summary-label">A well-rounded foundation</p>
+                <div class="academics-hero__summary-item"><span aria-hidden="true"><i class="fas fa-book-open"></i></span><span>Core learning and literacy</span></div>
+                <div class="academics-hero__summary-item"><span aria-hidden="true"><i class="fas fa-lightbulb"></i></span><span>Curiosity and problem-solving</span></div>
+                <div class="academics-hero__summary-item"><span aria-hidden="true"><i class="fas fa-heart"></i></span><span>Character and personal growth</span></div>
+            </div>
         </div>
     </section>
 
-    <div class="breadcrumb">
-        <div class="container">
-            <a href="{% url 'home' %}">Home</a>
-            <span>/</span>
-            <a href="{% url 'academics' %}">Academics</a>
-        </div>
-    </div>
-
-    <section class="academic-overview">
+    <section class="academics-overview">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Our Academic Approach</h2>
-                <p class="section-subtitle">Balancing foundational learning with creative engagement</p>
+                <h2 class="section-title">Learning that helps every girl thrive</h2>
+                <p class="section-subtitle">A supportive approach to knowledge, practical skills, and positive values.</p>
             </div>
-            <div class="overview-content">
-                <div class="overview-image">
-                    <img src="assets/classroom.jpg" alt="Students in classroom">
-                </div>
-                <div class="overview-text">
-                    <p>At AIC LABORET GIRLS BOARDING PRIMARY, we believe in providing a holistic education that lays a strong foundation for future learning. Our approach emphasizes:</p>
-                    <ul class="academic-features">
-                        <li><i class="fas fa-check-circle"></i> Interactive and engaging teaching methods</li>
-                        <li><i class="fas fa-check-circle"></i> Individualized attention to meet diverse learning needs</li>
-                        <li><i class="fas fa-check-circle"></i> Use of educational resources and technology</li>
-                        <li><i class="fas fa-check-circle"></i> Development of critical thinking and problem-solving skills</li>
-                        <li><i class="fas fa-check-circle"></i> Integration of cultural and moral values</li>
-                    </ul>
-                    <a href="#" class="btn-primary">Download Curriculum Overview</a>
-                </div>
+            <p class="academics-overview__intro">We aim to make learning active, encouraging, and relevant to each pupil. Through a strong foundation in primary education, girls are supported to ask questions, practise new skills, and take pride in their progress.</p>
+            <div class="academics-foundations">
+                <article class="academics-foundation">
+                    <div class="academics-foundation__icon" aria-hidden="true"><i class="fas fa-book-open"></i></div>
+                    <h3>Core foundations</h3>
+                    <p>Build confidence in reading, writing, mathematics, communication, and the essential knowledge pupils use across their learning.</p>
+                </article>
+                <article class="academics-foundation">
+                    <div class="academics-foundation__icon" aria-hidden="true"><i class="fas fa-seedling"></i></div>
+                    <h3>Learning by doing</h3>
+                    <p>Encourage curiosity and understanding through discussion, practice, creative work, and age-appropriate problem-solving.</p>
+                </article>
+                <article class="academics-foundation">
+                    <div class="academics-foundation__icon" aria-hidden="true"><i class="fas fa-hands-helping"></i></div>
+                    <h3>Values and wellbeing</h3>
+                    <p>Support respect, responsibility, cooperation, and confidence as part of each girl's learning and personal development.</p>
+                </article>
             </div>
-        </div>
-    </section>
-
-    <section class="divider-section" style="background-image: url('assets/library.jpg');">
-        <div class="container">
-            <blockquote>
-                "Education is the most powerful weapon which you can use to change the world."
-                <cite>- Nelson Mandela</cite>
-            </blockquote>
         </div>
     </section>
 
     <section class="grade-levels">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Grade Level Programs</h2>
-                <p class="section-subtitle">Tailored education for every stage of development</p>
+                <h2 class="section-title">A pathway through primary school</h2>
+                <p class="section-subtitle">Learning develops step by step, from early foundations to greater independence.</p>
             </div>
-            <div class="grade-tabs">
-                <div class="tab-buttons">
-                    <button class="tab-button active" data-tab="ecde">ECDE (Play Group, PP1, PP2)</button>
-                    <button class="tab-button" data-tab="primary">Primary (Grades 1-6)</button>
-                    <button class="tab-button" data-tab="junior">Junior Secondary (Grades 7-9)</button>
-                </div>
-                <div class="tab-content active" id="ecde">
-                    <div class="tab-content-inner">
-                        <div class="tab-image">
-                            <img src="assets/elementary.jpg" alt="ECDE Students">
-                        </div>
-                        <div class="tab-text">
-                            <h3>ECDE (Play Group, PP1, PP2): Early Childhood Development</h3>
-                            <p>Our ECDE program focuses on holistic development through play-based learning and early literacy skills. Key features include:</p>
-                            <ul>
-                                <li>Play-based learning activities</li>
-                                <li>Early literacy and numeracy skills development</li>
-                                <li>Creative arts and music</li>
-                                <li>Social and emotional development</li>
-                                <li>Physical development and outdoor play</li>
-                            </ul>
-                            <a href="#" class="btn-secondary">ECDE Details</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-content" id="primary">
-                    <div class="tab-content-inner">
-                        <div class="tab-image">
-                            <img src="assets/middle-school.jpg" alt="Primary Students">
-                        </div>
-                        <div class="tab-text">
-                            <h3>Primary (Grades 1-6): Foundational Learning</h3>
-                            <p>Our primary program builds on ECDE foundations with a focus on core academic subjects and critical thinking. Key features include:</p>
-                            <ul>
-                                <li>Comprehensive literacy and numeracy skills</li>
-                                <li>Science and environmental studies</li>
-                                <li>Social studies and cultural awareness</li>
-                                <li>Language studies and communication skills</li>
-                                <li>Extracurricular activities and sports</li>
-                            </ul>
-                            <a href="#" class="btn-secondary">Primary Details</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="tab-content" id="junior">
-                    <div class="tab-content-inner">
-                        <div class="tab-image">
-                            <img src="assets/high-school.jpg" alt="Junior Secondary Students">
-                        </div>
-                        <div class="tab-text">
-                            <h3>Junior Secondary (Grades 7-9): Transition to Secondary Education</h3>
-                            <p>Our junior secondary program prepares students for higher education with a focus on in-depth subject knowledge and practical skills. Key features include:</p>
-                            <ul>
-                                <li>Advanced subject-specific learning</li>
-                                <li>Introduction to technology and computer literacy</li>
-                                <li>Practical skills and project-based learning</li>
-                                <li>Career guidance and exploration</li>
-                                <li>Leadership and personal development</li>
-                            </ul>
-                            <a href="#" class="btn-secondary">Junior Secondary Details</a>
-                        </div>
-                    </div>
-                </div>
+            <div class="academics-grade-grid">
+                <article class="academics-grade-card">
+                    <p class="academics-grade-card__label">Grades 1–3</p>
+                    <h3>Building foundations</h3>
+                    <p>Pupils strengthen essential skills and develop positive routines that help them engage confidently with school and learning.</p>
+                    <ul>
+                        <li>Practise early literacy and numeracy</li>
+                        <li>Explore ideas through guided activities</li>
+                        <li>Build communication and learning habits</li>
+                    </ul>
+                </article>
+                <article class="academics-grade-card">
+                    <p class="academics-grade-card__label">Grades 4–6</p>
+                    <h3>Growing independence</h3>
+                    <p>Pupils extend their knowledge, make connections across subjects, and take increasing responsibility for their learning.</p>
+                    <ul>
+                        <li>Develop deeper understanding of core concepts</li>
+                        <li>Apply skills to tasks and practical projects</li>
+                        <li>Strengthen confidence and self-directed learning</li>
+                    </ul>
+                </article>
             </div>
         </div>
     </section>
 
-
-    <section class="special-programs">
+    <section class="academics-experiences">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Signature Programs</h2>
-                <p class="section-subtitle">Unique learning opportunities beyond the standard curriculum</p>
+                <h2 class="section-title">Learning beyond the lesson</h2>
+                <p class="section-subtitle">A broad range of experiences can help pupils discover interests and practise new skills.</p>
             </div>
-            <div class="programs-grid">
-                <div class="program-card">
-                    <div class="program-icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <h3>Reading and Literacy Program</h3>
-                    <p>Focus on developing strong reading and comprehension skills through engaging activities.</p>
-                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="program-card">
-                    <div class="program-icon">
-                        <i class="fas fa-music"></i>
-                    </div>
-                    <h3>Creative Arts & Music</h3>
-                    <p>Opportunities for students to explore their creativity through music, art, and drama.</p>
-                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="program-card">
-                    <div class="program-icon">
-                        <i class="fas fa-tree"></i>
-                    </div>
-                    <h3>Environmental Studies</h3>
-                    <p>Hands-on learning about nature and environmental conservation.</p>
-                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="program-card">
-                    <div class="program-icon">
-                        <i class="fas fa-hands-helping"></i>
-                    </div>
-                    <h3>Community Service</h3>
-                    <p>Inculcating a sense of responsibility and empathy through community engagement.</p>
-                    <a href="#" class="program-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                </div>
+            <div class="academics-experiences__grid">
+                <article class="academics-experience">
+                    <div class="academics-experience__icon" aria-hidden="true"><i class="fas fa-book-reader"></i></div>
+                    <h3>Reading</h3>
+                    <p>Build a love of reading, vocabulary, and understanding through regular practice.</p>
+                </article>
+                <article class="academics-experience">
+                    <div class="academics-experience__icon" aria-hidden="true"><i class="fas fa-palette"></i></div>
+                    <h3>Creative expression</h3>
+                    <p>Make space for imagination and self-expression through creative activities.</p>
+                </article>
+                <article class="academics-experience">
+                    <div class="academics-experience__icon" aria-hidden="true"><i class="fas fa-running"></i></div>
+                    <h3>Sport and movement</h3>
+                    <p>Encourage teamwork, participation, and healthy development through physical activity.</p>
+                </article>
+                <article class="academics-experience">
+                    <div class="academics-experience__icon" aria-hidden="true"><i class="fas fa-leaf"></i></div>
+                    <h3>Exploration</h3>
+                    <p>Connect learning with the world around us through observation and practical activities.</p>
+                </article>
             </div>
         </div>
     </section>
 
-    <section class="faculty-spotlight">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Meet Our Faculty</h2>
-                <p class="section-subtitle">Dedicated educators nurturing young minds</p>
+    <section class="academics-progress">
+        <div class="academics-progress__layout container">
+            <div class="academics-progress__heading">
+                <h2>Progress grows with support</h2>
+                <p>Every pupil learns in her own way. Ongoing guidance and communication help families and the school support each girl's development.</p>
             </div>
-            <div class="faculty-grid">
-                <div class="faculty-card">
-                    <div class="faculty-image">
-                        <img src="assets/math-teacher.jpg" alt="Primary teacher">
-                    </div>
-                    <div class="faculty-info">
-                        <h3>Ms. Jane Doe</h3>
-                        <p class="department">Lower Primary Teacher</p>
-                        <p class="bio">With over 10 years of experience, Ms. Jane is passionate about early childhood education.</p>
-                        <a href="#" class="faculty-link">View Profile</a>
-                    </div>
-                </div>
-                <div class="faculty-card">
-                    <div class="faculty-image">
-                        <img src="assets/science-teacher.jpg" alt="Primary teacher">
-                    </div>
-                    <div class="faculty-info">
-                        <h3>Mr. John Smith</h3>
-                        <p class="department">Upper Primary Teacher</p>
-                        <p class="bio">Mr. John brings a wealth of knowledge and enthusiasm to his teaching.</p>
-                        <a href="#" class="faculty-link">View Profile</a>
-                    </div>
-                </div>
-                <div class="faculty-card">
-                    <div class="faculty-image">
-                        <img src="assets/english-teacher.jpg" alt="Primary teacher">
-                    </div>
-                    <div class="faculty-info">
-                        <h3>Ms. Alice Karanja</h3>
-                        <p class="department">Language and Literacy Teacher</p>
-                        <p class="bio">Ms. Alice specializes in developing strong literacy skills in young learners.</p>
-                        <a href="#" class="faculty-link">View Profile</a>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center">
-                <a href="faculty.html" class="btn-primary">View All Faculty</a>
+            <div class="academics-progress__points">
+                <article class="academics-progress__point">
+                    <span aria-hidden="true"><i class="fas fa-tasks"></i></span>
+                    <div><h3>Practice and feedback</h3><p>Regular learning activities help pupils practise skills and understand what to work on next.</p></div>
+                </article>
+                <article class="academics-progress__point">
+                    <span aria-hidden="true"><i class="fas fa-comments"></i></span>
+                    <div><h3>Family communication</h3><p>Connect with the school to discuss your child's learning and progress.</p></div>
+                </article>
+                <article class="academics-progress__point">
+                    <span aria-hidden="true"><i class="fas fa-star"></i></span>
+                    <div><h3>Confidence and effort</h3><p>Recognise curiosity, persistence, and the growth that comes from trying.</p></div>
+                </article>
             </div>
         </div>
     </section>
 
-    <section class="calendar-section">
-        <div class="container">
-            <div class="calendar-container">
-                <div class="calendar-header">
-                    <h2>Upcoming Academic Dates</h2>
-                    <a href="#" class="btn-secondary">Full Calendar</a>
-                </div>
-                <div class="calendar-events">
-                    <div class="event-card">
-                        <div class="event-date">
-                            <span class="day">15</span>
-                            <span class="month">Aug</span>
-                        </div>
-                        <div class="event-details">
-                            <h3>First Day of School</h3>
-                            <p>Start of the new academic year</p>
-                        </div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-date">
-                            <span class="day">05</span>
-                            <span class="month">Sep</span>
-                        </div>
-                        <div class="event-details">
-                            <h3>Parents' Meeting</h3>
-                            <p>Meeting with parents to discuss academic progress</p>
-                        </div>
-                    </div>
-                    <div class="event-card">
-                        <div class="event-date">
-                            <span class="day">15</span>
-                            <span class="month">Oct</span>
-                        </div>
-                        <div class="event-details">
-                            <h3>Mid-Term Exams</h3>
-                            <p>Mid-term examinations for all students</p>
-                        </div>
-                    </div>
-                </div>
+    <section class="academics-cta">
+        <div class="academics-cta__inner">
+            <h2>Want to learn more?</h2>
+            <p>Contact the school with questions about the academic programme, or explore the admissions process for your daughter.</p>
+            <div class="academics-cta__actions">
+                <a class="academics-cta__button" href="{% url 'admissions' %}">Admissions information</a>
+                <a class="academics-cta__button academics-cta__button--secondary" href="{% url 'contact' %}">Contact the school</a>
             </div>
         </div>
     </section>
-
-    <section class="achievements-section">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Our Academic Achievements</h2>
-                <p class="section-subtitle">Celebrating excellence in primary education</p>
-            </div>
-            <div class="achievements-container">
-                <div class="achievement-card">
-                    <div class="achievement-icon">
-                        <i class="fas fa-trophy"></i>
-                    </div>
-                    <div class="achievement-content">
-                        <h3>Excellent KCPE Results</h3>
-                        <div class="achievement-stats">
-                            <div class="stat">
-                                <span class="number">95%</span>
-                                <span class="label">Pass Rate</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="achievement-card">
-                    <div class="achievement-icon">
-                        <i class="fas fa-medal"></i>
-                    </div>
-                    <div class="achievement-content">
-                        <h3>Top Performing Students</h3>
-                        <div class="achievement-stats">
-                            <div class="stat">
-                                <span class="number">5+</span>
-                                <span class="label">Students Above 400 Marks</span>
-                            </div>
-                            <div class="stat">
-                                <span class="number">20+</span>
-                                <span class="label">Students Above 350 Marks</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="achievement-card">
-                    <div class="achievement-icon">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div class="achievement-content">
-                        <h3>Consistent Academic Growth</h3>
-                        <div class="achievement-stats">
-                            <div class="stat">
-                                <span class="number">100%</span>
-                                <span class="label">Improvement Rate</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="achievement-card">
-                    <div class="achievement-icon">
-                        <i class="fas fa-university"></i>
-                    </div>
-                    <div class="achievement-content">
-                        <h3>Successful Transitions</h3>
-                        <p>Students placed in top secondary schools</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="achievements-cta">
-                <a href="{% url 'results' %}" class="btn-primary">View Detailed Results</a>
-                <a href="{% url 'admissions' %}" class="btn-secondary">How We Achieve This</a>
-            </div>
-        </div>
-    </section>
-    {%endblock%}
+</main>
+{% endblock %}

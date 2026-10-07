@@ -1,241 +1,153 @@
 {% extends 'base.html' %}
-{%block content%}
 
-    <!-- Contact Hero Section -->
-    <section class="page-hero" style="background-image: url('assets/contact-hero.jpg');">
-        <div class="container">
-            <h1>Contact Us</h1>
-            <p>We'd love to hear from you</p>
+{% block title %}Contact | AIC Laboret Girls Boarding Primary School{% endblock %}
+
+{% block extra_head %}
+<style>
+    .contact-page {
+        --contact-maroon: #6b0f1a;
+        --contact-green: #1a4731;
+        --contact-gold: #c9a84c;
+        --contact-muted: #6b7a70;
+        --contact-border: #e2eee7;
+        color: #1a1a1a;
+        font-family: 'DM Sans', sans-serif;
+    }
+    .contact-hero {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(58px, 8vw, 96px) 24px;
+        background:
+            radial-gradient(circle at 88% 12%, rgba(201,168,76,.2), transparent 24rem),
+            linear-gradient(125deg, #5b0c17, #7b1724 58%, #1a4731);
+        color: #fff;
+    }
+    .contact-hero::after {
+        position: absolute;
+        right: -150px;
+        bottom: -260px;
+        width: 500px;
+        height: 500px;
+        border: 1px solid rgba(240,208,128,.2);
+        border-radius: 50%;
+        box-shadow: 0 0 0 38px rgba(240,208,128,.035), 0 0 0 80px rgba(240,208,128,.025);
+        content: "";
+        pointer-events: none;
+    }
+    .contact-page .container { width: min(100%, 1100px); margin: 0 auto; padding: 0; }
+    .contact-hero__inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; text-align: center; }
+    .contact-hero__eyebrow { margin: 0 0 14px; color: #f0d080; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    .contact-hero h1 { margin: 0 0 16px; color: #fff; font: 700 clamp(36px, 5vw, 58px)/1.1 'Playfair Display', serif; }
+    .contact-hero__intro { max-width: 650px; margin: 0 auto; color: rgba(255,255,255,.8); font: 17px/1.75 'Source Serif 4', serif; }
+    .contact-page section:not(.contact-hero) { padding: clamp(46px, 7vw, 74px) 24px; }
+    .contact-options { background: #fff; }
+    .contact-section-heading { max-width: 700px; margin: 0 auto 34px; text-align: center; }
+    .contact-section-heading h2 { margin: 0 0 10px; color: var(--contact-green); font: 700 clamp(27px, 3vw, 36px)/1.2 'Playfair Display', serif; }
+    .contact-section-heading p { margin: 0; color: var(--contact-muted); font-size: 15px; line-height: 1.7; }
+    .contact-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 880px; margin: 0 auto; }
+    .contact-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 17px;
+        min-height: 176px;
+        padding: 24px;
+        border: 1px solid var(--contact-border);
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 6px 22px rgba(26,71,49,.055);
+    }
+    .contact-card__icon { flex: 0 0 44px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: #f0faf4; color: var(--contact-green); font-size: 17px; }
+    .contact-card h3 { margin: 1px 0 8px; color: var(--contact-green); font: 700 18px/1.35 'Playfair Display', serif; }
+    .contact-card p { margin: 0 0 12px; color: var(--contact-muted); font-size: 13px; line-height: 1.7; }
+    .contact-card a { color: var(--contact-maroon); font-size: 14px; font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+    .contact-card a:hover { color: #8b1a28; text-decoration: underline; }
+    .contact-guidance { background: #f0faf4; }
+    .contact-guidance__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .75fr); align-items: center; gap: clamp(26px, 6vw, 70px); }
+    .contact-guidance__copy h2 { margin: 0 0 13px; color: var(--contact-green); font: 700 clamp(25px, 3vw, 33px)/1.2 'Playfair Display', serif; }
+    .contact-guidance__copy p { margin: 0 0 13px; color: var(--contact-muted); font-size: 14px; line-height: 1.75; }
+    .contact-guidance__copy p:last-child { margin-bottom: 0; }
+    .contact-guidance__card { padding: 24px; border: 1px solid var(--contact-border); border-radius: 15px; background: #fff; box-shadow: 0 6px 22px rgba(26,71,49,.055); }
+    .contact-guidance__card h3 { margin: 0 0 10px; color: var(--contact-green); font: 700 18px/1.35 'Playfair Display', serif; }
+    .contact-guidance__card p { margin: 0 0 18px; color: var(--contact-muted); font-size: 13px; line-height: 1.7; }
+    .contact-guidance__button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 44px;
+        padding: 11px 17px;
+        border: 1px solid var(--contact-maroon);
+        border-radius: 9px;
+        background: var(--contact-maroon);
+        color: #fff !important;
+        font-size: 13px !important;
+        font-weight: 700;
+        text-decoration: none !important;
+        transition: background .2s, transform .2s;
+    }
+    .contact-guidance__button:hover { transform: translateY(-2px); background: #8b1a28; }
+    @media (max-width: 700px) {
+        .contact-cards { grid-template-columns: 1fr; }
+        .contact-card { min-height: 0; }
+        .contact-guidance__grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+        .contact-page section:not(.contact-hero) { padding-right: 18px; padding-left: 18px; }
+        .contact-card { padding: 20px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="contact-page">
+    <section class="contact-hero">
+        <div class="contact-hero__inner">
+            <p class="contact-hero__eyebrow">AIC Laboret Girls Boarding Primary School</p>
+            <h1>Contact the School</h1>
+            <p class="contact-hero__intro">We're happy to help with questions about admissions, academics, school events, and visiting arrangements.</p>
         </div>
     </section>
 
-    <!-- Breadcrumb Navigation -->
-    <div class="breadcrumb">
+    <section class="contact-options" aria-labelledby="contact-options-title">
         <div class="container">
-            <a href="{% url 'home' %}">Home</a>
-            <span>/</span>
-            <a href="{% url 'contact' %}">Contact</a>
-        </div>
-    </div>
-
-    <!-- Contact Info Section -->
-    <section class="contact-info-section">
-        <div class="container">
-            <div class="contact-grid">
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <h3>Visit Us</h3>
-                    <address>
-                        123 Education Boulevard<br>
-                        Learning City, LC 12345<br>
-                        United States
-                    </address>
-                    <a href="#map" class="contact-link">View on map <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-phone-alt"></i>
-                    </div>
-                    <h3>Call Us</h3>
-                    <p>Main Office: <a href="tel:+11234567890">(123) 456-7890</a></p>
-                    <p>Admissions: <a href="tel:+11234567891">(123) 456-7891</a></p>
-                    <p>Fax: (123) 456-7892</p>
-                    <a href="tel:+11234567890" class="contact-link">Call now <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h3>Email Us</h3>
-                    <p>General Inquiries: <a href="mailto:info@greenwood.edu">info@greenwood.edu</a></p>
-                    <p>Admissions: <a href="mailto:admissions@greenwood.edu">admissions@greenwood.edu</a></p>
-                    <p>Support: <a href="mailto:support@greenwood.edu">support@greenwood.edu</a></p>
-                    <a href="#contact-form" class="contact-link">Send message <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="contact-card">
-                    <div class="contact-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h3>Office Hours</h3>
-                    <p>Monday-Friday: 8:00 AM - 5:00 PM</p>
-                    <p>Saturday: 9:00 AM - 12:00 PM</p>
-                    <p>Sunday: Closed</p>
-                    <a href="{% url 'events' %}" class="contact-link">View events <i class="fas fa-arrow-right"></i></a>
-                </div>
+            <div class="contact-section-heading">
+                <h2 id="contact-options-title">Get in touch</h2>
+                <p>Reach the school using the contact details published on this website.</p>
             </div>
-        </div>
-    </section>
-
-    <!-- Map Section -->
-    <section class="map-section" id="map">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Our Location</h2>
-                <p class="section-subtitle">Find us easily with these directions</p>
-            </div>
-            <div class="map-container">
-                <div id="school-map"></div>
-                <div class="map-directions">
-                    <h3>Getting Here</h3>
-                    <div class="transport-option">
-                        <i class="fas fa-subway"></i>
-                        <div>
-                            <h4>By Metro</h4>
-                            <p>Take the Blue Line to Education Station. We're a 5-minute walk from the station.</p>
-                        </div>
+            <div class="contact-cards">
+                <article class="contact-card">
+                    <span class="contact-card__icon" aria-hidden="true"><i class="fas fa-envelope"></i></span>
+                    <div>
+                        <h3>Email the school</h3>
+                        <p>For general questions, send a message to the school's published email address.</p>
+                        <a href="mailto:info@aiclaboret.sc.ke">info@aiclaboret.sc.ke</a>
                     </div>
-                    <div class="transport-option">
-                        <i class="fas fa-bus"></i>
-                        <div>
-                            <h4>By Bus</h4>
-                            <p>Routes 42, 56, and 128 stop directly in front of the school.</p>
-                        </div>
+                </article>
+                <article class="contact-card">
+                    <span class="contact-card__icon" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                    <div>
+                        <h3>Visit or get directions</h3>
+                        <p>Please contact the school before travelling to confirm the location and any visitor arrangements.</p>
+                        <a href="mailto:info@aiclaboret.sc.ke?subject=Visit%20and%20directions">Ask about a visit <span aria-hidden="true">→</span></a>
                     </div>
-                    <div class="transport-option">
-                        <i class="fas fa-car"></i>
-                        <div>
-                            <h4>By Car</h4>
-                            <p>Free parking available in our visitor lot. Use the main entrance on Education Blvd.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Form Section -->
-    <section class="contact-form-section" id="contact-form">
-        <div class="container">
-            <div class="form-container">
-                <div class="form-header">
-                    <h2>Send Us a Message</h2>
-                    <p>Have questions? Fill out the form below and we'll get back to you within 24 hours.</p>
-                </div>
-                <form class="contact-form">
-                    <div class="form-group">
-                        <label for="name">Full Name*</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email Address*</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone">
-                    </div>
-                    <div class="form-group">
-                        <label for="subject">Subject*</label>
-                        <select id="subject" name="subject" required>
-                            <option value="" disabled selected>Select a subject</option>
-                            <option value="admissions">Admissions Inquiry</option>
-                            <option value="general">General Information</option>
-                            <option value="tour">Schedule a Tour</option>
-                            <option value="feedback">Feedback/Suggestions</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Your Message*</label>
-                        <textarea id="message" name="message" rows="5" required></textarea>
-                    </div>
-                    <div class="form-submit">
-                        <button type="submit" class="btn-primary">Send Message</button>
-                        <p class="form-note">* Required fields</p>
-                    </div>
-                </form>
-            </div>
-            <div class="form-image">
-                <img src="assets/contact-image.jpg" alt="School Reception">
+                </article>
             </div>
         </div>
     </section>
 
-    <!-- Departments Section -->
-    <section class="departments-section">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Key Departments</h2>
-                <p class="section-subtitle">Connect directly with the right team</p>
+    <section class="contact-guidance">
+        <div class="contact-guidance__grid container">
+            <div class="contact-guidance__copy">
+                <h2>How can we help?</h2>
+                <p>If you're asking about applying, our Admissions page explains the general process. For current requirements or available places, please confirm details with the school.</p>
+                <p>For school event dates or family visiting arrangements, contact us directly. This website does not currently publish a confirmed schedule.</p>
             </div>
-            <div class="departments-grid">
-                <div class="department-card">
-                    <div class="department-icon">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <h3>Admissions</h3>
-                    <p>Questions about applications, tours, or enrollment process.</p>
-                    <a href="mailto:admissions@greenwood.edu" class="department-link">admissions@greenwood.edu</a>
-                    <a href="tel:+11234567891" class="department-link">(123) 456-7891</a>
-                </div>
-                <div class="department-card">
-                    <div class="department-icon">
-                        <i class="fas fa-book-open"></i>
-                    </div>
-                    <h3>Academics</h3>
-                    <p>Curriculum, programs, and academic support services.</p>
-                    <a href="mailto:academics@greenwood.edu" class="department-link">academics@greenwood.edu</a>
-                    <a href="tel:+11234567893" class="department-link">(123) 456-7893</a>
-                </div>
-                <div class="department-card">
-                    <div class="department-icon">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <h3>Financial Aid</h3>
-                    <p>Tuition, scholarships, and payment plan inquiries.</p>
-                    <a href="mailto:financialaid@greenwood.edu" class="department-link">financialaid@greenwood.edu</a>
-                    <a href="tel:+11234567894" class="department-link">(123) 456-7894</a>
-                </div>
-                <div class="department-card">
-                    <div class="department-icon">
-                        <i class="fas fa-running"></i>
-                    </div>
-                    <h3>Athletics</h3>
-                    <p>Sports teams, schedules, and athletic facilities.</p>
-                    <a href="mailto:athletics@greenwood.edu" class="department-link">athletics@greenwood.edu</a>
-                    <a href="tel:+11234567895" class="department-link">(123) 456-7895</a>
-                </div>
-                <div class="department-card">
-                    <div class="department-icon">
-                        <i class="fas fa-paint-brush"></i>
-                    </div>
-                    <h3>Arts</h3>
-                    <p>Music, theater, and visual arts programs.</p>
-                    <a href="mailto:arts@greenwood.edu" class="department-link">arts@greenwood.edu</a>
-                    <a href="tel:+11234567896" class="department-link">(123) 456-7896</a>
-                </div>
-                <div class="department-card">
-                    <div class="department-icon">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <h3>Alumni Relations</h3>
-                    <p>Stay connected after graduation and support current students.</p>
-                    <a href="mailto:alumni@greenwood.edu" class="department-link">alumni@greenwood.edu</a>
-                    <a href="tel:+11234567897" class="department-link">(123) 456-7897</a>
-                </div>
-            </div>
+            <aside class="contact-guidance__card">
+                <h3>Admissions enquiries</h3>
+                <p>Explore the admissions information or start an enquiry with the school.</p>
+                <a class="contact-guidance__button" href="{% url 'admissions' %}">View admissions <span aria-hidden="true">→</span></a>
+            </aside>
         </div>
     </section>
-
-    <!-- Emergency Contact Section -->
-    <section class="emergency-section">
-        <div class="container">
-            <div class="emergency-content">
-                <div class="emergency-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="emergency-info">
-                    <h2>Emergency Contact</h2>
-                    <p>For urgent matters outside office hours, please contact our security team.</p>
-                    <div class="emergency-contact">
-                        <i class="fas fa-phone"></i>
-                        <a href="tel:+11234567899">(123) 456-7899</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-{%endblock%}
+</main>
+{% endblock %}

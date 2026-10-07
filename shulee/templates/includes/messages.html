@@ -1,12 +1,10 @@
-<div class="form-group">
-    {% if messages %}
-      {% for message in messages %}
-      {% if message.tags == 'error' %}
-      <div class="alert alert-danger" style="margin-top: 10px;">{{ message }}</div>
-      {% endif %}
-      {% if message.tags == 'success' %}
-      <div class="alert alert-success" style="margin-top: 10px;">{{ message }}</div>
-      {% endif %}
-      {% endfor %}
-    {% endif %}
-  </div>
+{% if messages %}
+<div class="messages mb-3" aria-live="polite">
+    {% for message in messages %}
+    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
