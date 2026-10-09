@@ -76,6 +76,10 @@
                   <span>{{ student.user.phone|default:"-" }}</span>
                 </li>
                 <li class="list-group-item d-flex justify-content-between">
+                  <span>Parent/guardian email</span>
+                  <span>{{ student.parent_email|default:"-" }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
                   <span>Address</span>
                   <span>{{ student.user.address|default:"-" }}</span>
                 </li>

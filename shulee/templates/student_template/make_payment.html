@@ -1,66 +1,29 @@
 {% extends 'student_template/base.html' %}
-{% block page_title %}Record Fee Payment{% endblock %}
+{% block page_title %}Pay school fees{% endblock %}
+{% block breadcrumb_active %}Pay fees{% endblock %}
 {% block main_content %}
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Record Fee Payment</h3>
+<div class="row">
+    <div class="col-lg-8 col-xl-7 mx-auto">
+        <section class="card card-outline card-success">
+            <div class="card-header"><h2 class="card-title"><i class="fas fa-mobile-screen-button mr-2"></i>Pay by M-Pesa STK Push</h2></div>
+            <form method="post" action="{% url 'make_fee_payment' %}">
+                {% csrf_token %}
+                <div class="card-body">
+                    <p class="text-muted">Pay part or all of the amount currently available on your account. Pending payments are reserved to prevent your total payments from exceeding the balance.</p>
+                    <div class="form-group">
+                        <label for="amount">Amount (Kenyan shillings)</label>
+                        <input id="amount" name="amount" class="form-control" type="number" min="1" max="{{ payment_limit }}" step="1" required>
+                        <small class="form-text text-muted">Outstanding balance: Ksh {{ fee_balance|floatformat:2 }}. Available to pay now: Ksh {{ payment_limit|floatformat:0 }}. Enter a whole-shilling amount.</small>
                     </div>
-                    <form method="POST" action="{% url 'make_fee_payment' %}">
-                        {% csrf_token %}
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Current Balance</label>
-                                        <input type="text" class="form-control" 
-                                            value="Ksh {{ fee_balance }}" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    {{ form.amount.label_tag }}
-                                    {{ form.amount }}
-                                    {{ form.amount.errors }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.payment_date.label_tag }}
-                                    {{ form.payment_date }}
-                                    {{ form.payment_date.errors }}
-                                </div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-md-6">
-                                    {{ form.payment_method.label_tag }}
-                                    {{ form.payment_method }}
-                                    {{ form.payment_method.errors }}
-                                </div>
-                                <div class="col-md-6">
-                                    {{ form.transaction_reference.label_tag }}
-                                    {{ form.transaction_reference }}
-                                    {{ form.transaction_reference.errors }}
-                                </div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-md-12">
-                                    {{ form.remarks.label_tag }}
-                                    {{ form.remarks }}
-                                    {{ form.remarks.errors }}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">Submit Payment</button>
-                            <a href="{% url 'student_fee_payments' %}" class="btn btn-default">Cancel</a>
-                        </div>
-                    </form>
+                    <div class="form-group">
+                        <label for="phone_number">M-Pesa phone number</label>
+                        <input id="phone_number" name="phone_number" class="form-control" type="tel" value="{{ default_phone }}" placeholder="07XXXXXXXX or 2547XXXXXXXX" autocomplete="tel" required>
+                    </div>
+                    <button class="btn btn-success" type="submit" {% if payment_limit <= 0 %}disabled{% endif %}>Send payment prompt</button>
+                    <a class="btn btn-outline-secondary" href="{% url 'student_fee_payments' %}">Payment history</a>
                 </div>
-            </div>
-        </div>
+            </form>
+        </section>
     </div>
-</section>
+</div>
 {% endblock %}

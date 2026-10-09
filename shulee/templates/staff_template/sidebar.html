@@ -47,6 +47,11 @@
                 </li>
                 <li class="nav-header">SUPPORT</li>
                 <li class="nav-item">
+                    <a href="{% url 'student_contact_inbox' %}" class="nav-link {% if request.resolver_match.url_name == 'student_contact_inbox' %}active{% endif %}">
+                        <i class="nav-icon fas fa-comments"></i><p>Student messages</p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{% url 'staff_apply_leave' %}" class="nav-link {% if request.resolver_match.url_name == 'staff_apply_leave' %}active{% endif %}">
                         <i class="nav-icon fas fa-calendar-minus"></i><p>Leave requests</p>
                     </a>

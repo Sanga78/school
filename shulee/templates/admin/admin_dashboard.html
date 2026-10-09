@@ -1,152 +1,155 @@
 {% extends 'admin/base.html' %}
 
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-welcome {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(24px, 4vw, 40px);
+        border-radius: 18px;
+        background: linear-gradient(120deg, #1a4731, #2d6a4f);
+        color: #fff;
+    }
+    .dashboard-welcome::after {
+        position: absolute;
+        top: -80px;
+        right: -45px;
+        width: 250px;
+        height: 250px;
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 50%;
+        box-shadow: 0 0 0 28px rgba(255,255,255,.04), 0 0 0 58px rgba(255,255,255,.035);
+        content: "";
+    }
+    .dashboard-welcome h1 { max-width: 680px; font: 700 clamp(25px, 3.3vw, 36px)/1.2 'Playfair Display', serif; }
+    .dashboard-welcome p { max-width: 650px; color: rgba(255,255,255,.82); }
+    .dashboard-welcome .btn { position: relative; z-index: 1; }
+    .dashboard-stat {
+        height: 100%;
+        padding: 20px;
+        border: 1px solid var(--school-border);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 5px 18px rgba(26,71,49,.045);
+    }
+    .dashboard-stat-label { color: var(--school-muted); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .dashboard-stat-value { margin: 8px 0 0; color: var(--school-green); font-size: 32px; font-weight: 700; line-height: 1; }
+    .dashboard-stat-icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 12px; background: var(--school-gold-pale); color: var(--school-maroon); font-size: 17px; }
+    .dashboard-section-title { margin-bottom: 14px; color: var(--school-ink); font: 700 21px/1.25 'Playfair Display', serif; }
+    .dashboard-link {
+        display: flex;
+        min-height: 100%;
+        align-items: center;
+        gap: 15px;
+        padding: 18px;
+        border: 1px solid var(--school-border);
+        border-radius: 13px;
+        background: #fff;
+        color: var(--school-ink);
+        text-decoration: none;
+        transition: border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .dashboard-link:hover { transform: translateY(-2px); border-color: var(--school-gold); box-shadow: 0 9px 22px rgba(26,71,49,.08); color: var(--school-green); }
+    .dashboard-link-icon { display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; border-radius: 11px; background: #eef5f0; color: var(--school-green); }
+    .dashboard-link strong { display: block; }
+    .dashboard-link small { display: block; margin-top: 3px; color: var(--school-muted); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h2 class="mb-4">Admin Dashboard</h2>
-    
-    <div class="row">
-        <!-- Stats Cards -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start border-4 border-primary shadow-sm h-100 py-2">
-                <div class="card-body">
-                    <div class="row g-0 align-items-center">
-                        <div class="col me-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Students</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.students_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<section class="dashboard-welcome mb-4">
+    <div class="row align-items-center position-relative" style="z-index: 1;">
+        <div class="col-lg-8">
+            <p class="text-uppercase small mb-2">School administration{% if current_year %} · {{ current_year.name }}{% endif %}</p>
+            <h1 class="mb-2">Welcome, {{ request.user.first_name|default:request.user.username }}</h1>
+            <p class="mb-0">A clear overview of admissions and the current school community.</p>
         </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start border-4 border-success shadow-sm h-100 py-2">
-                <div class="card-body">
-                    <div class="row g-0 align-items-center">
-                        <div class="col me-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Teachers</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.teachers_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start border-4 border-info shadow-sm h-100 py-2">
-                <div class="card-body">
-                    <div class="row g-0 align-items-center">
-                        <div class="col me-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Active Classes</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.classes_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-door-open fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start border-4 border-warning shadow-sm h-100 py-2">
-                <div class="card-body">
-                    <div class="row g-0 align-items-center">
-                        <div class="col me-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Pending Requests</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pending_requests }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-comments fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-lg-4 mt-3 mt-lg-0 text-lg-end">
+            <a class="btn btn-light" href="{% url 'review_student_applications' %}">
+                <i class="fas fa-file-circle-check me-2"></i>Review admissions
+            </a>
         </div>
     </div>
+</section>
 
-    <div class="row">
-        <!-- Recent Activities -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Activities</h6>
-                </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        {% for activity in recent_activities %}
-                        <div class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">{{ activity.get_action_display }}</h6>
-                                <small>{{ activity.timestamp|timesince }} ago</small>
-                            </div>
-                            <p class="mb-1">{{ activity.details|truncatechars:160 }}</p>
-                            <small>By {{ activity.user.get_full_name|default:"System" }}</small>
-                        </div>
-                        {% empty %}
-                        <div class="text-center py-4 text-muted">
-                            No recent activities
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
+<section class="row g-3 mb-4" aria-label="School overview">
+    <div class="col-6 col-xl-3">
+        <article class="dashboard-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="dashboard-stat-label">Active students</span>
+                <span class="dashboard-stat-icon"><i class="fas fa-user-graduate" aria-hidden="true"></i></span>
             </div>
+            <p class="dashboard-stat-value">{{ stats.students_count }}</p>
+        </article>
+    </div>
+    <div class="col-6 col-xl-3">
+        <article class="dashboard-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="dashboard-stat-label">Pending applications</span>
+                <span class="dashboard-stat-icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+            </div>
+            <p class="dashboard-stat-value">{{ stats.pending_applications }}</p>
+        </article>
+    </div>
+    <div class="col-6 col-xl-3">
+        <article class="dashboard-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="dashboard-stat-label">Interviews scheduled</span>
+                <span class="dashboard-stat-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
+            </div>
+            <p class="dashboard-stat-value">{{ stats.interviews_scheduled }}</p>
+        </article>
+    </div>
+    <div class="col-6 col-xl-3">
+        <article class="dashboard-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="dashboard-stat-label">Cash awaiting approval</span>
+                <span class="dashboard-stat-icon"><i class="fas fa-money-bill-transfer" aria-hidden="true"></i></span>
+            </div>
+            <p class="dashboard-stat-value">{{ stats.pending_cash_payments }}</p>
+            <a class="small text-decoration-none" href="{% url 'review_cash_payments' %}">Review cash requests <i class="fas fa-arrow-right ms-1" aria-hidden="true"></i></a>
+        </article>
+    </div>
+    <div class="col-6 col-xl-3">
+        <article class="dashboard-stat">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="dashboard-stat-label">Current classes</span>
+                <span class="dashboard-stat-icon"><i class="fas fa-door-open" aria-hidden="true"></i></span>
+            </div>
+            <p class="dashboard-stat-value">{{ stats.classes_count }}</p>
+        </article>
+    </div>
+</section>
+
+<section class="mb-4">
+    <h2 class="dashboard-section-title">Quick access</h2>
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-4">
+            <a class="dashboard-link" href="{% url 'review_student_applications' %}">
+                <span class="dashboard-link-icon"><i class="fas fa-file-circle-check" aria-hidden="true"></i></span>
+                <span><strong>Admissions</strong><small>Review applicants and schedule interviews</small></span>
+            </a>
         </div>
-
-        <!-- Quick Actions -->
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'add_teacher' %}" class="btn btn-primary w-100">
-                                <i class="fas fa-plus me-2"></i>Add Teacher
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'add_student' %}" class="btn btn-success w-100">
-                                <i class="fas fa-plus me-2"></i>Add Student
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'add_class' %}" class="btn btn-info w-100">
-                                <i class="fas fa-plus me-2"></i>Create Class
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'add_subject' %}" class="btn btn-warning w-100">
-                                <i class="fas fa-plus me-2"></i>Add Subject
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'send_notification' %}" class="btn btn-secondary w-100">
-                                <i class="fas fa-bell me-2"></i>Send Notification
-                            </a>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <a href="{% url 'generate_reports' %}" class="btn btn-dark w-100">
-                                <i class="fas fa-file-alt me-2"></i>Generate Reports
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-md-6 col-xl-4">
+            <a class="dashboard-link" href="{% url 'manage_students' %}">
+                <span class="dashboard-link-icon"><i class="fas fa-user-graduate" aria-hidden="true"></i></span>
+                <span><strong>Students</strong><small>Find and manage student records</small></span>
+            </a>
+        </div>
+        <div class="col-md-6 col-xl-4">
+            <a class="dashboard-link" href="{% url 'manage_events' %}">
+                <span class="dashboard-link-icon"><i class="fas fa-calendar-day" aria-hidden="true"></i></span>
+                <span><strong>School calendar</strong><small>Manage upcoming school events</small></span>
+            </a>
+        </div>
+        <div class="col-md-6 col-xl-4">
+            <a class="dashboard-link" href="{% url 'review_cash_payments' %}">
+                <span class="dashboard-link-icon"><i class="fas fa-money-bill-transfer" aria-hidden="true"></i></span>
+                <span><strong>Cash fee approvals{% if stats.pending_cash_payments %} · {{ stats.pending_cash_payments }} pending{% endif %}</strong><small>Review cash payment requests submitted by the bursar</small></span>
+            </a>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

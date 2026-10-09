@@ -6,8 +6,19 @@ from index.EmailBackEnd import EmailBackEnd
 from django.contrib import  messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
+from django.db.models import (
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    Max,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+    Value,
+)
+from django.db.models.functions import Coalesce
 from django.db import transaction
-from django.db.models import Max, Q, Sum
 from decimal import Decimal
 from django.views.decorators.http import require_POST
 from .models import (
@@ -20,6 +31,9 @@ from .models import (
     CustomUser,
     SessionYearModel,
     SchoolEvent,
+    CashPaymentApproval,
+    FeeTransaction,
+    StudentApplication,
 )
 from .forms import (
     AdminSignupForm,
@@ -142,14 +156,18 @@ def Login(request):
                 return redirect(reverse("teacher_dashboard"))
             elif user.user_type == 3:
                 student = get_object_or_404(Student, user=user)
-                student.active = True
-                student.save()
-                return redirect(reverse("student_home"))
+                if student.active:
+                    return redirect("student_home")
+                if hasattr(student, 'application'):
+                    return redirect("student_application_status")
+                logout(request)
+                messages.error(request, "Your student account is inactive. Contact the school office for assistance.")
+                return redirect("show_login")
             elif user.user_type == 4:
                 return redirect(reverse("bursar_dashboard"))
         else:
             messages.error(request,"Invalid Login Details")
-            return HttpResponseRedirect("/")
+            return redirect("show_login")
         
 def GetUserDetails(request):
     if request.user != None:
@@ -277,7 +295,10 @@ def student_signup(request):
         student.current_class = form.cleaned_data['current_class']
         student.academic_year = form.cleaned_data['academic_year']
         student.gender = form.cleaned_data['gender']
+        student.parent_email = form.cleaned_data['parent_email']
+        student.active = False
         student.save()
+        StudentApplication.objects.create(student=student)
 
         profile_image = form.cleaned_data['profile_pic']
         if profile_image:
@@ -325,11 +346,58 @@ def fee_records(request):
     else:
         fee_structure_form = FeeStructureForm()
 
+    money_field = DecimalField(max_digits=12, decimal_places=2)
+    structure_totals = FeeStructure.objects.filter(
+        class_obj_id=OuterRef('current_class_id'),
+        academic_year_id=OuterRef('current_class__academic_year_id'),
+        is_active=True,
+    ).order_by().values('class_obj_id').annotate(
+        total=Sum('amount'),
+    ).values('total')[:1]
+    legacy_invoice_totals = FeeTransaction.objects.filter(
+        student_id=OuterRef('pk'),
+        transaction_type='INVOICE',
+    ).order_by().values('student_id').annotate(
+        total=Sum('amount'),
+    ).values('total')[:1]
+    student_payment_totals = FeePayment.objects.filter(
+        student_id=OuterRef('pk'),
+    ).order_by().values('student_id').annotate(
+        total=Sum('amount'),
+    ).values('total')[:1]
+    unlinked_payment_totals = FeeTransaction.objects.filter(
+        student_id=OuterRef('pk'),
+        transaction_type='PAYMENT',
+        fee_payment__isnull=True,
+    ).order_by().values('student_id').annotate(
+        total=Sum('amount'),
+    ).values('total')[:1]
     students = Student.objects.select_related(
         'user', 'current_class', 'academic_year',
     ).annotate(
-        total_paid=Sum('payments__amount'),
+        total_fee_due=Coalesce(
+            Subquery(structure_totals, output_field=money_field),
+            Subquery(legacy_invoice_totals, output_field=money_field),
+            Value(Decimal('0.00')),
+            output_field=money_field,
+        ),
+        total_paid=(
+            Coalesce(
+                Subquery(student_payment_totals, output_field=money_field),
+                Value(Decimal('0.00')),
+                output_field=money_field,
+            ) + Coalesce(
+                Subquery(unlinked_payment_totals, output_field=money_field),
+                Value(Decimal('0.00')),
+                output_field=money_field,
+            )
+        ),
         last_payment_date=Max('payments__payment_date'),
+    ).annotate(
+        fee_balance=ExpressionWrapper(
+            F('total_fee_due') - F('total_paid'),
+            output_field=money_field,
+        ),
     )
     search = request.GET.get('q', '').strip()
     if search:
@@ -401,16 +469,78 @@ def record_payment(request, student_id):
     )
     
     if request.method == 'POST':
-        form = FeePaymentForm(request.POST, student=student)
+        form = FeePaymentForm(request.POST)
         if form.is_valid():
-            payment = form.save(commit=False)
-            payment.student = student
-            payment.recorded_by_bursar = request.user.bursar_profile
-            payment.save()
-            messages.success(request, 'Payment recorded successfully!')
-            return redirect('fee_records')
+            payment_data = form.cleaned_data
+            with transaction.atomic():
+                student = Student.objects.select_for_update().select_related(
+                    'current_class',
+                ).get(pk=student.pk)
+                applicable_fee_structures = list(
+                    student.get_applicable_fee_structures(),
+                )
+                if not applicable_fee_structures and student.get_fee_balance() <= 0:
+                    form.add_error(
+                        None,
+                        'No active fee structure is configured for this student’s class and academic year.',
+                    )
+                    return render(request, 'bursar/record_payment.html', {
+                        'student': student,
+                        'form': form,
+                        'payments': FeePayment.objects.filter(
+                            student=student,
+                        ).select_related('fee_structure', 'recorded_by_bursar__user'),
+                        'total_paid': student.get_total_paid_fees(),
+                        'total_fee_due': student.get_total_invoiced_fees(),
+                        'fee_balance': student.get_fee_balance(),
+                        'fee_structures': applicable_fee_structures,
+                    })
+                payment_fee_structure = (
+                    applicable_fee_structures[0]
+                    if len(applicable_fee_structures) == 1
+                    else None
+                )
+                if payment_data['amount'] <= 0:
+                    form.add_error('amount', 'Payment amount must be greater than zero.')
+                elif payment_data['amount'] > student.get_fee_balance():
+                    form.add_error('amount', 'Payment cannot exceed the outstanding balance.')
+                elif payment_data['payment_method'] == 'CASH':
+                    CashPaymentApproval.objects.create(
+                        student=student,
+                        amount=payment_data['amount'],
+                        payment_date=payment_data['payment_date'],
+                        transaction_code=payment_data['transaction_code'],
+                        notes=payment_data['notes'],
+                        fee_structure=payment_fee_structure,
+                        recorded_by=request.user.bursar_profile,
+                    )
+                    messages.success(request, 'Cash payment submitted for headteacher approval. The student balance has not changed yet.')
+                    return redirect('fee_records')
+                else:
+                    resulting_balance = student.get_fee_balance() - payment_data['amount']
+                    payment = FeePayment.objects.create(
+                        student=student,
+                        fee_structure=payment_fee_structure,
+                        amount=payment_data['amount'],
+                        payment_date=payment_data['payment_date'],
+                        payment_method=payment_data['payment_method'],
+                        transaction_code=payment_data['transaction_code'],
+                        recorded_by_bursar=request.user.bursar_profile,
+                        notes=payment_data['notes'],
+                    )
+                    FeeTransaction.objects.create(
+                        student=student,
+                        transaction_type='PAYMENT',
+                        fee_payment=payment,
+                        amount=payment.amount,
+                        balance=resulting_balance,
+                        description=f"Payment recorded by bursar via {payment.get_payment_method_display()}",
+                        date=payment.payment_date,
+                    )
+                    messages.success(request, 'Payment recorded successfully.')
+                    return redirect('fee_records')
     else:
-        form = FeePaymentForm(student=student)
+        form = FeePaymentForm()
     
     payments = FeePayment.objects.filter(student=student).select_related(
         'fee_structure', 'recorded_by_bursar__user',
@@ -422,6 +552,9 @@ def record_payment(request, student_id):
         'form': form,
         'payments': payments,
         'total_paid': total_paid,
+        'total_fee_due': student.get_total_invoiced_fees(),
+        'fee_balance': student.get_fee_balance(),
+        'fee_structures': student.get_applicable_fee_structures(),
     }
     return render(request, 'bursar/record_payment.html', context)
 

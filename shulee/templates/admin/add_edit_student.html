@@ -114,13 +114,13 @@
                         {% endif %}
                     </div>
                     <div class="form-group">
-                        <label for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
-                        {{ form.phone }}
-                        {% if form.phone.help_text %}
-                            <small class="form-text text-muted">{{ form.phone.help_text }}</small>
+                        <label for="{{ form.parent_email.id_for_label }}">{{ form.parent_email.label }}<span class="text-danger">*</span></label>
+                        {{ form.parent_email }}
+                        {% if form.parent_email.help_text %}
+                            <small class="form-text text-muted">{{ form.parent_email.help_text }}</small>
                         {% endif %}
-                        {% if form.phone.errors %}
-                            <div class="text-danger small">{{ form.phone.errors }}</div>
+                        {% if form.parent_email.errors %}
+                            <div class="text-danger small">{{ form.parent_email.errors }}</div>
                         {% endif %}
                     </div>
                     <div class="form-group">

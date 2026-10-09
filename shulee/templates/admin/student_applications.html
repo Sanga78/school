@@ -1,0 +1,86 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Student applications{% endblock %}
+
+{% block content %}
+<section class="container-fluid">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <p class="text-uppercase small text-muted mb-1">Admissions</p>
+            <h1 class="h3 mb-1">Student applications</h1>
+            <p class="text-muted mb-0">Review applicants, book interviews, and approve access to the student portal.</p>
+        </div>
+        <span class="badge text-bg-primary">{{ applications|length }} applications</span>
+    </div>
+
+    {% for application in applications %}
+    <article class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+                <div>
+                    <h2 class="h5 mb-1">{{ application.student.user.get_full_name }}</h2>
+                    <p class="text-muted mb-2">
+                        Admission account: {{ application.student.user.username }} ·
+                        Applied {{ application.submitted_at|date:"d M Y, H:i" }}
+                    </p>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Parent/guardian email</dt>
+                        <dd class="col-sm-8"><a href="mailto:{{ application.student.parent_email }}">{{ application.student.parent_email }}</a></dd>
+                        <dt class="col-sm-4">Student email</dt>
+                        <dd class="col-sm-8">{{ application.student.user.email|default:"Not provided" }}</dd>
+                        <dt class="col-sm-4">Requested class</dt>
+                        <dd class="col-sm-8">{{ application.student.current_class|default:"Not selected" }}</dd>
+                        <dt class="col-sm-4">Academic year</dt>
+                        <dd class="col-sm-8">{{ application.student.academic_year|default:"Not selected" }}</dd>
+                        {% if application.interview_at %}
+                        <dt class="col-sm-4">Interview</dt>
+                        <dd class="col-sm-8">{{ application.interview_at|date:"l, d M Y, H:i" }}</dd>
+                        {% endif %}
+                        {% if application.review_notes %}
+                        <dt class="col-sm-4">Review notes</dt>
+                        <dd class="col-sm-8">{{ application.review_notes|linebreaksbr }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+                <span class="badge {% if application.status == 'APPROVED' %}text-bg-success{% elif application.status == 'REJECTED' %}text-bg-danger{% elif application.status == 'INTERVIEW' %}text-bg-info{% else %}text-bg-warning{% endif %}">
+                    {{ application.get_status_display }}
+                </span>
+            </div>
+
+            {% if application.status == 'PENDING' or application.status == 'INTERVIEW' %}
+            <form class="row g-2 align-items-end border-top mt-3 pt-3" method="post" action="{% url 'review_student_application' application.pk %}">
+                {% csrf_token %}
+                <div class="col-md-3">
+                    <label class="form-label" for="action-{{ application.pk }}">Action</label>
+                    <select class="form-select" id="action-{{ application.pk }}" name="action" required>
+                        <option value="schedule">Schedule or update interview</option>
+                        <option value="approve">Approve application</option>
+                        <option value="reject">Decline application</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="interview-{{ application.pk }}">Interview date and time</label>
+                    <input class="form-control" id="interview-{{ application.pk }}" type="datetime-local" name="interview_at" value="{{ application.interview_at|date:'Y-m-d\\TH:i' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="notes-{{ application.pk }}">Note for applicant</label>
+                    <input class="form-control" id="notes-{{ application.pk }}" type="text" name="review_notes" maxlength="2000" value="{{ application.review_notes }}">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" type="submit">Save decision</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </article>
+    {% empty %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-inbox fa-2x text-muted mb-3" aria-hidden="true"></i>
+            <h2 class="h5">No applications yet</h2>
+            <p class="text-muted mb-0">New student applications will appear here for review.</p>
+        </div>
+    </div>
+    {% endfor %}
+</section>
+{% endblock %}

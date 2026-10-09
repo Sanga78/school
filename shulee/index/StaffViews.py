@@ -8,6 +8,7 @@ from django.http import Http404, HttpResponse, JsonResponse, HttpResponseRedirec
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_POST
 from django.utils.dateparse import parse_date
+from django.utils import timezone
 from index.models import (
     AcademicYear,
     Attendance,
@@ -16,11 +17,13 @@ from index.models import (
     Feedback,
     LeaveRequest,
     Notification,
+    ResultPublication,
     Staff,
     StaffSubjectAssignment,
     Student,
     StudentClass,
     Subject,
+    SubjectResultSubmission,
     SubjectResult,
 )
 from django.urls import reverse
@@ -87,6 +90,22 @@ def _teacher_assignment(user, assignment_id, class_id):
         academic_year=current_year,
     )
     return assignment, class_obj, current_year
+
+
+def _notify_headteachers(sender, title, message):
+    recipients = list(CustomUser.objects.filter(
+        user_type=1,
+        is_active=True,
+    ))
+    if not recipients:
+        return
+    notification = Notification.objects.create(
+        title=title,
+        message=message,
+        sender=sender,
+        priority='HIGH',
+    )
+    notification.recipients.add(*recipients)
 
 
 def _parse_attendance_statuses(raw_data, expected_ids):
@@ -324,6 +343,35 @@ def staff_feedback_save(request):
         messages.success(request, 'Your feedback was submitted.')
     return redirect('staff_feedback')
 
+
+@teacher_required
+def student_contact_inbox(request):
+    feedback_data = Feedback.objects.filter(
+        recipient_staff=request.user.staff_profile,
+    ).select_related('user', 'user__student_profile__current_class')
+    return render(request, 'teacher/student_contact_inbox.html', {
+        'feedback_data': feedback_data,
+    })
+
+
+@teacher_required
+@require_POST
+def student_contact_reply(request, feedback_id):
+    feedback = get_object_or_404(
+        Feedback,
+        pk=feedback_id,
+        recipient_staff=request.user.staff_profile,
+    )
+    reply = request.POST.get('reply', '').strip()
+    if not reply:
+        messages.error(request, 'Enter a reply before submitting.')
+    else:
+        feedback.reply = reply[:5000]
+        feedback.save(update_fields=['reply', 'updated_at'])
+        messages.success(request, 'Your reply was sent to the student.')
+    return redirect('student_contact_inbox')
+
+
 @teacher_required
 def staff_profile(request):
     staff = get_object_or_404(Staff, user=request.user)
@@ -448,17 +496,51 @@ def upload_results(request, class_id, subject_id):
         academic_year=current_year,
         active=True,
     ).select_related('user').order_by('user__last_name', 'user__first_name')
+    result_submission = SubjectResultSubmission.objects.filter(
+        class_obj=class_obj,
+        subject=assignment.subject,
+        academic_year=current_year,
+    )
     
     if request.method == 'POST':
         form = ResultUploadForm(request.POST)
         if form.is_valid():
             term = form.cleaned_data['term']
+            action = request.POST.get('action', 'save')
+            if action not in {'save', 'submit_subject'}:
+                form.add_error(None, 'Choose whether to save or submit these results.')
+            publication = ResultPublication.objects.filter(
+                class_obj=class_obj,
+                academic_year=current_year,
+                term=term,
+                status__in=['SUBMITTED', 'APPROVED'],
+            ).first()
+            if publication:
+                form.add_error(
+                    None,
+                    'These class results have already been sent for review or published and can no longer be changed.',
+                )
+            if result_submission.filter(term=term).exists():
+                form.add_error(
+                    None,
+                    'These subject results have already been submitted. Ask the headteacher to return the class results for correction before editing.',
+                )
+
             score_rows = []
+            missing_students = []
             for student in students:
                 exam_score = request.POST.get(f'exam_{student.id}', '').strip()
                 assignment_score = request.POST.get(f'assignment_{student.id}', '').strip()
                 if not exam_score and not assignment_score:
+                    if action == 'submit_subject':
+                        missing_students.append(student)
                     continue
+                if not exam_score or not assignment_score:
+                    form.add_error(
+                        None,
+                        f'Enter both exam and assignment scores for {student.user.get_full_name() or student.user.username}.',
+                    )
+                    break
                 try:
                     exam_score = Decimal(exam_score)
                     assignment_score = Decimal(assignment_score)
@@ -474,6 +556,17 @@ def upload_results(request, class_id, subject_id):
                     form.add_error(None, f'Scores for {student.user.get_full_name() or student.user.username} must be between 0 and 100.')
                     break
                 score_rows.append((student, exam_score, assignment_score))
+
+            if action == 'submit_subject' and missing_students and not form.non_field_errors():
+                names = ', '.join(
+                    student.user.get_full_name() or student.user.username
+                    for student in missing_students[:5]
+                )
+                more = ' and others' if len(missing_students) > 5 else ''
+                form.add_error(
+                    None,
+                    f'Cannot submit yet: {len(missing_students)} student result(s) are missing ({names}{more}).',
+                )
 
             if not score_rows and not form.non_field_errors():
                 form.add_error(None, 'Enter at least one student result before saving.')
@@ -492,7 +585,30 @@ def upload_results(request, class_id, subject_id):
                                 'created_by': staff,
                             },
                         )
-                messages.success(request, 'Student results saved.')
+                    if action == 'submit_subject':
+                        submission, created = SubjectResultSubmission.objects.get_or_create(
+                            class_obj=class_obj,
+                            subject=assignment.subject,
+                            academic_year=current_year,
+                            term=term,
+                            defaults={'submitted_by': staff},
+                        )
+                        if created:
+                            teacher_name = request.user.get_full_name() or request.user.username
+                            _notify_headteachers(
+                                request.user,
+                                f'{assignment.subject.name} results submitted',
+                                f'{teacher_name} sent {assignment.subject.name} results for '
+                                f'{class_obj.name}, {current_year.name} {dict(SubjectResult.TERM_CHOICES)[term]}.',
+                            )
+                            messages.success(
+                                request,
+                                f'{assignment.subject.name} results were submitted to the headteacher for review.',
+                            )
+                        else:
+                            messages.info(request, 'These subject results were already submitted.')
+                if action == 'save':
+                    messages.success(request, 'Student results saved as a draft. They are not visible to students.')
                 return redirect(
                     'upload_results',
                     class_id=class_obj.id,
@@ -507,8 +623,120 @@ def upload_results(request, class_id, subject_id):
         'class': class_obj,
         'subject': assignment.subject,
         'current_year': current_year,
+        'result_submission': result_submission,
     }
     return render(request, 'teacher/upload_results.html', context)
+
+
+@teacher_required
+@require_POST
+def submit_class_results(request, class_id):
+    staff = get_object_or_404(Staff, user=request.user)
+    current_year = AcademicYear.objects.filter(is_current=True).first()
+    if current_year is None:
+        raise PermissionDenied
+    class_obj = get_object_or_404(
+        StudentClass,
+        pk=class_id,
+        class_teacher=staff,
+        academic_year=current_year,
+    )
+    term = request.POST.get('term')
+    if term not in dict(SubjectResult.TERM_CHOICES):
+        messages.error(request, 'Choose a valid term before submitting class results.')
+        return redirect('class_teacher_dashboard')
+
+    students = list(Student.objects.filter(
+        current_class=class_obj,
+        academic_year=current_year,
+        active=True,
+    ).select_related('user'))
+    subject_ids = set(StaffSubjectAssignment.objects.filter(
+        academic_year=current_year,
+        classes=class_obj,
+    ).values_list('subject_id', flat=True).distinct())
+    if not students:
+        messages.error(request, 'There are no active students in this class to submit results for.')
+        return redirect('class_teacher_dashboard')
+    if not subject_ids:
+        messages.error(request, 'No subjects have been assigned to this class for the current academic year.')
+        return redirect('class_teacher_dashboard')
+
+    submitted_subject_ids = set(SubjectResultSubmission.objects.filter(
+        class_obj=class_obj,
+        academic_year=current_year,
+        term=term,
+        subject_id__in=subject_ids,
+    ).values_list('subject_id', flat=True))
+    missing_subjects = Subject.objects.filter(
+        pk__in=subject_ids - submitted_subject_ids,
+    ).order_by('name')
+    if missing_subjects.exists():
+        messages.error(
+            request,
+            'Cannot submit class results until every assigned subject teacher has submitted: '
+            + ', '.join(subject.name for subject in missing_subjects),
+        )
+        return redirect('class_teacher_dashboard')
+
+    missing_results = SubjectResult.objects.filter(
+        student__in=students,
+        subject_id__in=subject_ids,
+        academic_year=current_year,
+        term=term,
+    ).values('subject_id').annotate(result_count=Count('student_id', distinct=True))
+    complete_subject_ids = {
+        item['subject_id']
+        for item in missing_results
+        if item['result_count'] == len(students)
+    }
+    incomplete_subject_ids = subject_ids - complete_subject_ids
+    if incomplete_subject_ids:
+        incomplete_names = Subject.objects.filter(
+            pk__in=incomplete_subject_ids,
+        ).order_by('name')
+        messages.error(
+            request,
+            'Cannot submit class results because some students are missing results for: '
+            + ', '.join(subject.name for subject in incomplete_names),
+        )
+        return redirect('class_teacher_dashboard')
+
+    with transaction.atomic():
+        existing_publication = ResultPublication.objects.filter(
+            class_obj=class_obj,
+            academic_year=current_year,
+            term=term,
+        ).first()
+        if existing_publication and existing_publication.status == 'SUBMITTED':
+            messages.info(request, 'These class results are already awaiting headteacher review.')
+            return redirect('class_teacher_dashboard')
+        if existing_publication and existing_publication.status == 'APPROVED':
+            messages.error(request, 'These class results have already been published and cannot be resubmitted.')
+            return redirect('class_teacher_dashboard')
+        publication, created = ResultPublication.objects.update_or_create(
+            class_obj=class_obj,
+            academic_year=current_year,
+            term=term,
+            defaults={
+                'status': 'SUBMITTED',
+                'submitted_by': staff,
+                'reviewed_by': None,
+                'review_note': '',
+                'submitted_at': timezone.now(),
+                'reviewed_at': None,
+            },
+        )
+        teacher_name = request.user.get_full_name() or request.user.username
+        _notify_headteachers(
+            request.user,
+            f'{class_obj.name} results awaiting approval',
+            f'{teacher_name} sent complete {class_obj.name} class results for '
+            f'{current_year.name} {dict(SubjectResult.TERM_CHOICES)[term]}.',
+        )
+    messages.success(request, 'Complete class results were sent to the headteacher for verification.')
+    return redirect('class_teacher_dashboard')
+
 
 @teacher_required
 def class_teacher_dashboard(request):
@@ -523,6 +751,11 @@ def class_teacher_dashboard(request):
     context = {
         'classes': classes,
         'current_year': current_year,
+        'terms': SubjectResult.TERM_CHOICES,
+        'result_publications': ResultPublication.objects.filter(
+            class_obj__in=classes,
+            academic_year=current_year,
+        ) if current_year else ResultPublication.objects.none(),
     }
     return render(request, 'teacher/class_teacher_dashboard.html', context)
 

@@ -1,2 +1,23 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
 *
+!shulee/
+!shulee/.env.example
+!shulee/index/
+!shulee/index/migrations/
+!shulee/index/migrations/0003_feedback_recipient_staff_mpesapayment_and_more.py
+!shulee/index/migrations/0004_student_parent_email_studentapplication.py
+!shulee/index/migrations/0005_seed_standard_classes.py
+!shulee/index/migrations/0006_create_default_calendar_year.py
+!shulee/index/migrations/0007_seed_cbc_subjects.py
+!shulee/index/migrations/0008_subjectresultsubmission_resultpublication_and_more.py
+!shulee/index/mpesa.py
+!shulee/templates/
+!shulee/templates/admin/
+!shulee/templates/admin/review_cash_payments.html
+!shulee/templates/admin/student_applications.html
+!shulee/templates/admin/admin_dashboard.html
+!shulee/templates/admin/manage_classes.html
+!shulee/templates/teacher/
+!shulee/templates/teacher/student_contact_inbox.html
+!shulee/templates/student_template/
+!shulee/templates/student_template/application_status.html

@@ -1,360 +1,407 @@
 {% extends 'student_template/base.html' %}
-{% block page_title %}Student Dashboard{% endblock page_title %}
-{% load static %}
+{% block page_title %}My dashboard{% endblock %}
 {% block main_content %}
+<style>
+    .student-dashboard {
+        --dash-maroon: #7b1e2b;
+        --dash-green: #176b4d;
+        --dash-gold: #d5a642;
+        --dash-ink: #252a28;
+        --dash-muted: #68716d;
+    }
 
-<section class="content">
-    <div class="container-fluid">
-        <!-- Welcome Card -->
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card card-primary card-outline">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="mr-3">
-                                <img src="{{ user.students.profile_pic }}" class="img-circle elevation-2" alt="Student Image" style="width: 80px; height: 80px;">
-                            </div>
-                            <div>
-                                <h3 class="mb-1">Welcome, {{ user.first_name }} {{ user.last_name }}</h3>
-                                <p class="mb-0 text-muted">Class: {{ user.students.class_id.class_name }} | Admission Date: {{ user.students.created_at|date:"F j, Y" }}</p>
-                                <div class="mt-2">
-                                    <span class="badge badge-info">Roll Number: {{ user.students.roll_number }}</span>
-                                    <span class="badge badge-success ml-2">Session: {{ current_session }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    .student-dashboard .dashboard-intro {
+        background: linear-gradient(115deg, #6b0f1a 0%, #7b1e2b 62%, #176b4d 150%);
+        border-radius: 18px;
+        color: #fff;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        position: relative;
+    }
 
-        <!-- Quick Stats Row -->
-        <div class="row">
-            <div class="col-lg-3 col-6">
-              <!-- small box -->
-              <div class="small-box bg-gradient-primary">
-                  <div class="inner">
-                      <h3>{{ total_attendance }}</h3>
-                      <p>Total Attendance</p>
-                  </div>
-                  <div class="icon">
-                      <i class="ion ion-stats-bars"></i>
-                  </div>
-                  <a href="{% url 'student_view_attendance' %}" class="small-box-footer">
-                      More info <i class="fas fa-arrow-circle-right"></i>
-                  </a>
-              </div>
-            </div>
+    .student-dashboard .dashboard-intro::after {
+        border: 1px solid rgba(213, 166, 66, .36);
+        border-radius: 50%;
+        content: "";
+        height: 210px;
+        position: absolute;
+        right: -45px;
+        top: -95px;
+        width: 210px;
+    }
 
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-gradient-success">
-                    <div class="inner">
-                        <h3>{{ attendance_present }}</h3>
-                        <p>Days Present</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-user-check"></i>
-                    </div>
-                    <a href="{% url 'student_view_attendance' %}" class="small-box-footer">
-                        View Details <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
+    .student-dashboard .dashboard-intro h2 {
+        color: #fff;
+        font: 700 clamp(1.45rem, 3vw, 2rem)/1.2 "Playfair Display", Georgia, serif;
+        margin: 0 0 .5rem;
+        position: relative;
+        z-index: 1;
+    }
 
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-gradient-warning">
-                    <div class="inner">
-                        <h3>{{ attendance_absent }}</h3>
-                        <p>Days Absent</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-user-times"></i>
-                    </div>
-                    <a href="{% url 'student_view_attendance' %}" class="small-box-footer">
-                        View Details <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
+    .student-dashboard .dashboard-intro p {
+        color: rgba(255, 255, 255, .82);
+        margin: 0;
+        max-width: 620px;
+        position: relative;
+        z-index: 1;
+    }
 
-            <div class="col-lg-3 col-6">
-                <div class="small-box bg-gradient-danger">
-                    <div class="inner">
-                        <h3>{{ subjects }}</h3>
-                        <p>Subjects Enrolled</p>
-                    </div>
-                    <div class="icon">
-                        <i class="fas fa-book"></i>
-                    </div>
-                    <a href="#" class="small-box-footer">
-                        View Subjects <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
+    .student-dashboard .intro-tag {
+        color: #f0d080;
+        font-size: .75rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        margin-bottom: .55rem;
+        text-transform: uppercase;
+    }
 
-        <!-- Charts Row -->
-        <div class="row mt-4">
-            <div class="col-lg-6">
-                <div class="card card-dark">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-pie mr-2"></i>Attendance Overview
-                        </h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="pieChart" style="min-height: 300px; height: 300px; max-height: 300px; max-width: 100%;"></canvas>
-                    </div>
-                    <div class="card-footer bg-dark">
-                        <small class="text-white">Your overall attendance performance</small>
-                    </div>
-                </div>
-            </div>
+    .student-dashboard .dashboard-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 1.5rem;
+    }
 
-            <div class="col-lg-6">
-                <div class="card card-success">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-bar mr-2"></i>Subject-wise Attendance
-                        </h3>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="barChart" style="min-height: 300px; height: 300px; max-height: 300px; max-width: 100%;"></canvas>
-                    </div>
-                    <div class="card-footer bg-success">
-                        <small class="text-white">Attendance distribution by subject</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+    .student-dashboard .dashboard-card {
+        background: #fff;
+        border: 1px solid #ebe6dd;
+        border-radius: 14px;
+        box-shadow: 0 5px 18px rgba(44, 38, 30, .045);
+        min-width: 0;
+        padding: 1.2rem;
+    }
 
-        <!-- Quick Links and Notices Row -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-primary">
-                        <h3 class="card-title text-white">
-                            <i class="fas fa-bolt mr-2"></i>Quick Actions
-                        </h3>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="list-group list-group-flush">
-                            <a href="{% url 'student_view_result' %}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-poll mr-2 text-info"></i> View Exam Results
-                            </a>
-                            <a href="{% url 'student_apply_leave' %}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-file-signature mr-2 text-warning"></i> Apply for Leave
-                            </a>
-                            <a href="{% url 'student_feedback' %}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-comment-alt mr-2 text-success"></i> Send Feedback
-                            </a>
-                            <a href="{% url 'student_profile' %}" class="list-group-item list-group-item-action">
-                                <i class="fas fa-user-edit mr-2 text-primary"></i> Update Profile
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    .student-dashboard .summary-card {
+        border-top: 3px solid var(--dash-green);
+    }
 
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-info">
-                        <h3 class="card-title text-white">
-                            <i class="fas fa-bullhorn mr-2"></i>School Notices
-                        </h3>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="list-group list-group-flush">
-                            {% for notice in notices %}
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <h6 class="mb-1">{{ notice.title }}</h6>
-                                    <small class="text-muted">{{ notice.created_at|date:"M d" }}</small>
-                                </div>
-                                <p class="mb-1 text-muted">{{ notice.message|truncatewords:15 }}</p>
-                            </div>
-                            {% empty %}
-                            <div class="list-group-item text-center text-muted py-4">
-                                No notices available
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="card-footer text-center">
-                        <a href="#" class="text-info">View All Notices</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    .student-dashboard .summary-card.balance {
+        border-top-color: var(--dash-gold);
+    }
 
-        <!-- Upcoming Events -->
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card card-outline card-indigo">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="far fa-calendar-alt mr-2"></i>Upcoming Events
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="bg-indigo">
-                                    <tr>
-                                        <th style="width: 20%">Date</th>
-                                        <th style="width: 30%">Event</th>
-                                        <th style="width: 50%">Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for event in events %}
-                                    <tr>
-                                        <td>{{ event.event_date|date:"F j, Y" }}</td>
-                                        <td>{{ event.title }}</td>
-                                        <td>{{ event.description|truncatewords:20 }}</td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-3">No upcoming events</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+    .student-dashboard .summary-label {
+        color: var(--dash-muted);
+        display: block;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        margin-bottom: .65rem;
+        text-transform: uppercase;
+    }
 
-{% endblock main_content %}
+    .student-dashboard .summary-value {
+        color: var(--dash-maroon);
+        display: block;
+        font: 700 clamp(1.2rem, 2.3vw, 1.65rem)/1.2 "Playfair Display", Georgia, serif;
+        overflow-wrap: anywhere;
+    }
 
-{% block custom_js %}
-<script>
-$(document).ready(function() {
-    var subjects = {{ data_name|safe }};
-    var data1 = {{ data1 }};
-    var data2 = {{ data2 }};
+    .student-dashboard .summary-detail {
+        color: var(--dash-muted);
+        display: block;
+        font-size: .82rem;
+        margin-top: .45rem;
+    }
 
-    // Pie Chart Data
-    // In your dashboard.js
-    var pieData = {
-        labels: ['ABSENT', 'PRESENT', 'TOTAL'],
-        datasets: [{
-            data: [{{ attendance_absent }}, {{ attendance_present }}, {{ total_attendance }}],
-            backgroundColor: ['#f56954', '#00a65a', '#800000'], // Maroon as primary
-        }]
-    };
+    .student-dashboard .dashboard-columns {
+        display: grid;
+        gap: 1.25rem;
+        grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr);
+        margin-bottom: 1.5rem;
+    }
 
-    // Bar Chart Data
-    var barChartData = {
-        labels: subjects,
-        datasets: [
-            {
-                label: 'Present',
-                backgroundColor: 'rgba(0, 166, 90, 0.7)',
-                borderColor: 'rgba(0, 166, 90, 1)',
-                borderWidth: 1,
-                data: data1
-            },
-            {
-                label: 'Absent',
-                backgroundColor: 'rgba(245, 105, 84, 0.7)',
-                borderColor: 'rgba(245, 105, 84, 1)',
-                borderWidth: 1,
-                data: data2
-            }
-        ]
-    };
+    .student-dashboard .section-heading {
+        align-items: center;
+        border-bottom: 1px solid #eee9e1;
+        display: flex;
+        gap: .75rem;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: .8rem;
+    }
 
-    // Pie Chart Options
-    var pieOptions = {
-        maintainAspectRatio: false,
-        responsive: true,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    font: {
-                        size: 12
-                    }
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        var label = context.label || '';
-                        var value = context.raw || 0;
-                        var total = context.dataset.data.reduce((a, b) => a + b, 0);
-                        var percentage = Math.round((value / total) * 100);
-                        return `${label}: ${value} (${percentage}%)`;
-                    }
-                }
-            }
+    .student-dashboard .section-heading h2 {
+        color: var(--dash-maroon);
+        font: 700 1.2rem "Playfair Display", Georgia, serif;
+        margin: 0;
+    }
+
+    .student-dashboard .section-link {
+        color: var(--dash-green);
+        font-size: .86rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .student-dashboard .section-link:hover {
+        color: var(--dash-maroon);
+        text-decoration: underline;
+    }
+
+    .student-dashboard .progress-item + .progress-item {
+        margin-top: 1.1rem;
+    }
+
+    .student-dashboard .progress-copy {
+        align-items: center;
+        color: var(--dash-ink);
+        display: flex;
+        font-size: .9rem;
+        gap: 1rem;
+        justify-content: space-between;
+        margin-bottom: .45rem;
+    }
+
+    .student-dashboard .progress-copy strong {
+        color: var(--dash-green);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .student-dashboard .progress-track {
+        background: #eee9e1;
+        border-radius: 999px;
+        height: 9px;
+        overflow: hidden;
+    }
+
+    .student-dashboard .progress-fill {
+        background: linear-gradient(90deg, var(--dash-green), #42a174);
+        border-radius: inherit;
+        height: 100%;
+        min-width: 0;
+    }
+
+    .student-dashboard .teacher-name {
+        color: var(--dash-ink);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin: .25rem 0;
+    }
+
+    .student-dashboard .teacher-detail,
+    .student-dashboard .empty-note {
+        color: var(--dash-muted);
+        font-size: .9rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .student-dashboard .teacher-email {
+        color: var(--dash-green);
+        display: inline-block;
+        font-size: .88rem;
+        margin-top: .5rem;
+        overflow-wrap: anywhere;
+        text-decoration: none;
+    }
+
+    .student-dashboard .teacher-email:hover {
+        text-decoration: underline;
+    }
+
+    .student-dashboard .action-grid {
+        display: grid;
+        gap: .75rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .student-dashboard .action-link {
+        align-items: center;
+        background: #fff;
+        border: 1px solid #ebe6dd;
+        border-radius: 12px;
+        color: var(--dash-maroon);
+        display: flex;
+        gap: .75rem;
+        min-height: 64px;
+        padding: .9rem 1rem;
+        text-decoration: none;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+    .student-dashboard .action-link:hover {
+        border-color: var(--dash-gold);
+        box-shadow: 0 6px 16px rgba(44, 38, 30, .07);
+        color: var(--dash-maroon);
+        transform: translateY(-2px);
+    }
+
+    .student-dashboard .action-link i {
+        color: var(--dash-green);
+        font-size: 1.1rem;
+        width: 1.25rem;
+    }
+
+    .student-dashboard .action-link span {
+        font-size: .88rem;
+        font-weight: 700;
+    }
+
+    .student-dashboard .results-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .student-dashboard .results-table th,
+    .student-dashboard .results-table td {
+        border-bottom: 1px solid #eee9e1;
+        padding: .75rem .5rem;
+        text-align: left;
+    }
+
+    .student-dashboard .results-table th {
+        color: var(--dash-muted);
+        font-size: .75rem;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .student-dashboard .results-table td {
+        color: var(--dash-ink);
+        font-size: .9rem;
+    }
+
+    .student-dashboard .results-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    @media (max-width: 900px) {
+        .student-dashboard .dashboard-grid,
+        .student-dashboard .action-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-    };
 
-    // Bar Chart Options
-    var barChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            x: {
-                stacked: false,
-                grid: {
-                    display: false
-                }
-            },
-            y: {
-                stacked: false,
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: {
-                    font: {
-                        size: 12
-                    }
-                }
-            }
+        .student-dashboard .dashboard-columns {
+            grid-template-columns: 1fr;
         }
-    };
+    }
 
-    // Initialize Pie Chart
-    var pieChartCanvas = $('#pieChart').get(0).getContext('2d');
-    new Chart(pieChartCanvas, {
-        type: 'pie',
-        data: pieData,
-        options: pieOptions
-    });
+    @media (max-width: 480px) {
+        .student-dashboard .dashboard-grid,
+        .student-dashboard .action-grid {
+            grid-template-columns: 1fr 1fr;
+        }
 
-    // Initialize Bar Chart
-    var barChartCanvas = $('#barChart').get(0).getContext('2d');
-    new Chart(barChartCanvas, {
-        type: 'bar',
-        data: barChartData,
-        options: barChartOptions
-    });
+        .student-dashboard .dashboard-card {
+            padding: .95rem;
+        }
 
-    // Add animation to cards on page load
-    $('.card').each(function(i) {
-        $(this).delay(i * 200).animate({ opacity: 1 }, 400);
-    });
-});
-</script>
-{% endblock custom_js %}
+        .student-dashboard .results-table th,
+        .student-dashboard .results-table td {
+            font-size: .8rem;
+            padding: .65rem .35rem;
+        }
+    }
+</style>
+
+<div class="student-dashboard">
+    {% for notification in result_notifications %}
+        <div class="alert alert-success d-flex align-items-start gap-2" role="status">
+            <i class="fa-solid fa-circle-check mt-1" aria-hidden="true"></i>
+            <div><strong>{{ notification.title }}</strong><br>{{ notification.message }}</div>
+        </div>
+    {% endfor %}
+    <section class="dashboard-intro" aria-labelledby="dashboard-welcome">
+        <div class="intro-tag">AIC Laboret Girls Boarding Primary School</div>
+        <h2 id="dashboard-welcome">Your learning, all in one place</h2>
+        <p>Review your academic progress, keep track of school fees, and stay connected with your class teacher.</p>
+    </section>
+
+    <section class="dashboard-grid" aria-label="Student summary">
+        <article class="dashboard-card summary-card">
+            <span class="summary-label">Current class</span>
+            <span class="summary-value">{% if student.current_class %}{{ student.current_class.name }}{% else %}Not assigned{% endif %}</span>
+            <span class="summary-detail">{% if student.academic_year %}Academic year {{ student.academic_year.name }}{% else %}Student record{% endif %}</span>
+        </article>
+        <article class="dashboard-card summary-card">
+            <span class="summary-label">Results published</span>
+            <span class="summary-value">{{ result_count }}</span>
+            <span class="summary-detail">Across your subjects</span>
+        </article>
+        <article class="dashboard-card summary-card balance">
+            <span class="summary-label">Fee balance</span>
+            <span class="summary-value">Ksh {{ fee_balance|floatformat:2 }}</span>
+            <span class="summary-detail">Your current outstanding balance</span>
+        </article>
+        <article class="dashboard-card summary-card">
+            <span class="summary-label">Fees paid</span>
+            <span class="summary-value">Ksh {{ total_paid|floatformat:2 }}</span>
+            <span class="summary-detail">Payments recorded to date</span>
+        </article>
+    </section>
+
+    <section class="dashboard-columns">
+        <article class="dashboard-card">
+            <div class="section-heading">
+                <h2>Academic progress</h2>
+                <a class="section-link" href="{% url 'student_view_result' %}">View results</a>
+            </div>
+            {% for item in term_progress %}
+                <div class="progress-item">
+                    <div class="progress-copy">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.score|floatformat:1 }}%</strong>
+                    </div>
+                    <div class="progress-track" role="progressbar" aria-label="{{ item.label }} average"
+                         aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ item.score }}">
+                        <div class="progress-fill" style="width: {{ item.score }}%;"></div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty-note">Your progress will appear here once results have been published.</p>
+            {% endfor %}
+        </article>
+
+        <article class="dashboard-card">
+            <div class="section-heading">
+                <h2>Class teacher</h2>
+                <a class="section-link" href="{% url 'student_feedback' %}">Contact</a>
+            </div>
+            {% if teacher %}
+                <p class="teacher-name">{{ teacher.user.get_full_name|default:teacher.user.username }}</p>
+                <p class="teacher-detail">Your class teacher is here to support you with your learning and school life.</p>
+                {% if teacher.user.email %}
+                    <a class="teacher-email" href="mailto:{{ teacher.user.email }}">{{ teacher.user.email }}</a>
+                {% endif %}
+            {% else %}
+                <p class="empty-note">A class teacher has not been assigned to your class yet.</p>
+            {% endif %}
+        </article>
+    </section>
+
+    <section class="dashboard-card" style="margin-bottom: 1.5rem;">
+        <div class="section-heading">
+            <h2>Recent results</h2>
+            <a class="section-link" href="{% url 'student_view_result' %}">All results</a>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="results-table">
+                <thead>
+                    <tr><th>Subject</th><th>Term</th><th>Assignment</th><th>Exam</th><th>Average</th></tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                        <tr>
+                            <td>{{ result.subject.name }}</td>
+                            <td>{{ result.get_term_display }}</td>
+                            <td>{{ result.assignment_score|floatformat:1 }}%</td>
+                            <td>{{ result.exam_score|floatformat:1 }}%</td>
+                            <td>{% widthratio result.total_score 2 1 %}%</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="empty-note">No results have been published yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <nav class="action-grid" aria-label="Student services">
+        <a class="action-link" href="{% url 'student_view_result' %}"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span>Academic results</span></a>
+        <a class="action-link" href="{% url 'student_fee_statement' %}"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i><span>Fee statement</span></a>
+        <a class="action-link" href="{% url 'make_fee_payment' %}"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Pay school fees</span></a>
+        <a class="action-link" href="{% url 'student_feedback' %}"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Contact class teacher</span></a>
+    </nav>
+</div>
+{% endblock %}

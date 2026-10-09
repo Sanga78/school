@@ -1,0 +1,64 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Application status | AIC Laboret Girls</title>
+    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'dist/css/adminlte.min.css' %}">
+    <style>
+        body { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 24px; background: #f6f8f5; color: #183b2b; font-family: Arial, sans-serif; }
+        .application-card { width: min(100%, 720px); overflow: hidden; border: 1px solid #e3eae5; border-radius: 18px; background: #fff; box-shadow: 0 18px 55px rgba(24,59,43,.1); }
+        .application-header { padding: 30px 34px; background: #1a4731; color: #fff; }
+        .application-body { padding: 30px 34px; }
+        .application-status { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: #fdf6e3; color: #755710; font-weight: 700; }
+        .application-meta { margin: 22px 0; padding: 18px; border: 1px solid #e3eae5; border-radius: 12px; background: #fbfcfb; }
+        @media (max-width: 575px) { .application-header, .application-body { padding: 24px 20px; } }
+    </style>
+</head>
+<body>
+    <main class="application-card">
+        <header class="application-header">
+            <p class="text-uppercase mb-2">AIC Laboret Girls Primary</p>
+            <h1 class="h3 mb-1">Hello, {{ student.user.first_name }}</h1>
+            <p class="mb-0">Your student account is ready. Follow your application progress here.</p>
+        </header>
+        <section class="application-body">
+            <p class="application-status">
+                {% if application.status == 'INTERVIEW' %}
+                    <i class="fas fa-calendar-check" aria-hidden="true"></i> Interview scheduled
+                {% elif application.status == 'REJECTED' %}
+                    <i class="fas fa-circle-exclamation" aria-hidden="true"></i> Application not approved
+                {% else %}
+                    <i class="fas fa-hourglass-half" aria-hidden="true"></i> Application under review
+                {% endif %}
+            </p>
+
+            <div class="application-meta">
+                <p class="mb-2"><strong>Application reference:</strong> {{ application.pk }}</p>
+                <p class="mb-2"><strong>Submitted:</strong> {{ application.submitted_at|date:"d M Y" }}</p>
+                <p class="mb-0"><strong>Parent/guardian contact:</strong> {{ student.parent_email }}</p>
+            </div>
+
+            {% if application.status == 'INTERVIEW' and application.interview_at %}
+                <h2 class="h5">Interview appointment</h2>
+                <p>{{ application.interview_at|date:"l, d F Y" }} at {{ application.interview_at|date:"H:i" }}</p>
+                <p>Please have your parent or guardian contact the school using the email address provided if you need to change the appointment.</p>
+            {% elif application.status == 'REJECTED' %}
+                <p>Your application was not approved at this time. Contact the school using your parent or guardian's email address if you need clarification.</p>
+            {% else %}
+                <p>The headteacher will review your application. You can sign in again at any time to check for an interview appointment or decision.</p>
+            {% endif %}
+
+            {% if application.review_notes %}
+                <div class="alert alert-info" role="status">{{ application.review_notes|linebreaksbr }}</div>
+            {% endif %}
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a class="btn btn-success" href="{% url 'student_application_status' %}"><i class="fas fa-rotate-right mr-1" aria-hidden="true"></i> Refresh status</a>
+                <a class="btn btn-outline-secondary" href="{% url 'logout' %}">Sign out</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

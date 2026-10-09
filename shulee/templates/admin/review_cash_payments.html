@@ -1,0 +1,49 @@
+{% extends 'admin/base.html' %}
+{% block title %}Review cash fee payments{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="mb-4"><h1 class="h3 mb-1">Cash fee payment approvals</h1><p class="text-muted mb-0">Bursar-entered cash payments do not change a student balance until you approve them.</p></div>
+    {% if messages %}
+        {% for message in messages %}<div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}" role="status">{{ message }}</div>{% endfor %}
+    {% endif %}
+    <section class="card shadow-sm mb-4">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Awaiting approval</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Student</th><th>Class</th><th>Amount</th><th>Date</th><th>Receipt/reference</th><th>Submitted by</th><th>Notes</th><th>Decision</th></tr></thead>
+                <tbody>
+                    {% for approval in pending_approvals %}
+                        <tr>
+                            <td>{{ approval.student.user.get_full_name|default:approval.student.user.username }}</td>
+                            <td>{{ approval.student.current_class.name|default:"Unassigned" }}</td>
+                            <td>Ksh {{ approval.amount|floatformat:2 }}</td><td>{{ approval.payment_date|date:"d M Y" }}</td>
+                            <td>{{ approval.transaction_code|default:"-" }}</td><td>{{ approval.recorded_by.user.get_full_name|default:approval.recorded_by.user.username }}</td><td>{{ approval.notes|default:"-" }}</td>
+                            <td>
+                                <form method="post" action="{% url 'decide_cash_payment' approval.id %}">
+                                    {% csrf_token %}
+                                    <input type="text" name="review_note" maxlength="255" class="form-control form-control-sm mb-2" placeholder="Optional note">
+                                    <button class="btn btn-sm btn-success" type="submit" name="decision" value="approve">Approve</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" name="decision" value="reject">Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}<tr><td colspan="8" class="text-center text-muted py-4">There are no cash payments awaiting approval.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section class="card shadow-sm">
+        <div class="card-header bg-white"><h2 class="h5 mb-0">Reviewed requests</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Student</th><th>Amount</th><th>Status</th><th>Reviewed by</th><th>Review note</th></tr></thead>
+                <tbody>
+                    {% for approval in reviewed_approvals %}
+                        <tr><td>{{ approval.student.user.get_full_name|default:approval.student.user.username }}</td><td>Ksh {{ approval.amount|floatformat:2 }}</td><td>{{ approval.get_status_display }}</td><td>{{ approval.reviewed_by.get_full_name|default:approval.reviewed_by.username }}</td><td>{{ approval.review_note|default:"-" }}</td></tr>
+                    {% empty %}<tr><td colspan="5" class="text-center text-muted py-4">No requests have been reviewed yet.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

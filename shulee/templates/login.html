@@ -194,10 +194,10 @@
                 <form action="{% url 'do_login' %}" method="post">
                     {% csrf_token %}
                     <div class="portal-login__field">
-                        <label for="login-email">Email address</label>
+                        <label for="login-email">Email address or admission number</label>
                         <div class="portal-login__input-wrap">
                             <i class="fas fa-envelope portal-login__input-icon" aria-hidden="true"></i>
-                            <input class="portal-login__input" id="login-email" type="email" name="email" placeholder="you@example.com" autocomplete="username" required>
+                            <input class="portal-login__input" id="login-email" type="text" name="email" placeholder="you@example.com or admission number" autocomplete="username" required>
                         </div>
                     </div>
                     <div class="portal-login__field">

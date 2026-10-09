@@ -1,50 +1,30 @@
 {% extends 'student_template/base.html' %}
-{% block page_title %}
-Student Results
-{% endblock page_title %}
-{% load static %}
+{% block page_title %}My results{% endblock %}
+{% block breadcrumb_active %}Results{% endblock %}
 {% block main_content %}
-
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Results</h3>
-                    </div>
-                    <div class="table">
-                    <table class="table">
-                        <tr>
-                            <th>ID</th>
-                            <th>Subject</th>
-                            <th>Assignment Marks</th>
-                            <th>Exam Marks</th>
-                            <th>Status</th>
-                        </tr>
-                        {% for result in studentresult %}
-                        <tr>
-                            <td>{{ result.id }}</td>
-                            <td>{{ result.subject_id.subject_name }}</td>
-                            <td>{{ result.subject_assignment_marks }}</td>
-                            <td>{{ result.subject_exam_marks }}</td>
-                            <td>
-                                {% if result.subject_exam_marks >= 40 %}
-                                    <span class="alert alert-success">PASS</span>
-                                {% else %}
-                                    <span class="alert alert-danger">FAIL</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-                </div>
-            </div>
-                <!-- /.card -->         
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-  </section>
-  <!-- /.content -->
-{% endblock main_content %}
+{% for notification in result_notifications %}
+    <div class="alert alert-success d-flex align-items-start gap-2" role="status">
+        <i class="fa-solid fa-circle-check mt-1" aria-hidden="true"></i>
+        <div><strong>{{ notification.title }}</strong><br>{{ notification.message }}</div>
+    </div>
+{% endfor %}
+<div class="card card-outline card-primary">
+    <div class="card-header"><h2 class="card-title">Academic results</h2></div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Academic year</th><th>Term</th><th>Subject</th><th>Assignment / 100</th><th>Exam / 100</th><th>Average</th><th>Last updated</th></tr></thead>
+            <tbody>
+                {% for result in studentresult %}
+                    <tr>
+                        <td>{{ result.academic_year.name }}</td><td>{{ result.get_term_display }}</td><td>{{ result.subject.name }}</td>
+                        <td>{{ result.assignment_score }}</td><td>{{ result.exam_score }}</td>
+                        <td>{% widthratio result.total_score 2 1 %}%</td><td>{{ result.updated_at|date:"d M Y" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-center text-muted py-5">Results will appear here after your teachers publish them.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

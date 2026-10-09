@@ -2,170 +2,592 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Student Portal | AIC Laboret Girls Primary</title>
-    
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="{% static 'dist/img/school-logo.png' %}" type="image/x-icon">
-    
-    <!-- Google Font: Source Sans Pro -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
-    
-    <!-- Ionicons -->
-    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-    
-    <!-- Theme style -->
-    <link rel="stylesheet" href="{% static 'dist/css/adminlte.min.css' %}">
-    
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
-    
-    {% block custom_css %}{% endblock custom_css %}
-</head>
-<body class="hold-transition sidebar-mini layout-fixed accent-primary">
-<div class="wrapper">
+    <title>{% block title %}Student Portal | AIC Laboret Girls{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --portal-maroon: #70202b;
+            --portal-green: #176b4d;
+            --portal-gold: #d5a642;
+            --portal-ink: #252a28;
+            --portal-muted: #68716d;
+            --portal-paper: #f6f5f1;
+            --portal-sidebar: #202b27;
+        }
 
-    <!-- Preloader -->
-    <div class="preloader flex-column justify-content-center align-items-center bg-white">
-        <img class="animation__pulse" src="{% static 'dist/img/school-logo.png' %}" alt="Logo" height="80" width="80">
-        <div class="mt-3">
-            <p class="text-muted">Loading Student Portal...</p>
-            <div class="progress progress-sm active">
-                <div class="progress-bar bg-primary progress-bar-striped" style="width: 100%"></div>
-            </div>
-        </div>
-    </div>
+        body {
+            background: var(--portal-paper);
+            color: var(--portal-ink);
+            font-family: "DM Sans", sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
 
-    <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light border-bottom-0">
-        <!-- Left navbar links -->
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" data-widget="pushmenu" href="#" role="button">
-                    <i class="fas fa-bars"></i>
-                </a>
-            </li>
-            <li class="nav-item d-none d-sm-inline-block">
-                <a href="{% url 'student_home' %}" class="nav-link">
-                    <i class="fas fa-home mr-1"></i> Home
-                </a>
-            </li>
-        </ul>
+        .student-shell {
+            min-height: 100vh;
+        }
 
-        <!-- School Brand -->
-        <div class="navbar-brand mx-auto d-none d-md-block">
-            <h4 class="mb-0">
-                <img src="{% static 'dist/img/school-logo.png' %}" alt="Logo" style="height: 30px;" class="mr-2">
-                AIC Laboret Girls Primary
-            </h4>
-            <small class="d-block text-center text-muted">Student Portal</small>
-        </div>
+        .student-sidebar {
+            background: var(--portal-sidebar);
+            bottom: 0;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            left: 0;
+            overflow-y: auto;
+            padding: 1.35rem 1rem;
+            position: fixed;
+            top: 0;
+            width: 264px;
+            z-index: 1040;
+        }
 
-        <!-- Right navbar links -->
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item dropdown">
-                <a class="nav-link" data-toggle="dropdown" href="#">
-                    <i class="far fa-bell"></i>
-                    <span class="badge badge-warning navbar-badge">3</span>
-                </a>
-                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <span class="dropdown-header">3 Notifications</span>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-envelope mr-2"></i> New message
-                        <span class="float-right text-muted text-sm">3 mins</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-users mr-2"></i> Class announcement
-                        <span class="float-right text-muted text-sm">12 hours</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-file mr-2"></i> New assignment
-                        <span class="float-right text-muted text-sm">1 day</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item dropdown-footer">See All Notifications</a>
-                </div>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'logout' %}" role="button">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
-    <!-- /.navbar -->
+        .student-brand {
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, .12);
+            color: #fff;
+            display: flex;
+            gap: .8rem;
+            padding: .2rem .4rem 1.35rem;
+            text-decoration: none;
+        }
 
-    <!-- Main Sidebar Container -->
-    {% include 'student_template/sidebar.html' with user=user id=id %}
+        .student-brand-mark {
+            align-items: center;
+            background: var(--portal-gold);
+            border-radius: 12px;
+            color: var(--portal-maroon);
+            display: inline-flex;
+            flex: 0 0 42px;
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            height: 42px;
+            justify-content: center;
+        }
 
-    <!-- Content Wrapper -->
-    <div class="content-wrapper">
-        <!-- Content Header -->
-        <div class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1 class="m-0 text-dark">{% block page_title %}{% endblock page_title %}</h1>
-                    </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="{% url 'student_home' %}">Home</a></li>
-                            <li class="breadcrumb-item active">{% block breadcrumb_active %}{% endblock %}</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
+        .student-brand strong {
+            display: block;
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: 1rem;
+            line-height: 1.25;
+        }
 
-        <!-- Main Content -->
-        <section class="content">
-            <div class="container-fluid">
-                {% block main_content %}{% endblock main_content %}
-            </div>
-        </section>
-    </div>
+        .student-brand small {
+            color: #c6d0cb;
+            display: block;
+            font-size: .73rem;
+            margin-top: .2rem;
+        }
 
-    <!-- Main Footer -->
-    <footer class="main-footer">
-        
-        <strong>Copyright &copy; {% now "Y" %} <a href="#">AIC Laboret Girls Primary</a>.</strong> All rights reserved.
-    </footer>
-</div>
-<!-- ./wrapper -->
+        .student-user {
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, .12);
+            display: flex;
+            gap: .75rem;
+            min-width: 0;
+            padding: 1.15rem .35rem;
+        }
 
-<!-- REQUIRED SCRIPTS -->
-<!-- jQuery -->
-<script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
-<!-- Bootstrap 4 -->
-<script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<!-- AdminLTE App -->
-<script src="{% static 'dist/js/adminlte.min.js' %}"></script>
-<!-- Custom Scripts -->
-<script src="{% static 'js/custom.js' %}"></script>
+        .student-avatar {
+            align-items: center;
+            background: #315b49;
+            border: 1px solid rgba(255,255,255,.14);
+            border-radius: 50%;
+            color: #fff;
+            display: inline-flex;
+            flex: 0 0 40px;
+            font-weight: 700;
+            height: 40px;
+            justify-content: center;
+            overflow: hidden;
+            width: 40px;
+        }
 
-{% block custom_js %}{% endblock custom_js %}
+        .student-avatar img {
+            height: 100%;
+            object-fit: cover;
+            width: 100%;
+        }
 
-<script>
-    // Initialize tooltips
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
-    });
+        .student-user-copy {
+            min-width: 0;
+        }
 
-    // Active link highlighting
-    $(document).ready(function() {
-        $('.nav-link').each(function() {
-            if (this.href == window.location.href) {
-                $(this).addClass('active');
+        .student-user-copy strong,
+        .student-user-copy small {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .student-user-copy strong {
+            font-size: .88rem;
+        }
+
+        .student-user-copy small {
+            color: #c6d0cb;
+            font-size: .76rem;
+            margin-top: .15rem;
+        }
+
+        .student-nav {
+            flex: 1;
+            padding-top: 1rem;
+        }
+
+        .student-nav-label {
+            color: #9eada5;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .12em;
+            margin: 1rem .65rem .45rem;
+            text-transform: uppercase;
+        }
+
+        .student-nav-link {
+            align-items: center;
+            border-radius: 9px;
+            color: #d8e0dc;
+            display: flex;
+            font-size: .87rem;
+            gap: .75rem;
+            margin: .18rem 0;
+            padding: .7rem .75rem;
+            text-decoration: none;
+            transition: background-color .16s ease, color .16s ease;
+        }
+
+        .student-nav-link i {
+            color: #aebdb5;
+            font-size: .98rem;
+            text-align: center;
+            width: 1.25rem;
+        }
+
+        .student-nav-link:hover,
+        .student-nav-link.active {
+            background: #34483e;
+            color: #fff;
+        }
+
+        .student-nav-link.active {
+            box-shadow: inset 3px 0 var(--portal-gold);
+        }
+
+        .student-nav-link.active i,
+        .student-nav-link:hover i {
+            color: #f0cc72;
+        }
+
+        .student-signout {
+            border-top: 1px solid rgba(255, 255, 255, .12);
+            margin-top: 1rem;
+            padding-top: .9rem;
+        }
+
+        .student-main {
+            margin-left: 264px;
+            min-height: 100vh;
+        }
+
+        .student-topbar {
+            align-items: center;
+            background: #fff;
+            border-bottom: 1px solid #e9e6df;
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+            min-height: 76px;
+            padding: .8rem clamp(1rem, 3vw, 2.5rem);
+        }
+
+        .student-topbar-title {
+            color: var(--portal-maroon);
+            font: 700 1.25rem "Playfair Display", Georgia, serif;
+            margin: 0;
+        }
+
+        .student-topbar-subtitle {
+            color: var(--portal-muted);
+            font-size: .8rem;
+            margin: .2rem 0 0;
+        }
+
+        .student-topbar-account {
+            align-items: center;
+            color: var(--portal-green);
+            display: flex;
+            font-size: .85rem;
+            font-weight: 700;
+            gap: .55rem;
+        }
+
+        .student-topbar-account i {
+            font-size: 1.1rem;
+        }
+
+        .student-page {
+            margin: 0 auto;
+            max-width: 1440px;
+            padding: clamp(1.1rem, 3vw, 2.25rem);
+        }
+
+        .student-page-heading {
+            align-items: end;
+            border-bottom: 1px solid #e7e1d8;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem 1rem;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+        }
+
+        .student-page-heading h1 {
+            color: var(--portal-maroon);
+            font: 700 clamp(1.6rem, 3vw, 2.15rem) "Playfair Display", Georgia, serif;
+            margin: 0;
+        }
+
+        .student-page-heading p {
+            color: var(--portal-muted);
+            font-size: .9rem;
+            margin: .35rem 0 0;
+        }
+
+        .student-content > :last-child {
+            margin-bottom: 0;
+        }
+
+        .student-footer {
+            color: var(--portal-muted);
+            font-size: .78rem;
+            padding: 0 clamp(1.1rem, 3vw, 2.25rem) 1.25rem;
+        }
+
+        .student-portal .card {
+            background: #fff;
+            border: 1px solid #e8e5de;
+            border-radius: 13px;
+            box-shadow: 0 4px 16px rgba(44, 38, 30, .04);
+            overflow: hidden;
+        }
+
+        .student-portal .card-header {
+            align-items: center;
+            background: #fff;
+            border-bottom: 1px solid #eee9e1;
+            color: var(--portal-maroon);
+            display: flex;
+            justify-content: space-between;
+            padding: .95rem 1.1rem;
+        }
+
+        .student-portal .card-title {
+            font: 700 1.05rem "Playfair Display", Georgia, serif;
+            margin: 0;
+        }
+
+        .student-portal .card-outline {
+            border-top: 3px solid var(--portal-green);
+        }
+
+        .student-portal .card-outline.card-primary,
+        .student-portal .card-primary {
+            border-top-color: var(--portal-maroon);
+        }
+
+        .student-portal .card-outline.card-success {
+            border-top-color: var(--portal-green);
+        }
+
+        .student-portal .card-body {
+            padding: 1.15rem;
+        }
+
+        .student-portal .card-footer {
+            background: #fbfaf7;
+            border-top: 1px solid #eee9e1;
+            padding: .85rem 1.1rem;
+        }
+
+        .student-portal .table {
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+
+        .student-portal .table thead th {
+            background: #f8f7f3;
+            color: #4b5650;
+            font-size: .76rem;
+            letter-spacing: .03em;
+            white-space: nowrap;
+        }
+
+        .student-portal .table td,
+        .student-portal .table th {
+            padding: .75rem .8rem;
+        }
+
+        .student-portal .form-control,
+        .student-portal .form-select {
+            border-color: #dcded8;
+            border-radius: 8px;
+            min-height: 42px;
+        }
+
+        .student-portal .form-control:focus,
+        .student-portal .form-select:focus {
+            border-color: #78a68f;
+            box-shadow: 0 0 0 .2rem rgba(23, 107, 77, .13);
+        }
+
+        .student-portal .btn-primary {
+            background: var(--portal-maroon);
+            border-color: var(--portal-maroon);
+        }
+
+        .student-portal .btn-success {
+            background: var(--portal-green);
+            border-color: var(--portal-green);
+        }
+
+        .student-portal .badge-success { background: #198754; }
+        .student-portal .badge-warning { background: #ffc107; color: #252a28; }
+        .student-portal .badge-danger { background: #dc3545; }
+        .student-portal .badge-info { background: #0dcaf0; color: #252a28; }
+
+        .student-portal .info-box {
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid #ebe8e1;
+            border-radius: 10px;
+            display: flex;
+            margin-bottom: 1rem;
+            min-height: 84px;
+            overflow: hidden;
+        }
+
+        .student-portal .info-box-icon {
+            align-items: center;
+            align-self: stretch;
+            color: #fff;
+            display: flex;
+            flex: 0 0 58px;
+            font-size: 1.25rem;
+            justify-content: center;
+        }
+
+        .student-portal .info-box-content {
+            display: flex;
+            flex-direction: column;
+            gap: .2rem;
+            padding: .7rem .85rem;
+        }
+
+        .student-portal .info-box-text {
+            color: var(--portal-muted);
+            font-size: .78rem;
+        }
+
+        .student-portal .info-box-number {
+            color: var(--portal-maroon);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .student-portal .student-menu-toggle,
+        .student-sidebar-scrim {
+            display: none;
+        }
+
+        @media (max-width: 767.98px) {
+            .student-sidebar {
+                box-shadow: 8px 0 28px rgba(0, 0, 0, .2);
+                transform: translateX(-105%);
+                transition: transform .2s ease;
             }
-        });
-    });
-</script>
+
+            .student-shell.sidebar-open .student-sidebar {
+                transform: translateX(0);
+            }
+
+            .student-shell.sidebar-open .student-sidebar-scrim {
+                background: rgba(20, 27, 24, .48);
+                bottom: 0;
+                display: block;
+                left: 0;
+                position: fixed;
+                right: 0;
+                top: 0;
+                z-index: 1030;
+            }
+
+            .student-main {
+                margin-left: 0;
+            }
+
+            .student-topbar {
+                min-height: 66px;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            .student-menu-toggle {
+                align-items: center;
+                background: #f4f1e9;
+                border: 1px solid #e8e1d2;
+                border-radius: 8px;
+                color: var(--portal-maroon);
+                display: inline-flex;
+                height: 38px;
+                justify-content: center;
+                width: 40px;
+            }
+
+            .student-topbar-title {
+                font-size: 1.08rem;
+            }
+
+            .student-topbar-subtitle,
+            .student-topbar-account span {
+                display: none;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="student-shell" id="studentShell">
+        <aside class="student-sidebar" id="studentSidebar" aria-label="Student portal navigation">
+            <a class="student-brand" href="{% url 'student_home' %}">
+                <span class="student-brand-mark" aria-hidden="true">AIC</span>
+                <span><strong>AIC Laboret Girls</strong><small>Student portal</small></span>
+            </a>
+
+            <div class="student-user">
+                <span class="student-avatar">
+                    {% if request.user.profile_pic %}
+                        <img src="{{ request.user.profile_pic.url }}" alt="">
+                    {% else %}
+                        {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                    {% endif %}
+                </span>
+                <span class="student-user-copy">
+                    <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+                    <small>{% if request.user.student_profile.current_class %}{{ request.user.student_profile.current_class.name }}{% else %}Student{% endif %}</small>
+                </span>
+            </div>
+
+            <nav class="student-nav">
+                <div class="student-nav-label">My learning</div>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'student_home' %} active{% endif %}" href="{% url 'student_home' %}">
+                    <i class="fa-solid fa-house" aria-hidden="true"></i><span>Dashboard</span>
+                </a>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'student_view_result' %} active{% endif %}" href="{% url 'student_view_result' %}">
+                    <i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span>Results &amp; progress</span>
+                </a>
+
+                <div class="student-nav-label">School fees</div>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'student_fee_statement' %} active{% endif %}" href="{% url 'student_fee_statement' %}">
+                    <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i><span>Fee statement</span>
+                </a>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'student_fee_payments' %} active{% endif %}" href="{% url 'student_fee_payments' %}">
+                    <i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Payment history</span>
+                </a>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'make_fee_payment' %} active{% endif %}" href="{% url 'make_fee_payment' %}">
+                    <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i><span>Pay school fees</span>
+                </a>
+
+                <div class="student-nav-label">Stay connected</div>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'student_feedback' %} active{% endif %}" href="{% url 'student_feedback' %}">
+                    <i class="fa-regular fa-comments" aria-hidden="true"></i><span>Contact class teacher</span>
+                </a>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'student_profile' %} active{% endif %}" href="{% url 'student_profile' %}">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i><span>My profile</span>
+                </a>
+            </nav>
+
+            <div class="student-signout">
+                <a class="student-nav-link" href="{% url 'logout' %}">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Sign out</span>
+                </a>
+            </div>
+        </aside>
+        <button class="student-sidebar-scrim" type="button" id="studentSidebarScrim" aria-label="Close navigation"></button>
+
+        <div class="student-main">
+            <header class="student-topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="student-menu-toggle" type="button" id="studentMenuToggle" aria-label="Open navigation" aria-controls="studentSidebar" aria-expanded="false">
+                        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                    </button>
+                    <div>
+                        <p class="student-topbar-title mb-0">Student Portal</p>
+                        <p class="student-topbar-subtitle">Your school information in one place</p>
+                    </div>
+                </div>
+                <div class="student-topbar-account">
+                    <i class="fa-regular fa-circle-user" aria-hidden="true"></i>
+                    <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+                </div>
+            </header>
+
+            <main class="student-page student-portal">
+                <header class="student-page-heading">
+                    <div>
+                        <h1>{% block page_title %}Student portal{% endblock %}</h1>
+                        <p>Welcome, {{ request.user.get_full_name|default:request.user.username }}</p>
+                    </div>
+                </header>
+
+                {% if messages %}
+                    <div class="mb-4" aria-live="polite">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="student-content">
+                    {% block main_content %}{% endblock %}
+                </div>
+            </main>
+            <footer class="student-footer">AIC Laboret Girls Boarding Primary School · Student portal</footer>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function () {
+            var shell = document.getElementById('studentShell');
+            var toggle = document.getElementById('studentMenuToggle');
+            var scrim = document.getElementById('studentSidebarScrim');
+            if (!shell || !toggle || !scrim) return;
+
+            function closeSidebar() {
+                shell.classList.remove('sidebar-open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+
+            toggle.addEventListener('click', function () {
+                var isOpen = shell.classList.toggle('sidebar-open');
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+            scrim.addEventListener('click', closeSidebar);
+            shell.querySelectorAll('.student-nav-link').forEach(function (link) {
+                link.addEventListener('click', closeSidebar);
+            });
+        }());
+    </script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

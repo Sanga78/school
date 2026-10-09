@@ -70,6 +70,14 @@ SECURE_HSTS_PRELOAD = os.environ.get(
     'false',
 ).lower() in {'1', 'true', 'yes'}
 
+MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'sandbox')
+MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY', '')
+MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', '')
+MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE', '')
+MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', '')
+MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL', '')
+SCHOOL_MPESA_PAYBILL = os.environ.get('SCHOOL_MPESA_PAYBILL', '')
+
 
 # Application definition
 

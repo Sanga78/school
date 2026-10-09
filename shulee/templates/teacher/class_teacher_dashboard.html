@@ -5,7 +5,7 @@
     <div>
         <p class="text-uppercase small fw-bold text-primary mb-1">Class teacher workspace</p>
         <h1 class="h2 mb-1">Classes under your care</h1>
-        <p class="text-muted mb-0">{% if current_year %}View class membership and published results for {{ current_year.name }}.{% else %}There is no academic year marked as current yet.{% endif %}</p>
+        <p class="text-muted mb-0">{% if current_year %}Review completeness and send all class results to the headteacher for approval for {{ current_year.name }}.{% else %}There is no academic year marked as current yet.{% endif %}</p>
     </div>
     <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-primary"><i class="fas fa-arrow-left me-2"></i>Teaching dashboard</a>
 </div>
@@ -17,17 +17,31 @@
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead><tr><th scope="col">Class</th><th scope="col">Academic year</th><th scope="col">Active students</th><th scope="col" class="text-end">Results</th></tr></thead>
+            <thead><tr><th scope="col">Class</th><th scope="col">Academic year</th><th scope="col">Active students</th><th scope="col">Term submission</th><th scope="col" class="text-end">Results</th></tr></thead>
             <tbody>
                 {% for class in classes %}
                     <tr>
                         <td><strong>{{ class.name }}</strong></td>
                         <td>{{ class.academic_year.name }}</td>
                         <td>{{ class.active_student_count }}</td>
+                        <td>
+                            <form method="post" action="{% url 'submit_class_results' class.id %}" class="d-flex flex-wrap gap-2">
+                                {% csrf_token %}
+                                <select class="form-select form-select-sm" name="term" aria-label="Term to submit for {{ class.name }}" required>
+                                    {% for term_value, term_label in terms %}<option value="{{ term_value }}">{{ term_label }}</option>{% endfor %}
+                                </select>
+                                <button class="btn btn-sm btn-outline-success text-nowrap" type="submit"><i class="fas fa-clipboard-check me-1"></i>Verify and send</button>
+                            </form>
+                            {% for publication in result_publications %}
+                                {% if publication.class_obj_id == class.id %}
+                                    <span class="badge mt-1 {% if publication.status == 'APPROVED' %}text-bg-success{% elif publication.status == 'SUBMITTED' %}text-bg-warning{% else %}text-bg-danger{% endif %}">{{ publication.get_term_display }} · {{ publication.get_status_display }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
                         <td class="text-end"><a href="{% url 'view_class_results' class.id %}" class="btn btn-sm btn-primary"><i class="fas fa-chart-line me-1"></i>View results</a></td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="4" class="text-center text-muted py-5">{% if current_year %}No classes are assigned to you as class teacher for this year.{% else %}The school has not selected a current academic year yet.{% endif %}</td></tr>
+                    <tr><td colspan="5" class="text-center text-muted py-5">{% if current_year %}No classes are assigned to you as class teacher for this year.{% else %}The school has not selected a current academic year yet.{% endif %}</td></tr>
                 {% endfor %}
             </tbody>
         </table>

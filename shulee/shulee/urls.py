@@ -23,6 +23,12 @@ from django.conf import settings
 from index.EditResultViewClass import EditResultViewClass
 
 urlpatterns = [
+    path('admin/cash-payments/', HodViews.review_cash_payments, name='review_cash_payments'),
+    path('admin/cash-payments/<int:approval_id>/decision/', HodViews.decide_cash_payment, name='decide_cash_payment'),
+    path('admin/applications/', HodViews.review_student_applications, name='review_student_applications'),
+    path('admin/applications/<int:application_id>/review/', HodViews.review_student_application, name='review_student_application'),
+    path('admin/results/', HodViews.review_results, name='review_results'),
+    path('admin/results/<int:publication_id>/review/', HodViews.review_result_publication, name='review_result_publication'),
     path('admin/', admin.site.urls),
     path('signup_admin',views.signup_admin,name="signup_admin"),
     path('admin_signup',views.admin_signup,name="admin_signup"),
@@ -54,16 +60,14 @@ urlpatterns = [
     path('login',views.Login,name="do_login"),
     path('get_user_details',views.GetUserDetails),
     path('logout',views.Logout,name="logout"),
+    path('student/application-status/',StudentViews.student_application_status,name='student_application_status'),
     path('admin_home',HodViews.admin_home,name="admin_home"),
     path('add_staff',HodViews.add_staff,name="add_staff"),
     path('add_staff_save',HodViews.add_staff_save,name="add_staff_save"),
-    path('add_subject',HodViews.add_subject,name="add_subject"),
     path('manage_staff',HodViews.manage_staff,name="manage_staff"),
     # path('manage_student',HodViews.manage_students,name="manage_student"),
-    path('manage_subject',HodViews.manage_subject,name="manage_subject"),
     path('edit_staff/<str:staff_id>',HodViews.edit_staff,name="edit_staff"),
     path('edit_staff_save',HodViews.edit_staff_save,name="edit_staff_save"),
-    path('edit_subject/<str:subject_id>',HodViews.edit_subject,name="edit_subject"),
     path('manage_session',HodViews.manage_session,name="manage_session"),
     path('add_session_save',HodViews.add_session_save,name="add_session_save"),
     path('check_email_exist',HodViews.check_email_exist,name="check_email_exist"),
@@ -96,9 +100,7 @@ urlpatterns = [
     path('attendance/', HodViews.manage_attendance, name='manage_attendance'),
     path('attendance/<int:attendance_id>/', HodViews.view_attendance, name='view_attendance'),
     path('classes/', HodViews.manage_classes, name='manage_classes'),
-    path('add_class/', HodViews.add_class, name='add_class'),
     path('edit_class/<str:class_id>',HodViews.edit_class,name='edit_class'),
-    path('delete_class/<str:class_id>',HodViews.delete_class,name='delete_class'),
     # Leaves
     path('leaves/', HodViews.manage_leaves, name='manage_leaves'),
     path('leaves/<int:leave_id>/respond/', HodViews.respond_leave, name='respond_leave'),
@@ -139,7 +141,6 @@ urlpatterns = [
     path('logs/export/', HodViews.export_logs, name='export_logs'),
     
     # Subject Management
-    path('subjects/add/', HodViews.add_subject, name='add_subject'),
 
     path('notifications/send/',HodViews.send_notification, name='send_notification'),
     path('notifications/history/', HodViews.notification_history, name='notification_history'),
@@ -177,6 +178,7 @@ urlpatterns = [
     path('fetch_student_result',StaffViews.fetch_student_result,name="fetch_student_result"),
     path('teacher/dashboard/', StaffViews.teacher_dashboard, name='teacher_dashboard'),
     path('teacher/upload-results/<int:class_id>/<int:subject_id>/', StaffViews.upload_results, name='upload_results'),
+    path('teacher/classes/<int:class_id>/results/submit/', StaffViews.submit_class_results, name='submit_class_results'),
     
     # Class Teacher URLs
     path('class-teacher/dashboard/', StaffViews.class_teacher_dashboard, name='class_teacher_dashboard'),
@@ -184,19 +186,15 @@ urlpatterns = [
 
    #student urls
     path('student_home',StudentViews.student_home,name="student_home"),
-    path('student_view_attendance',StudentViews.student_view_attendance,name="student_view_attendance"),
-    path('student_view_attendance_post',StudentViews.student_view_attendance_post,name="student_view_attendance_post"),
     path('student_feedback',StudentViews.student_feedback,name="student_feedback"),
     path('student_feedback_save',StudentViews.student_feedback_save,name="student_feedback_save"),
-    path('student_apply_leave',StudentViews.student_apply_leave,name="student_apply_leave"),
-    path('student_apply_leave_save',StudentViews.student_apply_leave_save,name="student_apply_leave_save"),
     path('student_profile',StudentViews.student_profile,name="student_profile"),
     path('student_profile_save',StudentViews.student_profile_save,name="student_profile_save"),
-    path('student_fcmtoken_save',StudentViews.student_fcmtoken_save,name="student_fcmtoken_save"),
     path('student_view_result',StudentViews.student_view_result,name="student_view_result"),
     path('fee-statement/', StudentViews.student_fee_statement, name='student_fee_statement'),
     path('fee-payments/', StudentViews.student_fee_payments, name='student_fee_payments'),
-    path('fee-balance/', StudentViews.student_fee_balance, name='student_fee_balance'),
     path('make-payment/', StudentViews.make_fee_payment, name='make_fee_payment'),
-
+    path('payments/mpesa/callback/', StudentViews.mpesa_stk_callback, name='mpesa_stk_callback'),
+    path('teacher/student-messages/', StaffViews.student_contact_inbox, name='student_contact_inbox'),
+    path('teacher/student-messages/<int:feedback_id>/reply/', StaffViews.student_contact_reply, name='student_contact_reply'),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

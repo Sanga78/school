@@ -75,21 +75,21 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
-                    <tr><th>Student</th><th>Username</th><th>Class / year</th><th>Account</th><th>Total paid</th><th>Last payment</th><th></th></tr>
+                    <tr><th>Student ID</th><th>Student</th><th>Class / year</th><th>Total paid</th><th>Outstanding</th><th>Last payment</th><th></th></tr>
                 </thead>
                 <tbody>
                     {% for student in students %}
                     <tr>
+                        <td>{{ student.id }}</td>
                         <td>{{ student.user.get_full_name|default:student.user.username }}</td>
-                        <td>{{ student.user.username }}</td>
                         <td>{% if student.current_class %}{{ student.current_class.name }}<small class="d-block text-muted">{{ student.current_class.academic_year.name }}</small>{% else %}Not assigned{% endif %}</td>
-                        <td>{% if student.active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
-                        <td>Ksh {{ student.total_paid|default:"0.00" }}</td>
+                        <td>Ksh {{ student.total_paid|floatformat:2 }}</td>
+                        <td>Ksh {{ student.fee_balance|floatformat:2 }}</td>
                         <td>{{ student.last_payment_date|date:"d M Y"|default:"None" }}</td>
                         <td><a href="{% url 'record_payment' student.id %}" class="btn btn-sm btn-success"><i class="fas fa-money-bill-wave me-1"></i>Record payment</a></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7" class="text-center text-muted py-4">No students match the selected filters.</td></tr>
+                    <tr><td colspan="10" class="text-center text-muted py-4">No students match the selected filters.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

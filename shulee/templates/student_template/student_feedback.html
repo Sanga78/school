@@ -1,75 +1,48 @@
 {% extends 'student_template/base.html' %}
-{% block page_title %}
-Feedback
-{% endblock page_title %}
-{% load static %}
+{% block page_title %}Contact my class teacher{% endblock %}
+{% block breadcrumb_active %}Contact teacher{% endblock %}
 {% block main_content %}
-
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <!-- general form elements -->
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Leave a Feedback Message</h3>
-                    </div>
-                  <!-- /.card-header -->
+<div class="row">
+    <div class="col-lg-5">
+        <section class="card card-outline card-success">
+            <div class="card-header"><h2 class="card-title">Send your teacher a message</h2></div>
+            {% if class_teacher %}
+                <div class="card-body">
+                    <p class="mb-1"><strong>{{ class_teacher.user.get_full_name|default:class_teacher.user.username }}</strong></p>
+                    <p class="text-muted">{% if student.current_class %}Class teacher · {{ student.current_class.name }}{% endif %}</p>
                     <form action="{% url 'student_feedback_save' %}" method="post">
                         {% csrf_token %}
-                        <!-- form start -->
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label>Feedback Message</label>
-                                <textarea class="form-control" name="feedback_msg" id="" rows="6"></textarea>
-                            </div>                   
-                            <div class="form-group">
-                                {% if messages %}
-                                {% for message in messages %}
-                                {% if message.tags == 'error' %}
-                                <div class="alert alert-danger" style="margin-top: 10px;">{{ message }}</div>
-                                {% endif %}
-                                {% if message.tags == 'success' %}
-                                <div class="alert alert-success" style="margin-top: 10px;">{{ message }}</div>
-                                {% endif %}
-                                {% endfor %}
-                                {% endif %}
-                            </div>
+                        <div class="form-group">
+                            <label for="feedback_msg">Message</label>
+                            <textarea class="form-control" id="feedback_msg" name="feedback_msg" rows="6" maxlength="5000" required></textarea>
                         </div>
-                        <!-- /.card-body -->
-        
-                        <div class="card-footer">
-                        <button type="submit" class="btn btn-primary btn-block" id="">Leave a Feedback Message</button>
-                        </div>
-                
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane mr-1"></i>Send privately</button>
                     </form>
                 </div>
-                <div class="card card-primary">
-                    <div class="card-header">
-                        <h3 class="card-title">Feedback History</h3>
-                    </div>
-                    <div class="table">
-                    <table class="table">
-                        <tr>
-                            <th>ID</th>
-                            <th>Feedback Message</th>
-                            <th>Feedback Reply</th>
-                        </tr>
-                        {% for row in feedback_data %}
-                        <tr>
-                            <td>{{ row.id }}</td>
-                            <td>{{ row.feedback }}</td>
-                            <td>{{ row.feedback_reply }}</td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-                </div>
+            {% else %}
+                <div class="card-body"><p class="text-muted mb-0">A class teacher has not been assigned. Please ask the school office for help.</p></div>
+            {% endif %}
+        </section>
+    </div>
+    <div class="col-lg-7">
+        <section class="card card-outline card-primary">
+            <div class="card-header"><h2 class="card-title">My conversations</h2></div>
+            <div class="card-body">
+                {% for item in feedback_data %}
+                    <article class="border-bottom pb-3 mb-3">
+                        <p class="small text-muted mb-1">{{ item.created_at|date:"d M Y, H:i" }}{% if item.recipient_staff %} · To {{ item.recipient_staff.user.get_full_name|default:item.recipient_staff.user.username }}{% endif %}</p>
+                        <p class="mb-2">{{ item.message|linebreaksbr }}</p>
+                        {% if item.reply %}
+                            <div class="alert alert-light border mb-0"><strong>Teacher reply</strong><br>{{ item.reply|linebreaksbr }}</div>
+                        {% else %}
+                            <span class="badge badge-warning">Awaiting a reply</span>
+                        {% endif %}
+                    </article>
+                {% empty %}
+                    <p class="text-muted mb-0">Messages you send to your class teacher will appear here.</p>
+                {% endfor %}
             </div>
-                <!-- /.card -->         
-            </div>
-        </div>
-    </div><!-- /.container-fluid -->
-  </section>
-  <!-- /.content -->
-{% endblock main_content %}
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,8 @@
 import json
+from functools import wraps
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse,HttpResponseRedirect, JsonResponse
 from django.contrib import messages
@@ -10,40 +12,58 @@ from django.views.decorators.http import require_POST
 from django.db.models import Q, Count, Sum
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
+from django.utils import timezone
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
-from django.db import transaction # For atomic operations
+from django.db import IntegrityError, transaction # For atomic operations
 import csv
 import os
 from xhtml2pdf import pisa
 from datetime import datetime
-from reportlab.lib.units import inch
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import Paragraph, Spacer
 
 from .models import (
-    Bursar, StudentClass,CustomUser, Expense, FeePayment, Notification, Subject, Staff, Student,
+    Bursar, CashPaymentApproval, StudentApplication, StudentClass,CustomUser, Expense, FeePayment, FeeTransaction, Notification, Subject, Staff, Student, STANDARD_CLASS_NAMES,
     Attendance, AttendanceReport, 
     LeaveRequest, Feedback,SessionYearModel,
-    AcademicYear,StaffSubjectAssignment, SystemLog,
+    AcademicYear,StaffSubjectAssignment, SystemLog, ResultPublication,
+    SubjectResult, SubjectResultSubmission,
 )
 from .forms import (
     StudentForm,
     EditBursarForm,
     SystemSettingsForm,
     LeaveResponseForm, 
-    AddSubjectForm,
     AddAdministratorForm, AddBursarForm,
-    ClassForm, NotificationForm, StaffForm, 
-    StaffSubjectAssignmentForm, ClassTeacherAssignmentForm
+    NotificationForm, StaffForm,
+    StaffSubjectAssignmentForm, ClassTeacherAssignmentForm, ClassForm,
+    StudentApplicationReviewForm,
 )
 
 User = get_user_model()
 # Helper function to check if user is admin
 def is_admin(user):
     return user.is_authenticated and user.user_type == 1
+
+
+def is_bursar(user):
+    return (
+        user.is_authenticated
+        and user.is_active
+        and user.user_type == 4
+        and hasattr(user, 'bursar_profile')
+    )
+
+
+def bursar_required(view_func):
+    @login_required
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        if not is_bursar(request.user):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
 
 @login_required
 @user_passes_test(is_admin)
@@ -75,7 +95,7 @@ def assign_subjects(request, teacher_id):
     teacher = get_object_or_404(Staff, id=teacher_id)
     
     if request.method == 'POST':
-        form = StaffSubjectAssignmentForm(request.POST)
+        form = StaffSubjectAssignmentForm(request.POST, staff=teacher)
         if form.is_valid():
             assignment = form.save(commit=False)
             assignment.staff = teacher
@@ -84,7 +104,7 @@ def assign_subjects(request, teacher_id):
             messages.success(request, 'Subject assignment added successfully!')
             return redirect('teacher_subjects', teacher_id=teacher.id)
     else:
-        form = StaffSubjectAssignmentForm()
+        form = StaffSubjectAssignmentForm(staff=teacher)
     
     current_assignments = teacher.staffsubjectassignment_set.all()
     
@@ -184,12 +204,6 @@ def manage_staff(request):
 
 @login_required
 @user_passes_test(is_admin)
-def manage_subject(request):
-    subjects = Subject.objects.order_by('name')
-    return render(request, 'admin/manage_subjects.html', {'subjects': subjects})
-
-@login_required
-@user_passes_test(is_admin)
 def edit_staff(request,staff_id):
     staff=Staff.objects.get(admin=staff_id)
     return render(request,"hod_templates/edit_staff.html",{"staff":staff,"id":staff_id})
@@ -222,20 +236,6 @@ def edit_staff_save(request):
         except:
             messages.error(request,"Failed to Edit Staff")
             return HttpResponseRedirect(reverse("edit_staff",kwargs={"staff_id":staff_id}))
-
-@login_required
-@user_passes_test(is_admin)
-def edit_subject(request, subject_id):
-    subject = get_object_or_404(Subject, id=subject_id)
-    if request.method == 'POST':
-        form = AddSubjectForm(request.POST, instance=subject)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Subject updated successfully.')
-            return redirect('manage_subject')
-    else:
-        form = AddSubjectForm(instance=subject)
-    return render(request, 'admin/add_subject.html', {'form': form})
 
 @login_required
 @user_passes_test(is_admin)
@@ -450,18 +450,6 @@ def manage_classes(request):
 
 @login_required
 @user_passes_test(is_admin)
-def add_class(request):
-    if request.method == 'POST':
-        form = ClassForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('manage_classes')
-    else:
-        form = ClassForm()
-    return render(request, 'admin/add_edit_class.html', {'form': form})
-
-@login_required
-@user_passes_test(is_admin)
 def edit_class(request, class_id):
     class_obj = get_object_or_404(StudentClass, id=class_id)
     if request.method == 'POST':
@@ -475,30 +463,20 @@ def edit_class(request, class_id):
 
 @login_required
 @user_passes_test(is_admin)
-@require_POST
-def delete_class(request, class_id):
-    class_obj = get_object_or_404(StudentClass, id=class_id)
-    class_obj.delete()
-    return redirect('manage_classes')
-
-
-@login_required
-@user_passes_test(is_admin)
 def admin_dashboard(request):
+    current_year = AcademicYear.objects.filter(is_current=True).first()
     stats = {
-        'students_count': Student.objects.count(),
-        'teachers_count': Staff.objects.count(),
-        'classes_count': StudentClass.objects.count(),
-        'pending_requests': LeaveRequest.objects.filter(status=0).count()
+        'students_count': Student.objects.filter(active=True).count(),
+        'pending_applications': StudentApplication.objects.filter(status='PENDING').count(),
+        'pending_cash_payments': CashPaymentApproval.objects.filter(status='PENDING').count(),
+        'interviews_scheduled': StudentApplication.objects.filter(status='INTERVIEW').count(),
+        'classes_count': StudentClass.objects.filter(academic_year=current_year).count()
+            if current_year else 0,
     }
-    
-    recent_activities = SystemLog.objects.select_related('user').order_by(
-        '-timestamp',
-    )[:6]
-    
+
     context = {
         'stats': stats,
-        'recent_activities': recent_activities
+        'current_year': current_year,
     }
     return render(request, 'admin/admin_dashboard.html', context)
 
@@ -717,8 +695,8 @@ def add_student(request):
                     form.save()
                 messages.success(request, "Student added successfully!")
                 return redirect('manage_students')
-            except Exception as e:
-                messages.error(request, f"Error adding student: {e}")
+            except IntegrityError:
+                messages.error(request, "Could not add the student because an account with those details already exists.")
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -795,88 +773,283 @@ def deactivate_student(request, student_id):
     messages.success(request, 'Student deactivated successfully!')
     return redirect('manage_students')
 
-@login_required
-@user_passes_test(is_admin)
+@bursar_required
 def manage_finance(request):
-    # Summary statistics
-    total_fees = FeePayment.objects.aggregate(total=Sum('amount'))['total'] or 0
-    total_expenses = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
-    balance = total_fees - total_expenses
-    
-    # Recent transactions
-    recent_payments = FeePayment.objects.select_related(
-        'student', 'student__user', 'fee_structure'
-    ).order_by('-payment_date')[:5]
-    
-    recent_expenses = Expense.objects.select_related(
-        'recorded_by_bursar__user', 'approved_by'
-    ).order_by('-date')[:5]
-    
-    context = {
-        'total_fees': total_fees,
-        'total_expenses': total_expenses,
-        'balance': balance,
-        'recent_payments': recent_payments,
-        'recent_expenses': recent_expenses
-    }
-    return render(request, 'admin/manage_finance.html', context)
+    return redirect('bursar_dashboard')
+
 
 @login_required
 @user_passes_test(is_admin)
+def review_student_applications(request):
+    applications = StudentApplication.objects.select_related(
+        'student__user',
+        'student__current_class',
+        'student__academic_year',
+    ).order_by('status', '-submitted_at')
+    return render(request, 'admin/student_applications.html', {
+        'applications': applications,
+        'review_form': StudentApplicationReviewForm(),
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def review_student_application(request, application_id):
+    form = StudentApplicationReviewForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, 'Choose a valid application action and provide an interview time when scheduling.')
+        return redirect('review_student_applications')
+
+    with transaction.atomic():
+        application = get_object_or_404(
+            StudentApplication.objects.select_for_update().select_related('student'),
+            pk=application_id,
+        )
+        if application.status in {'APPROVED', 'REJECTED'}:
+            messages.error(request, 'This application has already received a final decision.')
+            return redirect('review_student_applications')
+
+        action = form.cleaned_data['action']
+        application.review_notes = form.cleaned_data['review_notes']
+        if action == 'schedule':
+            application.status = 'INTERVIEW'
+            application.interview_at = form.cleaned_data['interview_at']
+            success_message = 'Interview scheduled for this applicant.'
+        elif action == 'approve':
+            application.status = 'APPROVED'
+            application.student.active = True
+            application.student.save(update_fields=['active'])
+            success_message = 'Application approved. The student portal is now available to the applicant.'
+        else:
+            application.status = 'REJECTED'
+            application.student.active = False
+            application.student.save(update_fields=['active'])
+            success_message = 'Application declined.'
+
+        application.save(update_fields=[
+            'status',
+            'interview_at',
+            'review_notes',
+            'updated_at',
+        ])
+
+    messages.success(request, success_message)
+    return redirect('review_student_applications')
+
+
+@login_required
+@user_passes_test(is_admin)
+def review_cash_payments(request):
+    pending_approvals = CashPaymentApproval.objects.filter(
+        status='PENDING',
+    ).select_related('student__user', 'student__current_class', 'recorded_by__user')
+    reviewed_approvals = CashPaymentApproval.objects.exclude(
+        status='PENDING',
+    ).select_related('student__user', 'reviewed_by', 'recorded_by__user')
+    return render(request, 'admin/review_cash_payments.html', {
+        'pending_approvals': pending_approvals,
+        'reviewed_approvals': reviewed_approvals,
+        'pending_cash_payments_count': pending_approvals.count(),
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def review_results(request):
+    publications = ResultPublication.objects.filter(
+        status='SUBMITTED',
+    ).select_related(
+        'class_obj',
+        'academic_year',
+        'submitted_by__user',
+    ).prefetch_related('class_obj__subject_assignments__subject')
+    result_notifications = Notification.objects.filter(
+        title__icontains='results',
+        recipients=request.user,
+    ).select_related('sender').order_by('-created_at')[:20]
+    return render(request, 'admin/review_results.html', {
+        'publications': publications,
+        'result_notifications': result_notifications,
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def review_result_publication(request, publication_id):
+    decision = request.POST.get('decision')
+    if decision not in {'approve', 'reject'}:
+        messages.error(request, 'Choose whether to publish or return these results.')
+        return redirect('review_results')
+
+    with transaction.atomic():
+        publication = get_object_or_404(
+            ResultPublication.objects.select_for_update().select_related(
+                'class_obj',
+                'academic_year',
+                'submitted_by__user',
+            ),
+            pk=publication_id,
+            status='SUBMITTED',
+        )
+        students = list(Student.objects.filter(
+            current_class=publication.class_obj,
+            academic_year=publication.academic_year,
+            active=True,
+        ).select_related('user'))
+        required_subject_ids = set(StaffSubjectAssignment.objects.filter(
+            academic_year=publication.academic_year,
+            classes=publication.class_obj,
+        ).values_list('subject_id', flat=True).distinct())
+        submitted_subject_ids = set(SubjectResultSubmission.objects.filter(
+            class_obj=publication.class_obj,
+            academic_year=publication.academic_year,
+            term=publication.term,
+        ).values_list('subject_id', flat=True))
+        complete_subject_ids = set(
+            SubjectResult.objects.filter(
+                student__in=students,
+                academic_year=publication.academic_year,
+                term=publication.term,
+                subject_id__in=required_subject_ids,
+            ).values('subject_id').annotate(
+                student_count=Count('student_id', distinct=True),
+            ).filter(student_count=len(students)).values_list('subject_id', flat=True)
+        )
+        complete = bool(
+            students
+            and required_subject_ids
+            and required_subject_ids == submitted_subject_ids
+            and required_subject_ids == complete_subject_ids
+        )
+        if decision == 'approve' and not complete:
+            messages.error(
+                request,
+                'These results cannot be published: at least one assigned subject or active student result is missing.',
+            )
+            return redirect('review_results')
+
+        publication.reviewed_by = request.user
+        publication.review_note = request.POST.get('review_note', '').strip()[:255]
+        publication.reviewed_at = timezone.now()
+        publication.status = 'APPROVED' if decision == 'approve' else 'REJECTED'
+        publication.save(update_fields=[
+            'status',
+            'reviewed_by',
+            'review_note',
+            'reviewed_at',
+            'updated_at',
+        ])
+
+        if decision == 'approve':
+            if students:
+                notification = Notification.objects.create(
+                    title='Results are available online',
+                    message=(
+                        f'Your {publication.get_term_display()} results for '
+                        f'{publication.academic_year.name} are now available in the student portal.'
+                    ),
+                    sender=request.user,
+                    priority='HIGH',
+                )
+                notification.recipients.add(*(student.user for student in students))
+            messages.success(
+                request,
+                f'{publication.class_obj.name} results approved and published to students.',
+            )
+        else:
+            SubjectResultSubmission.objects.filter(
+                class_obj=publication.class_obj,
+                academic_year=publication.academic_year,
+                term=publication.term,
+            ).delete()
+            teacher_notification = Notification.objects.create(
+                title='Class results returned for correction',
+                message=(
+                    f'{publication.class_obj.name} {publication.get_term_display()} results were returned '
+                    f'by the headteacher. {publication.review_note}'.strip()
+                ),
+                sender=request.user,
+                priority='HIGH',
+            )
+            teacher_notification.recipients.add(publication.submitted_by.user)
+            messages.success(request, 'Results were returned to the class teacher for correction.')
+    return redirect('review_results')
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def decide_cash_payment(request, approval_id):
+    decision = request.POST.get('decision')
+    if decision not in {'approve', 'reject'}:
+        messages.error(request, 'Choose approve or reject.')
+        return redirect('review_cash_payments')
+
+    with transaction.atomic():
+        approval = get_object_or_404(
+            CashPaymentApproval.objects.select_for_update().select_related('student'),
+            pk=approval_id,
+            status='PENDING',
+        )
+        student = Student.objects.select_for_update().get(pk=approval.student_id)
+        review_note = request.POST.get('review_note', '').strip()[:255]
+        if decision == 'approve':
+            if approval.amount > student.get_available_fee_balance(
+                exclude_cash_approval_id=approval.pk,
+            ):
+                messages.error(request, 'This cash payment now exceeds the student balance. Reconcile the account before approving it.')
+                return redirect('review_cash_payments')
+            if approval.transaction_code and FeePayment.objects.filter(
+                transaction_code=approval.transaction_code,
+            ).exists():
+                messages.error(request, 'That payment reference has already been recorded.')
+                return redirect('review_cash_payments')
+            resulting_balance = student.get_fee_balance() - approval.amount
+            payment = FeePayment.objects.create(
+                student=student,
+                fee_structure=approval.fee_structure,
+                amount=approval.amount,
+                payment_date=approval.payment_date,
+                payment_method='CASH',
+                transaction_code=approval.transaction_code,
+                recorded_by_bursar=approval.recorded_by,
+                notes=approval.notes,
+            )
+            FeeTransaction.objects.create(
+                student=student,
+                transaction_type='PAYMENT',
+                fee_payment=payment,
+                amount=approval.amount,
+                balance=resulting_balance,
+                description=f'Cash payment approved by {request.user.get_full_name() or request.user.username}',
+                date=approval.payment_date,
+            )
+            approval.fee_payment = payment
+            approval.status = 'APPROVED'
+            messages.success(request, 'Cash payment approved and added to the student ledger.')
+        else:
+            approval.status = 'REJECTED'
+            messages.success(request, 'Cash payment request rejected.')
+        approval.reviewed_by = request.user
+        approval.review_note = review_note
+        approval.save(update_fields=[
+            'fee_payment',
+            'status',
+            'reviewed_by',
+            'review_note',
+            'updated_at',
+        ])
+    return redirect('review_cash_payments')
+
+@bursar_required
 def fee_payments(request):
-    payments = FeePayment.objects.select_related(
-        'student', 'student__user', 'fee_structure', 'received_by',
-        'recorded_by_bursar__user',
-    ).order_by('-payment_date')
-    
-    student_filter = request.GET.get('student')
-    if student_filter:
-        payments = payments.filter(student_id=student_filter)
-    
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
-    if date_from:
-        payments = payments.filter(payment_date__gte=date_from)
-    if date_to:
-        payments = payments.filter(payment_date__lte=date_to)
-    
-    students = Student.objects.all()
-    
-    context = {
-        'payments': payments,
-        'students': students,
-        'student_filter': student_filter,
-        'date_from': date_from,
-        'date_to': date_to
-    }
-    return render(request, 'admin/fee_payments.html', context)
+    return redirect('payment_reports')
 
-@login_required
-@user_passes_test(is_admin)
+@bursar_required
 def expenses(request):
-    expenses = Expense.objects.select_related(
-        'recorded_by_bursar__user', 'approved_by'
-    ).order_by('-date')
-    
-    category_filter = request.GET.get('category')
-    if category_filter:
-        expenses = expenses.filter(category=category_filter)
-    
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
-    if date_from:
-        expenses = expenses.filter(date__gte=date_from)
-    if date_to:
-        expenses = expenses.filter(date__lte=date_to)
-    
-    context = {
-        'expenses': expenses,
-        'category_filter': category_filter,
-        'categories': Expense.CATEGORIES,
-        'date_from': date_from,
-        'date_to': date_to
-    }
-    return render(request, 'admin/expenses.html', context)
+    return redirect('expense_management')
 
 # Administrator Management
 @login_required
@@ -1009,22 +1182,6 @@ def export_logs(request):
         ])
     
     return response
-
-# Subject Management
-@login_required
-@user_passes_test(is_admin)
-def add_subject(request):
-    if request.method == 'POST':
-        form = AddSubjectForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Subject added successfully!')
-            return redirect('manage_subject')
-    else:
-        form = AddSubjectForm()
-    
-    context = {'form': form}
-    return render(request, 'admin/add_subject.html', context)
 
 @login_required
 @user_passes_test(is_admin)
@@ -1172,60 +1329,9 @@ def generate_attendance_report(request):
     classes = StudentClass.objects.all()
     return render(request, 'admin/attendance_report_form.html', {'classes': classes})
 
-@login_required
-@user_passes_test(is_admin)
+@bursar_required
 def generate_finance_report(request):
-    if request.method == 'POST':
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        
-        payments = FeePayment.objects.filter(
-            payment_date__range=[start_date, end_date]
-        )
-        expenses = Expense.objects.filter(
-            date__range=[start_date, end_date]
-        )
-        
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="finance_report.pdf"'
-        
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
-        
-        styles = getSampleStyleSheet()
-        story = []
-        
-        # Title
-        story.append(Paragraph(
-            f"Financial Report ({start_date} to {end_date})", 
-            styles['Title']
-        ))
-        story.append(Spacer(1, 0.25*inch))
-        
-        # Summary Data
-        story.append(Paragraph("Summary", styles['Heading2']))
-        total_payments = payments.aggregate(total=Sum('amount'))['total'] or 0
-        total_expenses = expenses.aggregate(total=Sum('amount'))['total'] or 0
-        data = [
-            ['Total Payments', total_payments],
-            ['Total Expenses', total_expenses],
-            ['Balance', total_payments - total_expenses],
-        ]
-        
-        t = Table(data, colWidths=[2*inch, 2*inch])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
-            ('GRID', (0,0), (-1,-1), 1, colors.black)
-        ]))
-        story.append(t)
-        
-        doc.build(story)
-        pdf = buffer.getvalue()
-        buffer.close()
-        response.write(pdf)
-        return response
-    
-    return render(request, 'admin/finance_report_form.html')
+    return redirect('payment_reports')
 
 @login_required
 @user_passes_test(is_admin)
@@ -1245,12 +1351,17 @@ def add_academic_year(request):
         end_date = request.POST.get('end_date')
         
         try:
-            AcademicYear.objects.create(
-                name=name,
-                start_date=start_date,
-                end_date=end_date
-            )
-            messages.success(request, 'Academic year added successfully!')
+            with transaction.atomic():
+                academic_year = AcademicYear.objects.create(
+                    name=name,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+                StudentClass.objects.bulk_create([
+                    StudentClass(name=class_name, academic_year=academic_year)
+                    for class_name in STANDARD_CLASS_NAMES
+                ])
+            messages.success(request, 'Academic year and standard classes added successfully!')
             return redirect('manage_academic_years')
         except Exception as e:
             messages.error(request, f'Error adding academic year: {str(e)}')

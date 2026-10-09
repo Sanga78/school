@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from decimal import Decimal
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -51,6 +52,21 @@ class CustomUser(AbstractUser):
 
 # Get the custom user model after it's defined
 User = get_user_model()
+
+STANDARD_CLASS_NAMES = (
+    'PP1',
+    'PP2',
+    'Grade 1',
+    'Grade 2',
+    'Grade 3',
+    'Grade 4',
+    'Grade 5',
+    'Grade 6',
+    'Grade 7',
+    'Grade 8',
+    'Grade 9',
+)
+
 
 class AcademicYear(models.Model):
     name = models.CharField(max_length=50, unique=True) # Ensure academic year names are unique
@@ -144,6 +160,7 @@ class Student(models.Model):
     date_of_admission = models.DateField(default=timezone.now)
     father_name = models.CharField(max_length=100, blank=True)
     mother_name = models.CharField(max_length=100, blank=True)
+    parent_email = models.EmailField(blank=True)
     active = models.BooleanField(default=True)
 
     class Meta:
@@ -159,17 +176,58 @@ class Student(models.Model):
         return self.fee_transactions.all().order_by('-date', '-created_at')
 
     def get_total_invoiced_fees(self):
+        if self.current_class_id:
+            class_fee_total = FeeStructure.objects.filter(
+                class_obj_id=self.current_class_id,
+                academic_year_id=self.current_class.academic_year_id,
+                is_active=True,
+            ).aggregate(total=models.Sum('amount'))['total']
+            if class_fee_total is not None:
+                return class_fee_total
+
         return self.fee_transactions.filter(
             transaction_type='INVOICE'
-        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0.00')
 
     def get_total_paid_fees(self):
-        return self.fee_transactions.filter(
+        recorded_payments = self.payments.aggregate(
+            total=models.Sum('amount'),
+        )['total'] or Decimal('0.00')
+        unlinked_ledger_payments = self.fee_transactions.filter(
             transaction_type='PAYMENT'
-        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        ).filter(
+            fee_payment__isnull=True,
+        ).aggregate(total=models.Sum('amount'))['total'] or Decimal('0.00')
+        return recorded_payments + unlinked_ledger_payments
+
+    def get_applicable_fee_structures(self):
+        if not self.current_class_id:
+            return FeeStructure.objects.none()
+        return FeeStructure.objects.filter(
+            class_obj_id=self.current_class_id,
+            academic_year_id=self.current_class.academic_year_id,
+            is_active=True,
+        ).select_related('class_obj', 'academic_year')
 
     def get_fee_balance(self):
         return self.get_total_invoiced_fees() - self.get_total_paid_fees()
+
+    def get_available_fee_balance(self, exclude_cash_approval_id=None):
+        pending_cash = self.cash_payment_approvals.filter(status='PENDING')
+        if exclude_cash_approval_id is not None:
+            pending_cash = pending_cash.exclude(pk=exclude_cash_approval_id)
+
+        pending_amounts = pending_cash.aggregate(
+            cash=models.Sum('amount'),
+        )
+        pending_mpesa = self.mpesa_payments.filter(
+            status='PENDING',
+        ).aggregate(total=models.Sum('amount'))['total']
+        reserved_balance = (
+            pending_amounts['cash'] or Decimal('0.00')
+        ) + (pending_mpesa or Decimal('0.00'))
+
+        return max(self.get_fee_balance() - reserved_balance, Decimal('0.00'))
 
     # The create_fee_invoice method was a class method on Student in your original file.
     # It makes more sense as a static method or a separate function/service,
@@ -203,6 +261,32 @@ class Student(models.Model):
             date=timezone.now().date()
         )
         return transaction
+
+
+class StudentApplication(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending review'),
+        ('INTERVIEW', 'Interview scheduled'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Not approved'),
+    )
+
+    student = models.OneToOneField(
+        Student,
+        on_delete=models.CASCADE,
+        related_name='application',
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='PENDING')
+    interview_at = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['status', '-submitted_at']
+
+    def __str__(self):
+        return f"Application for {self.student} ({self.get_status_display()})"
     
 class StudentClass(models.Model): # Renamed from 'Class' to 'StudentClass' to avoid conflict with Python's 'class' keyword
     name = models.CharField(max_length=50)
@@ -249,6 +333,76 @@ class SubjectResult(models.Model):
 
     def __str__(self):
         return f"{self.student} - {self.subject} ({self.get_term_display()} in {self.academic_year})"
+
+
+class SubjectResultSubmission(models.Model):
+    class_obj = models.ForeignKey(
+        StudentClass,
+        on_delete=models.CASCADE,
+        related_name='subject_result_submissions',
+    )
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
+    term = models.CharField(max_length=20, choices=SubjectResult.TERM_CHOICES)
+    submitted_by = models.ForeignKey(Staff, on_delete=models.PROTECT)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['class_obj', 'subject', 'academic_year', 'term'],
+                name='unique_class_subject_result_submission',
+            ),
+        ]
+        ordering = ['submitted_at']
+
+    def __str__(self):
+        return f'{self.subject} results for {self.class_obj} ({self.term})'
+
+
+class ResultPublication(models.Model):
+    STATUS_CHOICES = (
+        ('SUBMITTED', 'Awaiting headteacher review'),
+        ('APPROVED', 'Published to students'),
+        ('REJECTED', 'Returned for correction'),
+    )
+
+    class_obj = models.ForeignKey(
+        StudentClass,
+        on_delete=models.CASCADE,
+        related_name='result_publications',
+    )
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
+    term = models.CharField(max_length=20, choices=SubjectResult.TERM_CHOICES)
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='SUBMITTED')
+    submitted_by = models.ForeignKey(
+        Staff,
+        on_delete=models.PROTECT,
+        related_name='submitted_result_publications',
+    )
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_result_publications',
+    )
+    review_note = models.CharField(max_length=255, blank=True)
+    submitted_at = models.DateTimeField(default=timezone.now)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['class_obj', 'academic_year', 'term'],
+                name='unique_class_result_publication',
+            ),
+        ]
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f'{self.class_obj} results ({self.term}, {self.get_status_display()})'
 
 class Attendance(models.Model):
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='attendances')
@@ -317,6 +471,13 @@ class LeaveRequest(models.Model):
 
 class Feedback(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedback') # Using User model
+    recipient_staff = models.ForeignKey(
+        'Staff',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='student_feedback',
+    )
     message = models.TextField()
     reply = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -494,6 +655,83 @@ class FeePayment(models.Model):
     def __str__(self):
         return f"{self.student} - Paid Ksh{self.amount} via {self.get_payment_method_display()} on {self.payment_date}"
 
+
+class MpesaPayment(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending confirmation'),
+        ('PAID', 'Paid'),
+        ('FAILED', 'Failed'),
+    )
+
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='mpesa_payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    phone_number = models.CharField(max_length=12)
+    account_reference = models.CharField(max_length=12)
+    merchant_request_id = models.CharField(max_length=100, blank=True)
+    checkout_request_id = models.CharField(max_length=100, unique=True)
+    receipt_number = models.CharField(max_length=30, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    result_description = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"M-Pesa {self.amount} for {self.student} ({self.get_status_display()})"
+
+
+class CashPaymentApproval(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending headteacher approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+
+    student = models.ForeignKey(Student, on_delete=models.PROTECT, related_name='cash_payment_approvals')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateField(default=timezone.localdate)
+    transaction_code = models.CharField(max_length=50, blank=True)
+    notes = models.TextField(blank=True)
+    fee_structure = models.ForeignKey(
+        FeeStructure,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cash_payment_approvals',
+    )
+    recorded_by = models.ForeignKey(
+        'Bursar',
+        on_delete=models.PROTECT,
+        related_name='cash_payment_approvals',
+    )
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_cash_payment_approvals',
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    review_note = models.CharField(max_length=255, blank=True)
+    fee_payment = models.OneToOneField(
+        FeePayment,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cash_approval',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Cash payment {self.amount} for {self.student} ({self.get_status_display()})"
+
+
 class Expense(models.Model):
     CATEGORIES = (
         ('SALARY', 'Staff Salaries'),
@@ -570,22 +808,6 @@ def create_user_profile(sender, instance, created, **kwargs):
         elif instance.user_type == 4:  # Bursar
             Bursar.objects.create(user=instance)
         # No 'else' for Admin (user_type 1) as they don't need a separate profile model typically.
-
-@receiver(post_save, sender=CustomUser)
-def save_user_profile(sender, instance, **kwargs):
-    """
-    Signal receiver to save associated Staff, Student, or Bursar profile
-    when a CustomUser is saved (updated).
-    """
-    # Only try to save if the profile exists.
-    # Admin (user_type 1) typically doesn't have a specific profile model, so skip.
-    if instance.user_type == 2 and hasattr(instance, 'staff_profile'):  # Staff
-        instance.staff_profile.save()
-    elif instance.user_type == 3 and hasattr(instance, 'student_profile'):  # Student
-        instance.student_profile.save()
-    elif instance.user_type == 4 and hasattr(instance, 'bursar_profile'):  # Bursar
-        instance.bursar_profile.save()
-
 
 class SystemLog(models.Model):
     LOG_TYPE_CHOICES = [

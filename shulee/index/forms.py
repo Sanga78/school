@@ -41,6 +41,7 @@ class StudentSignupForm(forms.Form):
     last_name = forms.CharField(max_length=150)
     username = forms.CharField(max_length=150)
     email = forms.EmailField(required=False)
+    parent_email = forms.EmailField()
     address = forms.CharField(required=False, max_length=500)
     academic_year = forms.ModelChoiceField(
         queryset=AcademicYear.objects.filter(is_current=True),
@@ -117,6 +118,48 @@ class StudentSignupForm(forms.Form):
         return cleaned_data
 
 
+class StudentProfileForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'phone', 'address']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 150}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 150}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 20}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': 500}),
+        }
+
+
+class StudentApplicationReviewForm(forms.Form):
+    action = forms.ChoiceField(choices=(
+        ('schedule', 'Schedule interview'),
+        ('approve', 'Approve application'),
+        ('reject', 'Reject application'),
+    ))
+    interview_at = forms.DateTimeField(
+        required=False,
+        input_formats=['%Y-%m-%dT%H:%M'],
+        widget=forms.DateTimeInput(
+            attrs={'class': 'form-control', 'type': 'datetime-local'},
+            format='%Y-%m-%dT%H:%M',
+        ),
+    )
+    review_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('action') == 'schedule':
+            interview_at = cleaned_data.get('interview_at')
+            if not interview_at:
+                self.add_error('interview_at', 'Choose an interview date and time.')
+            elif interview_at <= timezone.now():
+                self.add_error('interview_at', 'Choose a future interview date and time.')
+        return cleaned_data
+
+
 class ChoiceNoValidation(ChoiceField):
     def validate(self, value):
         pass
@@ -137,6 +180,10 @@ class StudentForm(forms.ModelForm):
         required=False,
         widget=forms.EmailInput(attrs={'class': 'form-control'}),
         help_text="Optional, but recommended for communication purposes.")
+    parent_email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control'}),
+        help_text="Required contact email for the student's parent or guardian.")
     username = forms.CharField(
         max_length=150, 
         required=True, 
@@ -160,8 +207,8 @@ class StudentForm(forms.ModelForm):
     class Meta:
         model = Student
         fields = [
-            'gender', 'date_of_birth', 'current_class', 
-            'academic_year', 'father_name', 'mother_name', 'active'
+            'gender', 'date_of_birth', 'current_class',
+            'academic_year', 'father_name', 'mother_name', 'parent_email', 'active'
         ]
         widgets = {
             'gender': forms.Select(attrs={'class': 'form-control'}),
@@ -170,6 +217,7 @@ class StudentForm(forms.ModelForm):
             'academic_year': forms.Select(attrs={'class': 'form-control'}),
             'father_name': forms.TextInput(attrs={'class': 'form-control'}),
             'mother_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'parent_email': forms.EmailInput(attrs={'class': 'form-control'}),
             'active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -233,7 +281,9 @@ class StudentForm(forms.ModelForm):
                 password=self.cleaned_data['password'],
                 **user_data
             )
-            student.user = user
+            student = user.student_profile
+            for field_name in self._meta.fields:
+                setattr(student, field_name, getattr(self.instance, field_name))
 
         if commit:
             student.save()
@@ -270,20 +320,10 @@ class EditResultForm(forms.Form):
     exam_marks=forms.CharField(label="Exam Marks",widget=forms.TextInput(attrs={"class":"form-control"}))
 
 class FeePaymentForm(forms.ModelForm):
-    def __init__(self, *args, student=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['fee_structure'].required = False
-        if student is not None:
-            self.fields['fee_structure'].queryset = FeeStructure.objects.filter(
-                class_obj=student.current_class,
-                is_active=True,
-            ) if student.current_class_id else FeeStructure.objects.none()
-
     class Meta:
         model = FeePayment
-        fields = ['fee_structure', 'amount', 'payment_date', 'payment_method', 'transaction_code', 'notes']
+        fields = ['amount', 'payment_date', 'payment_method', 'transaction_code', 'notes']
         widgets = {
-            'fee_structure': forms.Select(attrs={'class': 'form-control'}),
             'payment_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'payment_method': forms.Select(attrs={'class': 'form-control'}),
@@ -348,51 +388,22 @@ class ExpenseForm(forms.ModelForm):
 class ClassForm(forms.ModelForm):
     class Meta:
         model = StudentClass
-        fields = ['name', 'academic_year', 'class_teacher']
+        fields = ['class_teacher']
         widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'E.g., Form 1, Grade 5, etc.'
-            }),
-            'academic_year': forms.Select(attrs={
-                'class': 'form-select'
-            }),
             'class_teacher': forms.Select(attrs={
                 'class': 'form-select'
             }),
         }
-        labels = {
-            'name': 'Class Name',
-            'academic_year': 'Academic Year',
-            'class_teacher': 'Class Teacher'
-        }
         help_texts = {
-            'name': 'Enter the name of the class (e.g., Grade 1, Grade 9)',
             'class_teacher': 'Select the teacher responsible for this class'
         }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)       
-        # Only show active academic years
-        self.fields['academic_year'].queryset = AcademicYear.objects.filter(is_current=True)        
-        # Only show teachers (staff with user_type=2)
+        super().__init__(*args, **kwargs)
         self.fields['class_teacher'].queryset = Staff.objects.filter(
             user__user_type=2
-        ).select_related('user')        
-        # Add empty label for dropdowns
-        self.fields['academic_year'].empty_label = 'Select Academic Year'
+        ).select_related('user')
         self.fields['class_teacher'].empty_label = 'Select Class Teacher'
-    def clean_name(self):
-        name = self.cleaned_data.get('name')
-        academic_year = self.cleaned_data.get('academic_year')       
-        if StudentClass.objects.filter(
-            name__iexact=name, 
-            academic_year=academic_year
-        ).exclude(pk=self.instance.pk if self.instance else None).exists():
-            raise forms.ValidationError(
-                'A class with this name already exists for the selected academic year.'
-            )        
-        return name
 
 class SystemSettingsForm(forms.Form):
     school_name = forms.CharField(
@@ -504,35 +515,6 @@ class LeaveResponseForm(forms.ModelForm):
         
         return cleaned_data
 
-class AddSubjectForm(forms.ModelForm):
-    class Meta:
-        model = Subject
-        fields = ['name', 'code', 'description']
-        widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'E.g., Mathematics, Biology'
-            }),
-            'code': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'E.g., MATH101, BIO201'
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Subject description (optional)'
-            }),
-        }
-        labels = {
-            'code': 'Subject Code'
-        }
-
-    def clean_code(self):
-        code = self.cleaned_data.get('code')
-        if Subject.objects.filter(code__iexact=code).exclude(pk=self.instance.pk).exists():
-            raise forms.ValidationError("A subject with this code already exists.")
-        return code.upper()
-
 # Teacher Management Forms
 class StaffForm(forms.ModelForm):
     password = forms.CharField(
@@ -596,9 +578,16 @@ class StaffSubjectAssignmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         staff = kwargs.pop('staff', None)
         super().__init__(*args, **kwargs)
-        if staff:
+        current_year = AcademicYear.objects.filter(is_current=True).first()
+        self.fields['academic_year'].queryset = (
+            AcademicYear.objects.filter(pk=current_year.pk)
+            if current_year else AcademicYear.objects.none()
+        )
+        if current_year:
+            self.fields['academic_year'].initial = current_year
+        if staff and current_year:
             self.fields['classes'].queryset = StudentClass.objects.filter(
-                academic_year__is_current=True
+                academic_year=current_year
             )
 
 class AddAdministratorForm(forms.ModelForm):

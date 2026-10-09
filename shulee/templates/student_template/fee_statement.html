@@ -15,7 +15,7 @@
                                 <div class="info-box bg-light">
                                     <span class="info-box-icon bg-info"><i class="fas fa-file-invoice-dollar"></i></span>
                                     <div class="info-box-content">
-                                        <span class="info-box-text">Total Invoices</span>
+                                        <span class="info-box-text">Total class fees</span>
                                         <span class="info-box-number">Ksh {{ total_invoices }}</span>
                                     </div>
                                 </div>
@@ -41,6 +41,22 @@
                                 </div>
                             </div>
                         </div>
+
+                        {% if fee_structures %}
+                        <section class="mb-4">
+                            <h2 class="h5">Fees for your class</h2>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead><tr><th>Fee</th><th>Amount (Ksh)</th><th>Due date</th></tr></thead>
+                                    <tbody>
+                                        {% for structure in fee_structures %}
+                                        <tr><td>{{ structure.name }}</td><td>{{ structure.amount|floatformat:2 }}</td><td>{{ structure.due_date|date:"d M Y" }}</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                        {% endif %}
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-striped">
