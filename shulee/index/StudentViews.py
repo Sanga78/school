@@ -257,7 +257,7 @@ def student_fee_statement(request):
 def student_fee_payments(request):
     student = _student_for_user(request.user)
     mpesa_payments = MpesaPayment.objects.filter(student=student)
-    cash_requests = CashPaymentApproval.objects.filter(student=student)
+    cash_requests = CashPaymentApproval.objects.filter(student=student, status='APPROVED')
     mpesa_receipts = mpesa_payments.filter(
         receipt_number__isnull=False,
     ).exclude(receipt_number='').values_list('receipt_number', flat=True)
