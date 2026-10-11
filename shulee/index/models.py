@@ -6,6 +6,9 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth import get_user_model
+from .validators import validate_kenyan_birth_certificate, validate_admission_number
+
+FIRST_ADMISSION_NUMBER = 1001
 
 # Ensure CustomUser is defined before any models that reference it via a direct ForeignKey
 # or OneToOneField. Using get_user_model() helps prevent circular imports in some cases,
@@ -103,10 +106,32 @@ class Staff(models.Model):
     subjects = models.ManyToManyField(Subject, through='StaffSubjectAssignment', blank=True) # Added blank=True
     qualification = models.CharField(max_length=100, blank=True)
     date_of_joining = models.DateField(default=timezone.now)
+    ROLE_CHOICES = (
+        ('TEACHER', 'Teacher'),
+        ('DEPUTY_HEADTEACHER', 'Deputy Headteacher'),
+        ('BOARDING_MASTER', 'Boarding Master'),
+        ('OTHER', 'Other Staff'),
+    )
+    EMPLOYMENT_CHOICES = (
+        ('TSC', 'TSC (Teachers Service Commission)'),
+        ('BOM', 'BOM (Board of Management)'),
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='TEACHER')
+    employment_type = models.CharField(max_length=3, choices=EMPLOYMENT_CHOICES, default='TSC')
+    monthly_salary = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    department = models.CharField(max_length=100, blank=True)
 
     class Meta:
         verbose_name = "Staff"
         verbose_name_plural = "Staff" # This was already correct
+
+    @property
+    def employee_id(self):
+        return f'EMP{self.pk:04d}'
+
+    @property
+    def is_bom(self):
+        return self.employment_type == 'BOM'
 
     def __str__(self):
         return self.user.get_full_name() if self.user.get_full_name() else self.user.username
@@ -158,10 +183,13 @@ class Student(models.Model):
     current_class = models.ForeignKey('StudentClass', on_delete=models.SET_NULL, null=True, blank=True, related_name='students') # Added blank=True
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.SET_NULL, null=True, blank=True, related_name='students') # Added blank=True and related_name
     date_of_admission = models.DateField(default=timezone.now)
+    admission_number = models.CharField(max_length=50, blank=True, unique=True, validators=[validate_admission_number], db_index=True, help_text="Always the same as the student's username.")
+    birth_certificate_number = models.CharField(max_length=50, blank=True, null=True, default=None, unique=True, db_index=True, validators=[validate_kenyan_birth_certificate], help_text="Kenyan birth certificate format: XXXXX-XXXXX-XXXXX")
     father_name = models.CharField(max_length=100, blank=True)
     mother_name = models.CharField(max_length=100, blank=True)
     parent_email = models.EmailField(blank=True)
     active = models.BooleanField(default=True)
+    is_boarder = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['current_class', 'user__last_name']
@@ -171,17 +199,25 @@ class Student(models.Model):
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.user.username})"
 
+    def save(self, *args, **kwargs):
+        # The student's username is their admission number.
+        self.admission_number = self.user.username
+        if not self.birth_certificate_number:
+            self.birth_certificate_number = None
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and 'admission_number' not in update_fields:
+            kwargs['update_fields'] = [*update_fields, 'admission_number']
+        super().save(*args, **kwargs)
+
     # Renamed method for clarity and to indicate it returns a queryset
     def get_fee_transactions(self):
         return self.fee_transactions.all().order_by('-date', '-created_at')
 
     def get_total_invoiced_fees(self):
         if self.current_class_id:
-            class_fee_total = FeeStructure.objects.filter(
-                class_obj_id=self.current_class_id,
-                academic_year_id=self.current_class.academic_year_id,
-                is_active=True,
-            ).aggregate(total=models.Sum('amount'))['total']
+            class_fee_total = self.get_applicable_fee_structures().aggregate(
+                total=models.Sum('amount'),
+            )['total']
             if class_fee_total is not None:
                 return class_fee_total
 
@@ -203,11 +239,43 @@ class Student(models.Model):
     def get_applicable_fee_structures(self):
         if not self.current_class_id:
             return FeeStructure.objects.none()
+        applies = ['ALL', 'BOARDER' if self.is_boarder else 'DAY']
         return FeeStructure.objects.filter(
             class_obj_id=self.current_class_id,
             academic_year_id=self.current_class.academic_year_id,
             is_active=True,
+            applies_to__in=applies,
         ).select_related('class_obj', 'academic_year')
+
+    def get_food_requirements(self):
+        if not self.current_class_id:
+            return FoodRequirement.objects.none()
+        return FoodRequirement.objects.filter(
+            class_obj_id=self.current_class_id,
+            academic_year_id=self.current_class.academic_year_id,
+        )
+
+    def get_food_status(self):
+        """Per requirement: required, credited and still owed (kg and cash value)."""
+        rows = []
+        for requirement in self.get_food_requirements():
+            credited = self.food_contributions.filter(
+                requirement=requirement,
+            ).aggregate(total=models.Sum('kg_credited'))['total'] or Decimal('0.00')
+            owed_kg = max(requirement.quantity_kg - credited, Decimal('0.00'))
+            rows.append({
+                'requirement': requirement,
+                'credited_kg': credited,
+                'owed_kg': owed_kg,
+                'owed_value': (owed_kg * requirement.cash_per_kg).quantize(Decimal('0.01')),
+            })
+        return rows
+
+    def get_food_balance(self):
+        return sum((row['owed_value'] for row in self.get_food_status()), Decimal('0.00'))
+
+    def get_total_owed(self):
+        return self.get_fee_balance() + self.get_food_balance()
 
     def get_fee_balance(self):
         return self.get_total_invoiced_fees() - self.get_total_paid_fees()
@@ -279,6 +347,7 @@ class StudentApplication(models.Model):
     status = models.CharField(max_length=12, choices=STATUS_CHOICES, default='PENDING')
     interview_at = models.DateTimeField(null=True, blank=True)
     review_notes = models.TextField(blank=True)
+    confirmation_id = models.CharField(max_length=20, unique=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -287,6 +356,15 @@ class StudentApplication(models.Model):
 
     def __str__(self):
         return f"Application for {self.student} ({self.get_status_display()})"
+    
+    def save(self, *args, **kwargs):
+        if not self.confirmation_id:
+            from datetime import datetime
+            from uuid import uuid4
+            year = datetime.now().year
+            random_part = str(uuid4()).split('-')[0].upper()[:8]
+            self.confirmation_id = f"CONF{year}{random_part}"
+        super().save(*args, **kwargs)
     
 class StudentClass(models.Model): # Renamed from 'Class' to 'StudentClass' to avoid conflict with Python's 'class' keyword
     name = models.CharField(max_length=50)
@@ -405,7 +483,8 @@ class ResultPublication(models.Model):
         return f'{self.class_obj} results ({self.term}, {self.get_status_display()})'
 
 class Attendance(models.Model):
-    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='attendances')
+    # A null subject marks the daily class register taken by the class teacher.
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='attendances', null=True, blank=True)
     class_obj = models.ForeignKey('StudentClass', on_delete=models.CASCADE, related_name='attendances') # Renamed to StudentClass
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='attendances')
     attendance_date = models.DateField()
@@ -446,16 +525,29 @@ class AttendanceReport(models.Model):
 
 class LeaveRequest(models.Model):
     STATUS_CHOICES = (
-        (0, 'Pending'),
+        (0, 'Pending Approval'),
         (1, 'Approved'),
         (2, 'Rejected'),
     )
+    LEAVE_TYPE_CHOICES = (
+        ('Sick Leave', 'Sick Leave'),
+        ('Annual Leave', 'Annual / Vacation Leave'),
+        ('Maternity Leave', 'Maternity Leave'),
+        ('Paternity Leave', 'Paternity Leave'),
+        ('Compassionate Leave', 'Compassionate Leave'),
+        ('Other', 'Other'),
+    )
 
     applicant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leave_requests') # Using User model
-    leave_type = models.CharField(max_length=50)
+    leave_type = models.CharField(max_length=50, choices=LEAVE_TYPE_CHOICES)
     start_date = models.DateField()
     end_date = models.DateField()
     reason = models.TextField()
+    cover_teacher = models.ForeignKey(
+        'Staff', on_delete=models.SET_NULL, null=True, blank=True, related_name='covering_leaves',
+    )
+    handover_notes = models.TextField(blank=True)
+    review_notes = models.TextField(blank=True)
     status = models.IntegerField(choices=STATUS_CHOICES, default=0)
     approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_leaves')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -466,18 +558,15 @@ class LeaveRequest(models.Model):
         verbose_name_plural = "Leave Requests"
         ordering = ['-created_at']
 
+    @property
+    def total_days(self):
+        return (self.end_date - self.start_date).days + 1
+
     def __str__(self):
         return f"{self.applicant} - {self.leave_type} ({self.get_status_display()})"
 
 class Feedback(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedback') # Using User model
-    recipient_staff = models.ForeignKey(
-        'Staff',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='student_feedback',
-    )
     message = models.TextField()
     reply = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -526,6 +615,7 @@ class Notification(models.Model):
         choices=PRIORITY_CHOICES,
         default='MEDIUM'
     )
+    link = models.CharField(max_length=200, blank=True)
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
@@ -555,6 +645,16 @@ class SchoolEvent(models.Model):
     ends_at = models.DateTimeField(blank=True, null=True)
     location = models.CharField(max_length=200, blank=True)
     is_published = models.BooleanField(default=True)
+    # Empty audience_class means a school-wide event visible to everyone.
+    audience_class = models.ForeignKey(
+        'StudentClass',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='targeted_events',
+    )
+    # When set, only these students (of audience_class) receive the event.
+    recipients = models.ManyToManyField('Student', blank=True, related_name='targeted_events')
     created_by = models.ForeignKey(
         CustomUser,
         on_delete=models.SET_NULL,
@@ -564,6 +664,10 @@ class SchoolEvent(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def is_public(self):
+        return self.audience_class_id is None
 
     class Meta:
         ordering = ['starts_at', 'title']
@@ -609,6 +713,19 @@ class FeeStructure(models.Model):
     academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='fee_structures')
     due_date = models.DateField()
     is_active = models.BooleanField(default=True)
+    CATEGORY_CHOICES = (
+        ('ACADEMIC', 'Academic'),
+        ('BOARDING', 'Boarding'),
+        ('OTHER', 'Other'),
+    )
+    APPLIES_CHOICES = (
+        ('ALL', 'All students'),
+        ('BOARDER', 'Boarders only'),
+        ('DAY', 'Day scholars only'),
+    )
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='ACADEMIC')
+    term = models.PositiveSmallIntegerField(null=True, blank=True, choices=((1, 'Term 1'), (2, 'Term 2'), (3, 'Term 3')))
+    applies_to = models.CharField(max_length=7, choices=APPLIES_CHOICES, default='ALL')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -792,6 +909,184 @@ class FeeTransaction(models.Model):
     def __str__(self):
         return f"{self.get_transaction_type_display()} for {self.student} - Ksh{self.amount} (Balance: Ksh{self.balance})"
 
+def next_admission_number():
+    """Next strictly sequential admission number (1001, 1002, ...)."""
+    numbers = [
+        int(value)
+        for value in Student.objects.filter(admission_number__regex=r'^[0-9]{4,9}$')
+        .values_list('admission_number', flat=True)
+    ]
+    candidate = max(numbers, default=FIRST_ADMISSION_NUMBER - 1) + 1
+    candidate = max(candidate, FIRST_ADMISSION_NUMBER)
+    while CustomUser.objects.filter(username=str(candidate)).exists():
+        candidate += 1
+    return str(candidate)
+
+
+class SchoolProfile(models.Model):
+    """Singleton holding public school information."""
+    school_name = models.CharField(max_length=150, default='AIC Laboret Girls Primary School')
+    school_code = models.CharField(max_length=50, blank=True)
+    uniform_description = models.TextField(blank=True)
+    logo = models.ImageField(upload_to='school/', blank=True, null=True)
+    address = models.TextField(blank=True)
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=20, blank=True)
+    website = models.URLField(blank=True)
+    applications_open = models.BooleanField(default=True)
+    term_1_start = models.DateField(null=True, blank=True)
+    term_1_end = models.DateField(null=True, blank=True)
+    term_2_start = models.DateField(null=True, blank=True)
+    term_2_end = models.DateField(null=True, blank=True)
+    term_3_start = models.DateField(null=True, blank=True)
+    term_3_end = models.DateField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "School Profile"
+
+    @classmethod
+    def get(cls):
+        return cls.objects.first() or cls.objects.create()
+
+    def __str__(self):
+        return self.school_name
+
+
+class UniformItem(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='uniform/', blank=True, null=True)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.name
+
+
+class FoodRequirement(models.Model):
+    """Cereal/bean contribution a class must provide; payable in kind or in cash."""
+    ITEM_CHOICES = (
+        ('MAIZE', 'Maize'),
+        ('MILLET', 'Millet'),
+        ('BEANS', 'Beans'),
+    )
+    class_obj = models.ForeignKey('StudentClass', on_delete=models.CASCADE, related_name='food_requirements')
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE, related_name='food_requirements')
+    item = models.CharField(max_length=10, choices=ITEM_CHOICES)
+    quantity_kg = models.DecimalField(max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    cash_per_kg = models.DecimalField(max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))],
+                                      help_text="Cash equivalent per kilogram.")
+
+    class Meta:
+        unique_together = ('class_obj', 'academic_year', 'item')
+        ordering = ['item']
+
+    @property
+    def cash_equivalent_total(self):
+        return (self.quantity_kg * self.cash_per_kg).quantize(Decimal('0.01'))
+
+    def __str__(self):
+        return f"{self.get_item_display()} {self.quantity_kg}kg - {self.class_obj}"
+
+
+class FoodContribution(models.Model):
+    METHOD_CHOICES = (
+        ('IN_KIND', 'Food stuff brought'),
+        ('CASH', 'Cash equivalent paid'),
+    )
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='food_contributions')
+    requirement = models.ForeignKey(FoodRequirement, on_delete=models.CASCADE, related_name='contributions')
+    method = models.CharField(max_length=10, choices=METHOD_CHOICES)
+    quantity_kg = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal('0.00'))
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    kg_credited = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal('0.00'))
+    date = models.DateField(default=timezone.now)
+    notes = models.CharField(max_length=200, blank=True)
+    received_by = models.ForeignKey(Bursar, on_delete=models.SET_NULL, null=True, related_name='food_contributions')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+
+    def save(self, *args, **kwargs):
+        if self.method == 'CASH':
+            self.quantity_kg = Decimal('0.00')
+            self.kg_credited = (self.amount / self.requirement.cash_per_kg).quantize(Decimal('0.01'))
+        else:
+            self.amount = Decimal('0.00')
+            self.kg_credited = self.quantity_kg
+        super().save(*args, **kwargs)
+
+    @property
+    def receipt_number(self):
+        return f"FD-{self.pk:06d}"
+
+    def __str__(self):
+        return f"{self.student} - {self.requirement.get_item_display()} ({self.get_method_display()})"
+
+
+class GovernmentGrant(models.Model):
+    SOURCE_CHOICES = (
+        ('STIPEND', 'Government stipend'),
+        ('GRANT', 'Grant'),
+        ('SUBSIDY', 'Subsidy'),
+    )
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='STIPEND')
+    description = models.CharField(max_length=200, blank=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    date = models.DateField(default=timezone.now)
+    reference = models.CharField(max_length=50, blank=True)
+    recorded_by = models.ForeignKey(Bursar, on_delete=models.SET_NULL, null=True, blank=True, related_name='grants')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+
+    def __str__(self):
+        return f"{self.get_source_display()} Ksh{self.amount} on {self.date}"
+
+
+class Payslip(models.Model):
+    STATUS_CHOICES = (
+        ('GENERATED', 'Generated'),
+        ('PAID', 'Paid'),
+    )
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='payslips')
+    month = models.DateField(help_text="First day of the payroll month.")
+    basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
+    allowances = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    net_pay = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='GENERATED')
+    generated_by = models.ForeignKey(Bursar, on_delete=models.SET_NULL, null=True, related_name='generated_payslips')
+    paid_by = models.ForeignKey(Bursar, on_delete=models.SET_NULL, null=True, blank=True, related_name='paid_payslips')
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('staff', 'month')
+        ordering = ['-month', 'staff__user__first_name']
+
+    def save(self, *args, **kwargs):
+        self.net_pay = self.basic_salary + self.allowances - self.deductions
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.staff} payslip {self.month:%B %Y}"
+
+
+def school_cash_balance():
+    """Liquid cash: fee payments + cash food payments + grants - expenses."""
+    zero = Decimal('0.00')
+    fees = FeePayment.objects.aggregate(t=models.Sum('amount'))['t'] or zero
+    food = FoodContribution.objects.aggregate(t=models.Sum('amount'))['t'] or zero
+    grants = GovernmentGrant.objects.aggregate(t=models.Sum('amount'))['t'] or zero
+    expenses = Expense.objects.aggregate(t=models.Sum('amount'))['t'] or zero
+    return fees + food + grants - expenses
+
+
 # --- Signals ---
 
 @receiver(post_save, sender=CustomUser)
@@ -800,6 +1095,10 @@ def create_user_profile(sender, instance, created, **kwargs):
     Signal receiver to create associated Staff, Student, or Bursar profile
     when a CustomUser is created.
     """
+    if not created and instance.user_type == 3:
+        Student.objects.filter(user=instance).exclude(
+            admission_number=instance.username,
+        ).update(admission_number=instance.username)
     if created:
         if instance.user_type == 2:  # Staff
             Staff.objects.create(user=instance)

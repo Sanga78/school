@@ -7,7 +7,7 @@
             <h2>Empowering Girls Through Education</h2>
             <p>Providing quality education since 1985</p>
             <div class="hero-buttons">
-                <a href="{% url 'home' %}" class="btn-primary">Apply Now</a>
+                <a href="{% url 'apply' %}" class="btn-primary">Apply Now</a>
                 <a href="{% url 'about' %}" class="btn-secondary">Learn More</a>
             </div>
         </div>
@@ -32,7 +32,7 @@
                 <i class="fas fa-user-tie"></i>
                 <h3>Admissions</h3>
                 <p>Start your application process</p>
-                <a href="{% url 'admissions' %}">Apply Now →</a>
+                <a href="{% url 'apply' %}">Apply Now →</a>
             </div>
             <div class="quick-link-card">
                 <i class="fas fa-user-tie"></i>
@@ -237,10 +237,12 @@
             <h2>Enroll Your Daughter Today!</h2>
             <p>Applications are now open. Schedule a tour today!</p>
             <div class="cta-buttons">
-                <a href="{% url 'admissions' %}" class="btn-primary">Apply Now</a>
+                <a href="{% url 'apply' %}" class="btn-primary">Apply Now</a>
                 <a href="{% url 'contact' %}" class="btn-secondary">Schedule Tour</a>
             </div>
         </div>
     </section>
+
+    {% include 'partials/school_info.html' %}
 
   {%endblock%}

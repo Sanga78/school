@@ -102,6 +102,31 @@
                             </div>
                         </div>
                         
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="{{ form.role.id_for_label }}">Role</label>
+                                    {{ form.role }}
+                                    {% for error in form.role.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="{{ form.employment_type.id_for_label }}">Employment type</label>
+                                    {{ form.employment_type }}
+                                    {% for error in form.employment_type.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label class="form-label" for="{{ form.monthly_salary.id_for_label }}">Monthly salary (Ksh)</label>
+                                    {{ form.monthly_salary }}
+                                    <small class="text-muted">{{ form.monthly_salary.help_text }}</small>
+                                    {% for error in form.monthly_salary.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group mb-3">
                             <label class="form-label">Address</label>
                             {{ form.address }}

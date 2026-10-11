@@ -9,7 +9,7 @@
     <div class="row g-3 mb-4">
         <div class="col-md-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Fees collected</div><div class="display-6 fw-semibold">Ksh {{ total_paid|floatformat:2 }}</div><a href="{% url 'fee_records' %}" class="btn btn-sm btn-outline-primary mt-3">Fee records</a></div></div></div>
         <div class="col-md-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Expenses recorded</div><div class="display-6 fw-semibold">Ksh {{ total_expenses|floatformat:2 }}</div><a href="{% url 'expense_management' %}" class="btn btn-sm btn-outline-primary mt-3">Manage expenses</a></div></div></div>
-        <div class="col-md-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Net recorded cash flow</div><div class="display-6 fw-semibold">Ksh {{ balance|floatformat:2 }}</div><a href="{% url 'payment_reports' %}" class="btn btn-sm btn-outline-primary mt-3">View reports</a></div></div></div>
+        <div class="col-md-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted">Available liquid cash</div><div class="display-6 fw-semibold">Ksh {{ balance|floatformat:2 }}</div><div class="small text-muted">Fees + food cash + grants &minus; expenses</div><a href="{% url 'payment_reports' %}" class="btn btn-sm btn-outline-primary mt-3">View reports</a></div></div></div>
     </div>
     <div class="row g-3">
         <div class="col-lg-6">

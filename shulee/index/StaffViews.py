@@ -1,10 +1,10 @@
-from functools import wraps
+﻿from functools import wraps
+from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, Q
-from django.http import Http404, HttpResponse, JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.http import require_POST
 from django.utils.dateparse import parse_date
@@ -13,11 +13,10 @@ from index.models import (
     AcademicYear,
     Attendance,
     AttendanceReport,
-    CustomUser,
     Feedback,
     LeaveRequest,
-    Notification,
     ResultPublication,
+    SchoolEvent,
     Staff,
     StaffSubjectAssignment,
     Student,
@@ -28,9 +27,9 @@ from index.models import (
 )
 from django.urls import reverse
 from django.contrib import messages
-import json
 from django.contrib.auth.decorators import login_required
-from .forms import ResultUploadForm, TeacherProfileForm
+from .forms import ClassEventForm, ResultUploadForm, TeacherProfileForm
+from .services import admins, notify
 
 
 def teacher_required(view_func):
@@ -49,260 +48,28 @@ def staff_home(request):
     return redirect('teacher_dashboard')
 
 
-def _current_teacher_assignments(user):
-    current_year = AcademicYear.objects.filter(is_current=True).first()
-    if current_year is None:
-        return current_year, StaffSubjectAssignment.objects.none()
-    assignments = StaffSubjectAssignment.objects.filter(
-        staff__user=user,
-        academic_year=current_year,
-    ).select_related('subject', 'academic_year').prefetch_related('classes')
-    return current_year, assignments
-
-
-def _required_pk(value):
-    try:
-        pk = int(value)
-    except (TypeError, ValueError) as error:
-        raise Http404 from error
-    if pk < 1:
-        raise Http404
-    return pk
-
-
-def _teacher_assignment(user, assignment_id, class_id):
-    assignment_id = _required_pk(assignment_id)
-    class_id = _required_pk(class_id)
-    current_year = AcademicYear.objects.filter(is_current=True).first()
-    if current_year is None:
-        raise PermissionDenied
-    assignment = get_object_or_404(
-        StaffSubjectAssignment.objects.select_related('staff', 'subject', 'academic_year'),
-        pk=assignment_id,
-        staff__user=user,
-        academic_year=current_year,
-        classes__pk=class_id,
-        classes__academic_year=current_year,
-    )
-    class_obj = get_object_or_404(
-        StudentClass,
-        pk=class_id,
-        academic_year=current_year,
-    )
-    return assignment, class_obj, current_year
-
-
 def _notify_headteachers(sender, title, message):
-    recipients = list(CustomUser.objects.filter(
-        user_type=1,
-        is_active=True,
-    ))
-    if not recipients:
-        return
-    notification = Notification.objects.create(
-        title=title,
-        message=message,
-        sender=sender,
-        priority='HIGH',
-    )
-    notification.recipients.add(*recipients)
+    notify(admins(), title, message, sender=sender, priority='HIGH',
+           link=reverse('review_results'))
 
 
-def _parse_attendance_statuses(raw_data, expected_ids):
-    try:
-        payload = json.loads(raw_data or '')
-    except json.JSONDecodeError as error:
-        raise ValueError('Attendance data must be valid JSON.') from error
-    if not isinstance(payload, list):
-        raise ValueError('Attendance data must be a list.')
-
-    statuses = {}
-    for item in payload:
-        if not isinstance(item, dict) or set(item) != {'id', 'status'}:
-            raise ValueError('Each attendance entry must include a student and status.')
-        try:
-            student_id = int(item['id'])
-        except (TypeError, ValueError) as error:
-            raise ValueError('Attendance includes an invalid student.') from error
-        raw_status = item['status']
-        if raw_status not in (0, 1, False, True, '0', '1'):
-            raise ValueError('Attendance status must be present or absent.')
-        if student_id in statuses:
-            raise ValueError('Attendance includes a student more than once.')
-        is_present = raw_status is True or raw_status == 1 or raw_status == '1'
-        statuses[student_id] = 'P' if is_present else 'A'
-
-    if set(statuses) != set(expected_ids):
-        raise ValueError('Attendance must include every student in the assigned class.')
-    return statuses
-
-
-@teacher_required
-def staff_take_attendance(request):
-    current_year, assignments = _current_teacher_assignments(request.user)
-    return render(request, 'staff_template/attendance.html', {
-        'assignments': assignments,
-        'current_year': current_year,
-    })
-
-@teacher_required
-@require_POST
-def get_students(request):
-    assignment, class_obj, current_year = _teacher_assignment(
-        request.user,
-        request.POST.get('assignment_id'),
-        request.POST.get('class_id'),
-    )
-    students = Student.objects.filter(
-        current_class=class_obj,
-        academic_year=current_year,
-        active=True,
-    ).select_related('user').order_by('user__last_name', 'user__first_name')
-    return JsonResponse({
-        'students': [
-            {'id': student.pk, 'name': student.user.get_full_name() or student.user.username}
-            for student in students
-        ],
-        'subject': assignment.subject.name,
-        'class_name': class_obj.name,
-    })
-
-@teacher_required
-@require_POST
-def save_attendance_data(request):
-    assignment, class_obj, current_year = _teacher_assignment(
-        request.user,
-        request.POST.get('assignment_id'),
-        request.POST.get('class_id'),
-    )
-    attendance_date = parse_date(request.POST.get('attendance_date', ''))
-    if attendance_date is None:
-        return JsonResponse({'error': 'Enter a valid attendance date.'}, status=400)
-    students = list(Student.objects.filter(
-        current_class=class_obj,
-        academic_year=current_year,
-        active=True,
-    ))
-    if not students:
-        return JsonResponse({'error': 'There are no active students in this assigned class.'}, status=400)
-    try:
-        statuses = _parse_attendance_statuses(
-            request.POST.get('student_ids'),
-            [student.pk for student in students],
-        )
-    except ValueError as error:
-        return JsonResponse({'error': str(error)}, status=400)
-
-    with transaction.atomic():
-        attendance, created = Attendance.objects.get_or_create(
-            subject=assignment.subject,
-            class_obj=class_obj,
-            academic_year=current_year,
-            attendance_date=attendance_date,
-            defaults={'created_by': request.user.staff_profile},
-        )
-        if not created:
-            return JsonResponse({'error': 'Attendance has already been recorded for this class and date.'}, status=409)
-        AttendanceReport.objects.bulk_create([
-            AttendanceReport(
-                attendance=attendance,
-                student=student,
-                status=statuses[student.pk],
-            )
-            for student in students
-        ])
-    return JsonResponse({'success': True})
-    
-@teacher_required
-def staff_update_attendance(request):
-    current_year, assignments = _current_teacher_assignments(request.user)
-    return render(request, 'staff_template/attendance_update.html', {
-        'assignments': assignments,
-        'current_year': current_year,
-    })
-
-@teacher_required
-@require_POST
-def get_attendance_dates(request):
-    assignment, class_obj, current_year = _teacher_assignment(
-        request.user,
-        request.POST.get('assignment_id'),
-        request.POST.get('class_id'),
-    )
-    attendance = Attendance.objects.filter(
-        subject=assignment.subject,
-        class_obj=class_obj,
-        academic_year=current_year,
-    ).order_by('-attendance_date')
-    return JsonResponse({
-        'attendance': [
-            {'id': row.pk, 'attendance_date': row.attendance_date.isoformat()}
-            for row in attendance
-        ],
-    })
-
-@teacher_required
-@require_POST
-def get_attendance_student(request):
-    assignment, class_obj, current_year = _teacher_assignment(
-        request.user,
-        request.POST.get('assignment_id'),
-        request.POST.get('class_id'),
-    )
-    attendance = get_object_or_404(
-        Attendance,
-        pk=_required_pk(request.POST.get('attendance_id')),
-        subject=assignment.subject,
-        class_obj=class_obj,
-        academic_year=current_year,
-    )
-    reports = attendance.reports.select_related('student__user').order_by(
-        'student__user__last_name',
-        'student__user__first_name',
-    )
-    return JsonResponse({
-        'students': [
-            {
-                'id': report.student_id,
-                'name': report.student.user.get_full_name() or report.student.user.username,
-                'status': report.status == 'P',
-            }
-            for report in reports
-        ],
-    })
-
-@teacher_required
-@require_POST
-def save_updateattendance_data(request):
-    assignment, class_obj, current_year = _teacher_assignment(
-        request.user,
-        request.POST.get('assignment_id'),
-        request.POST.get('class_id'),
-    )
-    attendance = get_object_or_404(
-        Attendance,
-        pk=_required_pk(request.POST.get('attendance_id')),
-        subject=assignment.subject,
-        class_obj=class_obj,
-        academic_year=current_year,
-    )
-    reports = list(attendance.reports.all())
-    try:
-        statuses = _parse_attendance_statuses(
-            request.POST.get('student_ids'),
-            [report.student_id for report in reports],
-        )
-    except ValueError as error:
-        return JsonResponse({'error': str(error)}, status=400)
-    for report in reports:
-        report.status = statuses[report.student_id]
-    AttendanceReport.objects.bulk_update(reports, ['status', 'updated_at'])
-    return JsonResponse({'success': True})
-    
 @teacher_required
 def staff_apply_leave(request):
-    leave_data = LeaveRequest.objects.filter(applicant=request.user)
-    return render(request, 'staff_template/staff_apply_leave.html', {'leave_data': leave_data})
+    staff = request.user.staff_profile
+    leave_data = LeaveRequest.objects.filter(
+        applicant=request.user,
+    ).select_related('cover_teacher__user', 'approved_by')
+    colleagues = Staff.objects.filter(
+        user__user_type=2, user__is_active=True,
+    ).exclude(pk=staff.pk).select_related('user').order_by('user__first_name', 'user__last_name')
+    return render(request, 'teacher/leave.html', {
+        'staff': staff,
+        'leave_data': leave_data,
+        'colleagues': colleagues,
+        'leave_types': LeaveRequest.LEAVE_TYPE_CHOICES,
+        'today': timezone.localdate(),
+    })
+
 
 @teacher_required
 @require_POST
@@ -311,9 +78,17 @@ def staff_apply_leave_save(request):
     start_date = parse_date(request.POST.get('start_date', ''))
     end_date = parse_date(request.POST.get('end_date', ''))
     reason = request.POST.get('reason', '').strip()
+    handover_notes = request.POST.get('handover_notes', '').strip()[:2000]
+    valid_types = {value for value, _ in LeaveRequest.LEAVE_TYPE_CHOICES}
+    cover_teacher = None
+    cover_id = request.POST.get('cover_teacher', '')
+    if cover_id.isdigit():
+        cover_teacher = Staff.objects.filter(
+            pk=int(cover_id), user__user_type=2, user__is_active=True,
+        ).exclude(user=request.user).first()
 
-    if not leave_type or len(leave_type) > 50 or not reason or not start_date or not end_date:
-        messages.error(request, 'Enter a leave type, valid start and end dates, and a reason.')
+    if leave_type not in valid_types or not reason or not start_date or not end_date:
+        messages.error(request, 'Choose a leave type, valid start and end dates, and give a reason.')
     elif end_date < start_date:
         messages.error(request, 'The leave end date must be on or after the start date.')
     else:
@@ -323,14 +98,16 @@ def staff_apply_leave_save(request):
             start_date=start_date,
             end_date=end_date,
             reason=reason,
+            cover_teacher=cover_teacher,
+            handover_notes=handover_notes,
         )
-        messages.success(request, 'Your leave request was submitted.')
+        messages.success(request, 'Your leave request was submitted and is awaiting approval.')
     return redirect('staff_apply_leave')
 
 @teacher_required
 def staff_feedback(request):
     feedback_data = Feedback.objects.filter(user=request.user)
-    return render(request, 'staff_template/staff_feedback.html', {'feedback_data': feedback_data})
+    return render(request, 'teacher/feedback.html', {'feedback_data': feedback_data})
 
 @teacher_required
 @require_POST
@@ -339,37 +116,12 @@ def staff_feedback_save(request):
     if not feedback_message:
         messages.error(request, 'Enter a message before submitting feedback.')
     else:
-        Feedback.objects.create(user=request.user, message=feedback_message)
-        messages.success(request, 'Your feedback was submitted.')
+        feedback = Feedback.objects.create(user=request.user, message=feedback_message[:5000])
+        notify(admins(), 'New feedback from a teacher',
+               f'{request.user.get_full_name() or request.user.username} sent feedback to the administration.',
+               sender=request.user, link=reverse('respond_feedback', args=[feedback.pk]))
+        messages.success(request, 'Your feedback was sent to the administration.')
     return redirect('staff_feedback')
-
-
-@teacher_required
-def student_contact_inbox(request):
-    feedback_data = Feedback.objects.filter(
-        recipient_staff=request.user.staff_profile,
-    ).select_related('user', 'user__student_profile__current_class')
-    return render(request, 'teacher/student_contact_inbox.html', {
-        'feedback_data': feedback_data,
-    })
-
-
-@teacher_required
-@require_POST
-def student_contact_reply(request, feedback_id):
-    feedback = get_object_or_404(
-        Feedback,
-        pk=feedback_id,
-        recipient_staff=request.user.staff_profile,
-    )
-    reply = request.POST.get('reply', '').strip()
-    if not reply:
-        messages.error(request, 'Enter a reply before submitting.')
-    else:
-        feedback.reply = reply[:5000]
-        feedback.save(update_fields=['reply', 'updated_at'])
-        messages.success(request, 'Your reply was sent to the student.')
-    return redirect('student_contact_inbox')
 
 
 @teacher_required
@@ -391,64 +143,6 @@ def teacher_profile_save(request):
     return render(request, 'teacher/profile.html', {'staff': staff, 'form': form})
 
 @teacher_required
-def staff_profile_save(request):
-    if request.method != "POST":
-        return HttpResponseRedirect(reverse("staff_profile"))
-    else:
-        first_name=request.POST.get("first_name")
-        last_name=request.POST.get("last_name")
-        address=request.POST.get("address")
-        password=request.POST.get("password")
-        try:
-            customuser=CustomUser.objects.get(id=request.user.id)
-            customuser.first_name=first_name
-            customuser.last_name=last_name
-            if password!=None and password!="":
-                customuser.set_password(password)
-            customuser.save()
-
-            staff=Staff.objects.get(id=customuser.id)
-            staff.address = address
-            staff.save()
-            messages.success(request,"Successfully Updated Profile")
-            return HttpResponseRedirect(reverse("staff_profile"))
-        except:
-            messages.error(request,"Failed to Update Profile")
-            return HttpResponseRedirect(reverse("staff_profile"))
-
-@teacher_required
-@require_POST
-def staff_fcmtoken_save(request):
-    token = request.POST.get("token")
-    try:
-        staff=Staff.objects.get(admin=request.user.id)
-        staff.fcm_token=token
-        staff.save()
-        return HttpResponse("True")
-    except:
-        return HttpResponse("False")
-    
-@teacher_required
-def staff_all_notifications(request):
-    staff=Staff.objects.get(admin=request.user.id)
-    notifications=Notification.objects.filter(staff_id=staff.id)
-    return render(request,"staff_template/all_notifications.html",{"notifications":notifications})
-
-@teacher_required
-def staff_add_result(request):
-    return redirect('teacher_dashboard')
-
-@teacher_required
-@require_POST
-def save_student_result(request):
-    return redirect('teacher_dashboard')
-
-@teacher_required
-@require_POST
-def fetch_student_result(request):
-    return redirect('teacher_dashboard')
-
-@teacher_required
 def teacher_dashboard(request):
     staff = get_object_or_404(Staff, user=request.user)
     current_year = AcademicYear.objects.filter(is_current=True).first()
@@ -465,11 +159,27 @@ def teacher_dashboard(request):
         ).annotate(
             active_student_count=Count('students', filter=Q(students__active=True)),
         )
+    today = timezone.localdate()
+    class_cards = []
+    for class_obj in class_teacher_classes:
+        reports = AttendanceReport.objects.filter(
+            attendance__subject__isnull=True,
+            attendance__class_obj=class_obj,
+            attendance__attendance_date=today,
+        )
+        class_cards.append({
+            'class': class_obj,
+            'marked_today': reports.exists(),
+            'present_today': reports.filter(status__in=['P', 'L']).count(),
+            'absent_today': reports.filter(status='A').count(),
+        })
 
     context = {
         'assignments': assignments,
         'current_year': current_year,
         'class_teacher_classes': class_teacher_classes,
+        'class_cards': class_cards,
+        'today': today,
     }
     return render(request, 'teacher/teacher_dashboard.html', context)
 
@@ -758,6 +468,186 @@ def class_teacher_dashboard(request):
         ) if current_year else ResultPublication.objects.none(),
     }
     return render(request, 'teacher/class_teacher_dashboard.html', context)
+
+
+@teacher_required
+def class_teacher_events(request, class_id):
+    staff = get_object_or_404(Staff, user=request.user)
+    current_year = AcademicYear.objects.filter(is_current=True).first()
+    if current_year is None:
+        raise PermissionDenied
+    class_obj = get_object_or_404(
+        StudentClass, pk=class_id, class_teacher=staff, academic_year=current_year,
+    )
+    if request.method == 'POST':
+        form = ClassEventForm(request.POST, class_obj=class_obj)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.created_by = request.user
+            form.instance = event
+            form.save()
+            messages.success(request, 'Event sent to the selected students.')
+            return redirect('class_teacher_events', class_id=class_obj.pk)
+    else:
+        form = ClassEventForm(class_obj=class_obj)
+    events = SchoolEvent.objects.filter(audience_class=class_obj).prefetch_related(
+        'recipients__user',
+    ).order_by('-starts_at')
+    return render(request, 'teacher/class_events.html', {
+        'class_obj': class_obj,
+        'form': form,
+        'events': events,
+    })
+
+
+@teacher_required
+@require_POST
+def class_teacher_delete_event(request, class_id, event_id):
+    staff = get_object_or_404(Staff, user=request.user)
+    event = get_object_or_404(
+        SchoolEvent, pk=event_id, audience_class_id=class_id,
+        audience_class__class_teacher=staff,
+    )
+    event.delete()
+    messages.success(request, 'Event removed.')
+    return redirect('class_teacher_events', class_id=class_id)
+
+
+@teacher_required
+def class_teacher_attendance(request, class_id):
+    staff = get_object_or_404(Staff, user=request.user)
+    current_year = AcademicYear.objects.filter(is_current=True).first()
+    if current_year is None:
+        raise PermissionDenied
+    class_obj = get_object_or_404(
+        StudentClass, pk=class_id, class_teacher=staff, academic_year=current_year,
+    )
+    source = request.POST if request.method == 'POST' else request.GET
+    attendance_date = parse_date(source.get('date') or '') or timezone.localdate()
+    students = list(Student.objects.filter(
+        current_class=class_obj, academic_year=current_year, active=True,
+    ).select_related('user').order_by('user__last_name', 'user__first_name'))
+    valid_statuses = {code for code, _ in AttendanceReport.STATUS_CHOICES}
+
+    if request.method == 'POST':
+        if attendance_date > timezone.localdate():
+            messages.error(request, 'Attendance cannot be recorded for a future date.')
+        else:
+            with transaction.atomic():
+                attendance = Attendance.objects.filter(
+                    subject__isnull=True, class_obj=class_obj,
+                    attendance_date=attendance_date, academic_year=current_year,
+                ).first()
+                if attendance is not None:
+                    messages.error(request, 'The register for this date has already been marked and cannot be marked again.')
+                    return redirect(f"{reverse('class_teacher_attendance', args=[class_obj.pk])}?date={attendance_date.isoformat()}")
+                if attendance is None:
+                    attendance = Attendance.objects.create(
+                        subject=None, class_obj=class_obj, attendance_date=attendance_date,
+                        academic_year=current_year, created_by=staff,
+                    )
+                for student in students:
+                    status = request.POST.get(f'status_{student.pk}')
+                    if status not in valid_statuses:
+                        status = 'A'
+                    AttendanceReport.objects.update_or_create(
+                        attendance=attendance, student=student,
+                        defaults={
+                            'status': status,
+                            'remarks': request.POST.get(f'remarks_{student.pk}', '').strip()[:100],
+                        },
+                    )
+            messages.success(request, f'Attendance for {class_obj.name} on {attendance_date:%d %b %Y} saved.')
+            return redirect(f"{reverse('class_teacher_attendance', args=[class_obj.pk])}?date={attendance_date.isoformat()}")
+
+    existing = {
+        report.student_id: report
+        for report in AttendanceReport.objects.filter(
+            attendance__subject__isnull=True, attendance__class_obj=class_obj,
+            attendance__attendance_date=attendance_date, attendance__academic_year=current_year,
+        )
+    }
+    rows = [{'student': s, 'report': existing.get(s.pk)} for s in students]
+    return render(request, 'teacher/class_attendance.html', {
+        'class_obj': class_obj,
+        'attendance_date': attendance_date,
+        'today': timezone.localdate(),
+        'rows': rows,
+        'status_choices': AttendanceReport.STATUS_CHOICES,
+        'recorded': bool(existing),
+    })
+
+
+@teacher_required
+def class_teacher_weekly_attendance(request, class_id):
+    staff = get_object_or_404(Staff, user=request.user)
+    current_year = AcademicYear.objects.filter(is_current=True).first()
+    if current_year is None:
+        raise PermissionDenied
+    class_obj = get_object_or_404(
+        StudentClass, pk=class_id, class_teacher=staff, academic_year=current_year,
+    )
+    register = Attendance.objects.filter(
+        subject__isnull=True, class_obj=class_obj, academic_year=current_year,
+    )
+    week_starts = sorted(
+        {d - timedelta(days=d.weekday()) for d in register.values_list('attendance_date', flat=True)},
+        reverse=True,
+    )
+
+    requested = parse_date(request.GET.get('week') or '')
+    if requested is not None:
+        week_start = requested - timedelta(days=requested.weekday())
+    elif week_starts:
+        week_start = week_starts[0]
+    else:
+        week_start = timezone.localdate() - timedelta(days=timezone.localdate().weekday())
+    days = [week_start + timedelta(days=i) for i in range(5)]
+
+    students = list(Student.objects.filter(
+        current_class=class_obj, academic_year=current_year, active=True,
+    ).select_related('user').order_by('user__last_name', 'user__first_name'))
+    marks = {}
+    for report in AttendanceReport.objects.filter(
+        attendance__in=register.filter(attendance_date__in=days),
+    ).select_related('attendance'):
+        marks[(report.student_id, report.attendance.attendance_date)] = report.status
+
+    rows = []
+    for student in students:
+        cells = [marks.get((student.pk, day)) for day in days]
+        rows.append({
+            'student': student,
+            'cells': cells,
+            'present': sum(1 for c in cells if c in ('P', 'L')),
+            'absent': sum(1 for c in cells if c == 'A'),
+            'late': sum(1 for c in cells if c == 'L'),
+            'excused': sum(1 for c in cells if c == 'E'),
+        })
+    recorded_days = {d for (_, d) in marks}
+    weeks = [
+        {
+            'start': start,
+            'end': start + timedelta(days=4),
+            'days_recorded': register.filter(
+                attendance_date__range=(start, start + timedelta(days=6)),
+            ).count(),
+        }
+        for start in week_starts
+    ]
+    template = 'teacher/class_attendance_print.html' if request.GET.get('print') else 'teacher/class_attendance_weekly.html'
+    return render(request, template, {
+        'class_obj': class_obj,
+        'year': current_year,
+        'week_start': week_start,
+        'week_end': days[-1],
+        'days': days,
+        'recorded_days': recorded_days,
+        'rows': rows,
+        'weeks': weeks,
+        'printed_at': timezone.now(),
+        'teacher_name': request.user.get_full_name() or request.user.username,
+    })
 
 @teacher_required
 def view_class_results(request, class_id):

@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect,reverse, get_object_or_404
+﻿from django.shortcuts import render,redirect,reverse, get_object_or_404
 from django.http import HttpResponse,HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import login,logout
@@ -7,6 +7,8 @@ from django.contrib import  messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.db.models import (
+    Case,
+    CharField,
     DecimalField,
     ExpressionWrapper,
     F,
@@ -16,6 +18,7 @@ from django.db.models import (
     Subquery,
     Sum,
     Value,
+    When,
 )
 from django.db.models.functions import Coalesce
 from django.db import transaction
@@ -29,23 +32,96 @@ from .models import (
     FeePayment,
     Expense,
     CustomUser,
-    SessionYearModel,
     SchoolEvent,
     CashPaymentApproval,
     FeeTransaction,
     StudentApplication,
+    school_cash_balance,
+    SchoolProfile,
+    UniformItem,
+    Staff,
+    Bursar,
+    Notification,
+    NotificationReadStatus,
 )
+from django.utils.http import url_has_allowed_host_and_scheme
 from .forms import (
-    AdminSignupForm,
     FeePaymentForm,
     FeeStructureForm,
     ExpenseForm,
     SchoolEventForm,
     StudentSignupForm,
 )
+def _portal_base_template(user):
+    return {
+        1: 'admin/base.html',
+        2: 'teacher/base.html',
+        3: 'student_template/base.html',
+        4: 'bursar/base.html',
+    }.get(user.user_type, 'base.html')
+
+
+@login_required
+def notifications(request):
+    read_ids = set(NotificationReadStatus.objects.filter(user=request.user).values_list('notification_id', flat=True))
+    items = list(Notification.objects.filter(recipients=request.user).order_by('-created_at')[:100])
+    for item in items:
+        item.is_read = item.pk in read_ids
+    return render(request, 'notifications/inbox.html', {
+        'notifications': items,
+        'base_template': _portal_base_template(request.user),
+    })
+
+
+@login_required
+def open_notification(request, notification_id):
+    notification = get_object_or_404(Notification, pk=notification_id, recipients=request.user)
+    NotificationReadStatus.objects.get_or_create(notification=notification, user=request.user)
+    if notification.link and url_has_allowed_host_and_scheme(notification.link, allowed_hosts={request.get_host()}):
+        return redirect(notification.link)
+    return redirect('notifications')
+
+
+@login_required
+@require_POST
+def mark_notifications_read(request):
+    unread = Notification.objects.filter(recipients=request.user).exclude(read_statuses__user=request.user)
+    NotificationReadStatus.objects.bulk_create(
+        [NotificationReadStatus(notification=n, user=request.user) for n in unread],
+        ignore_conflicts=True,
+    )
+    return redirect('notifications')
+
+
 # Create your views here.
+def public_school_context():
+    leaders = []
+    for staff in Staff.objects.filter(
+        role__in=['DEPUTY_HEADTEACHER', 'BOARDING_MASTER'], user__is_active=True,
+    ).select_related('user'):
+        leaders.append({
+            'name': staff.user.get_full_name() or staff.user.username,
+            'title': staff.get_role_display(),
+            'photo': staff.user.profile_pic,
+            'order': 0 if staff.role == 'DEPUTY_HEADTEACHER' else 1,
+        })
+    for bursar in Bursar.objects.filter(user__is_active=True).select_related('user')[:1]:
+        leaders.append({
+            'name': bursar.user.get_full_name() or bursar.user.username,
+            'title': 'Bursar',
+            'photo': bursar.user.profile_pic,
+            'order': 2,
+        })
+    leaders.sort(key=lambda leader: leader['order'])
+    return {
+        'school_profile': SchoolProfile.get(),
+        'uniform_items': UniformItem.objects.all(),
+        'leaders': leaders,
+    }
+
+
 def index(request):
-    return render(request,'dashboard.html')
+    return render(request, 'dashboard.html', public_school_context())
 def about(request):
     return render(request,'about.html')
 def academics(request):
@@ -55,19 +131,29 @@ def admissions(request):
 def results(request):
     return render(request,'results.html')
 def events(request):
-    is_admin = request.user.is_authenticated and request.user.user_type == 1
-    is_active_student = (
-        request.user.is_authenticated
-        and request.user.user_type == 3
-        and Student.objects.filter(user=request.user, active=True).exists()
-    )
-    calendar_events = SchoolEvent.objects.filter(
+    user = request.user
+    is_admin = user.is_authenticated and user.user_type == 1
+    upcoming = SchoolEvent.objects.filter(
         is_published=True,
         starts_at__gte=timezone.now(),
-    ) if is_admin or is_active_student else SchoolEvent.objects.none()
+    ).select_related('audience_class')
+    if is_admin:
+        calendar_events = upcoming
+    else:
+        visible = Q(audience_class__isnull=True)
+        if user.is_authenticated and user.user_type == 3:
+            student = Student.objects.filter(user=user, active=True).first()
+            if student is not None:
+                visible |= Q(pk__in=student.targeted_events.values('pk')) | Q(
+                    audience_class_id=student.current_class_id,
+                    pk__in=SchoolEvent.objects.filter(recipients__isnull=True).values('pk'),
+                )
+        elif user.is_authenticated and user.user_type == 2:
+            visible |= Q(created_by=user)
+        calendar_events = upcoming.filter(visible).distinct()
     return render(request, 'events.html', {
         'calendar_events': calendar_events,
-        'can_view_calendar': is_admin or is_active_student,
+        'can_view_calendar': True,
         'can_manage_events': is_admin,
     })
 
@@ -139,9 +225,23 @@ def contact(request):
 def loginPage(request):
     return render(request,'login.html')
 def home(request):
-    return render(request,'home.html')
+    return render(request, 'home.html', public_school_context())
+def _application_context(form):
+    today = timezone.localdate()
+    max_age, min_age = form.MAX_AGE, form.MIN_AGE
+    return {
+        'form': form,
+        'academic_years': form.fields['academic_year'].queryset,
+        'classes': form.fields['current_class'].queryset,
+        'min_age': min_age,
+        'max_age': max_age,
+        'latest_birth_date': today.replace(year=today.year - min_age, day=min(today.day, 28)),
+        'earliest_birth_date': today.replace(year=today.year - max_age - 1, day=min(today.day, 28)),
+    }
+
+
 def apply(request):
-    return render(request,'apply.html')
+    return render(request, 'apply.html', _application_context(StudentSignupForm()))
 
 def Login(request):
     if request.method!="POST":
@@ -179,112 +279,28 @@ def Logout(request):
     logout(request)
     return HttpResponseRedirect("/")
 
-@login_required(login_url='show_login')
-def signup_admin(request):
-    _require_calendar_admin(request)
-    return render(request,"signup_admin.html")
-
-@login_required(login_url='show_login')
-@require_POST
-def admin_signup(request):
-    _require_calendar_admin(request)
-    form = AdminSignupForm(request.POST)
-    if not form.is_valid():
-        return render(request, 'signup_admin.html', {'form': form}, status=400)
-    if request.method!="POST":
-        return HttpResponse("<h2>Method Not Allowed !</h2>")
-    else:
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        try:
-            user = CustomUser.objects.create_user(username=username,password=password,email=email,user_type=1)
-            user.save()
-            messages.success(request,"Successfully Created Admin")
-            return HttpResponseRedirect(reverse("manage_administrators"))
-        except:
-            messages.error(request,"Failed to Create Admin")
-            return HttpResponseRedirect(reverse("signup_admin"))
-
-def signup_staff(request):
-    return render(request,"signup_staff.html")
-
-def staff_signup(request):
-    if request.method!="POST":
-        return HttpResponse("<h2>Method Not Allowed !</h2>")
-    else:
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        address = request.POST.get("address")
-        try:
-            user = CustomUser.objects.create_user(username=username,password=password,email=email,user_type=2)
-            user.staffs.address=address
-            user.save()
-            messages.success(request,"Successfully Created  Staff")
-            return HttpResponseRedirect(reverse("show_login"))
-        except:
-            messages.error(request,"Failed to Create Staff")
-            return HttpResponseRedirect(reverse("signup_staff"))
-
 def signup_student(request):
-    form = StudentSignupForm()
-    return render(request, 'signup_student.html', {
-        'form': form,
-        'academic_years': form.fields['academic_year'].queryset,
-        'classes': form.fields['current_class'].queryset,
-    })
+    return redirect('apply')
 
-def _legacy_student_signup(request):
-    raise PermissionDenied
-    if request.method!="POST":
-        return HttpResponse("<h2>Method Not Allowed !</h2>")
-    else:
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        email = request.POST.get("email") 
-        address = request.POST.get("address")
-        session_year_id = request.POST.get("session_year_id")
-        course_id = request.POST.get("course")
-        sex = request.POST.get("sex")
+def _temporary_application_username():
+    count = StudentApplication.objects.count() + 1
+    while CustomUser.objects.filter(username=f'APP{count:06d}').exists():
+        count += 1
+    return f'APP{count:06d}'
 
-        profile_pic = request.FILES['profile_pic']
-
-        fs = FileSystemStorage()
-        filename = fs.save(profile_pic.name,profile_pic)
-        profile_pic_url = fs.url(filename)
-
-        try:
-            user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=3)
-            user.students.address = address
-            session_year = SessionYearModel.objects.get(id=session_year_id)
-            user.students.session_year_id = session_year
-            user.students.gender = sex
-            user.students.profile_pic = profile_pic_url
-            user.save()
-            messages.success(request,"Successfully created student")
-            return HttpResponseRedirect(reverse("show_login"))
-        except:
-            messages.error(request,"Failed to Add student")
-            return HttpResponseRedirect(reverse("signup_student"))
 
 @require_POST
 def student_signup(request):
     form = StudentSignupForm(request.POST, request.FILES)
-    context = {
-        'form': form,
-        'academic_years': form.fields['academic_year'].queryset,
-        'classes': form.fields['current_class'].queryset,
-    }
+    context = _application_context(form)
     if not form.is_valid():
-        return render(request, 'signup_student.html', context, status=400)
+        return render(request, 'apply.html', context, status=400)
 
+    username = form.cleaned_data.get('username') or _temporary_application_username()
     with transaction.atomic():
         user = CustomUser.objects.create_user(
-            username=form.cleaned_data['username'],
-            email=form.cleaned_data['email'],
+            username=username,
+            email=form.cleaned_data.get('email') or '',
             password=form.cleaned_data['password'],
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
@@ -295,18 +311,33 @@ def student_signup(request):
         student.current_class = form.cleaned_data['current_class']
         student.academic_year = form.cleaned_data['academic_year']
         student.gender = form.cleaned_data['gender']
+        student.date_of_birth = form.cleaned_data.get('date_of_birth')
+        student.birth_certificate_number = form.cleaned_data.get('birth_certificate_number') or None
         student.parent_email = form.cleaned_data['parent_email']
         student.active = False
         student.save()
-        StudentApplication.objects.create(student=student)
+        application = StudentApplication.objects.create(student=student)
 
         profile_image = form.cleaned_data['profile_pic']
         if profile_image:
             user.profile_pic = profile_image
             user.save(update_fields=['profile_pic'])
 
-    messages.success(request, 'Your student account was created. You can now sign in.')
-    return redirect('show_login')
+    return redirect('application_confirmation', application_id=application.id)
+
+
+def application_confirmation(request, application_id):
+    try:
+        application = StudentApplication.objects.select_related('student__user', 'student__current_class', 'student__academic_year').get(id=application_id)
+    except StudentApplication.DoesNotExist:
+        messages.error(request, 'Application not found.')
+        return redirect('home')
+    
+    context = {
+        'application': application,
+        'student': application.student,
+    }
+    return render(request, 'confirmation_letter.html', context)
 
 
 def bursar_check(user):
@@ -329,7 +360,7 @@ def bursar_dashboard(request):
     return render(request, 'bursar/dashboard.html', {
         'total_paid': total_paid,
         'total_expenses': total_expenses,
-        'balance': total_paid - total_expenses,
+        'balance': school_cash_balance(),
         'recent_payments': recent_payments,
         'recent_expenses': recent_expenses,
     })
@@ -348,6 +379,7 @@ def fee_records(request):
 
     money_field = DecimalField(max_digits=12, decimal_places=2)
     structure_totals = FeeStructure.objects.filter(
+        Q(applies_to='ALL') | Q(applies_to=OuterRef('boarder_type')),
         class_obj_id=OuterRef('current_class_id'),
         academic_year_id=OuterRef('current_class__academic_year_id'),
         is_active=True,
@@ -374,6 +406,12 @@ def fee_records(request):
     ).values('total')[:1]
     students = Student.objects.select_related(
         'user', 'current_class', 'academic_year',
+    ).annotate(
+        boarder_type=Case(
+            When(is_boarder=True, then=Value('BOARDER')),
+            default=Value('DAY'),
+            output_field=CharField(),
+        ),
     ).annotate(
         total_fee_due=Coalesce(
             Subquery(structure_totals, output_field=money_field),
@@ -482,7 +520,7 @@ def record_payment(request, student_id):
                 if not applicable_fee_structures and student.get_fee_balance() <= 0:
                     form.add_error(
                         None,
-                        'No active fee structure is configured for this student’s class and academic year.',
+                        'No active fee structure is configured for this studentâ€™s class and academic year.',
                     )
                     return render(request, 'bursar/record_payment.html', {
                         'student': student,
@@ -600,7 +638,7 @@ def payment_reports(request):
         'expenses': expenses,
         'total_paid': total_paid,
         'total_expenses': total_expenses,
-        'balance': total_paid - total_expenses,
+        'balance': school_cash_balance(),
         'total_students': total_students,
     }
     return render(request, 'bursar/payment_reports.html', context)

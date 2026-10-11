@@ -162,6 +162,7 @@
             </a>
         </div>
         <div class="panel-masthead-actions">
+            {% include 'notifications/_bell.html' %}
             <div class="panel-user">
                 <span class="panel-avatar">{% if request.user.profile_pic %}<img src="{{ request.user.profile_pic.url }}" alt="">{% else %}{{ request.user.username|slice:":1"|upper }}{% endif %}</span>
                 <span class="panel-user-info"><span class="panel-user-name">{{ request.user.get_full_name|default:request.user.username }}</span><span class="panel-user-role">Bursar</span></span>
@@ -175,6 +176,9 @@
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'bursar_dashboard' %}active{% endif %}" href="{% url 'bursar_dashboard' %}"><i class="fas fa-gauge-high"></i><span>Dashboard</span></a></li>
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'fee_records' or request.resolver_match.url_name == 'record_payment' %}active{% endif %}" href="{% url 'fee_records' %}"><i class="fas fa-money-bill-wave"></i><span>Student fee records</span></a></li>
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'expense_management' %}active{% endif %}" href="{% url 'expense_management' %}"><i class="fas fa-receipt"></i><span>Expenses</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'bursar_food' or request.resolver_match.url_name == 'bursar_food_student' %}active{% endif %}" href="{% url 'bursar_food' %}"><i class="fas fa-wheat-awn"></i><span>Food contributions</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'bursar_grants' %}active{% endif %}" href="{% url 'bursar_grants' %}"><i class="fas fa-landmark"></i><span>Grants &amp; stipends</span></a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'bursar_payroll' %}active{% endif %}" href="{% url 'bursar_payroll' %}"><i class="fas fa-users"></i><span>Staff payroll</span></a></li>
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'payment_reports' %}active{% endif %}" href="{% url 'payment_reports' %}"><i class="fas fa-chart-column"></i><span>Finance reports</span></a></li>
         </ul>
     </aside>

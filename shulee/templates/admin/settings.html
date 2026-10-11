@@ -2,101 +2,82 @@
 {% block title %}System Settings{% endblock %}
 {% block content %}
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2>System Settings</h2>
-        </div>
-    </div>
+    <h2 class="mb-4">System Settings</h2>
 
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="m-0">Academic Year Settings</h6>
-                </div>
-                <div class="card-body">
-                    <form method="post" action="{% url 'set_current_academic_year' %}">
-                        {% csrf_token %}
-                        <div class="form-group mb-3">
-                            <label class="form-label">Current Academic Year</label>
-                            <select name="academic_year" class="form-select" required>
-                                {% for year in academic_years %}
-                                <option value="{{ year.id }}" {% if year.is_current %}selected{% endif %}>{{ year.name }}</option>
-                                {% endfor %}
-                            </select>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-header bg-primary text-white"><h6 class="m-0">School information</h6></div>
+                    <div class="card-body">
+                        {% for field in form %}
+                        {% if field.name == 'school_name' or field.name == 'logo' or field.name == 'address' or field.name == 'contact_email' or field.name == 'contact_phone' or field.name == 'website' %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                         </div>
-                        <button type="submit" class="btn btn-primary">Set Current Year</button>
-                    </form>
+                        {% endif %}
+                        {% endfor %}
+                        {% if form.instance.logo %}<img src="{{ form.instance.logo.url }}" alt="Current logo" style="max-height:70px;">{% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-md-6 mb-4">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="m-0">System Configuration</h6>
-                </div>
-                <div class="card-body">
-                    <form method="post" action="">
-                        {% csrf_token %}
-                        <div class="form-group mb-3">
-                            <label class="form-label">School Name</label>
-                            <input type="text" name="school_name" class="form-control" value="{{ settings.school_name }}" required>
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white"><h6 class="m-0">Academic calendar</h6></div>
+                    <div class="card-body">
+                        <p class="mb-3">
+                            Current academic year:
+                            <strong>{{ current_year.name|default:"not yet generated" }}</strong>
+                            {% if current_year %}<span class="text-muted">({{ current_year.start_date|date:"d M Y" }} &ndash; {{ current_year.end_date|date:"d M Y" }})</span>{% endif %}
+                            <br><small class="text-muted">Years roll over automatically; students are promoted when a new year begins.
+                            <a href="{% url 'manage_academic_years' %}">View all years</a></small>
+                        </p>
+                        {% for n in "123" %}
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                {% if n == "1" %}<label class="form-label" for="id_term_1_start">Term 1 start</label>{{ form.term_1_start }}{{ form.term_1_start.errors }}
+                                {% elif n == "2" %}<label class="form-label" for="id_term_2_start">Term 2 start</label>{{ form.term_2_start }}{{ form.term_2_start.errors }}
+                                {% else %}<label class="form-label" for="id_term_3_start">Term 3 start</label>{{ form.term_3_start }}{{ form.term_3_start.errors }}{% endif %}
+                            </div>
+                            <div class="col-6">
+                                {% if n == "1" %}<label class="form-label" for="id_term_1_end">Term 1 end</label>{{ form.term_1_end }}{{ form.term_1_end.errors }}
+                                {% elif n == "2" %}<label class="form-label" for="id_term_2_end">Term 2 end</label>{{ form.term_2_end }}{{ form.term_2_end.errors }}
+                                {% else %}<label class="form-label" for="id_term_3_end">Term 3 end</label>{{ form.term_3_end }}{{ form.term_3_end.errors }}{% endif %}
+                            </div>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label">School Logo</label>
-                            <input type="file" name="logo" class="form-control">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="form-label">Address</label>
-                            <textarea name="address" class="form-control" rows="2">{{ settings.address }}</textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Settings</button>
-                    </form>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h6 class="m-0">User Management</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-4">
-                        <a href="{% url 'manage_administrators' %}" class="btn btn-primary">
-                            <i class="fas fa-user-shield me-2"></i>Manage Administrators
-                        </a>
-                        <a href="{% url 'manage_bursars' %}" class="btn btn-success">
-                            <i class="fas fa-user-tie me-2"></i>Manage Bursars
-                        </a>
-                        <a href="{% url 'backup_database' %}" class="btn btn-warning">
-                            <i class="fas fa-database me-2"></i>Backup Database
-                        </a>
-                        <a href="{% url 'system_logs' %}" class="btn btn-info">
-                            <i class="fas fa-clipboard-list me-2"></i>View System Logs
-                        </a>
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white"><h6 class="m-0">Admissions</h6></div>
+                    <div class="card-body">
+                        <div class="form-check form-switch">
+                            {{ form.applications_open }}
+                            <label class="form-check-label" for="{{ form.applications_open.id_for_label }}">{{ form.applications_open.label }}</label>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <button type="submit" class="btn btn-primary mb-4">Save settings</button>
+    </form>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white"><h6 class="m-0">User management &amp; maintenance</h6></div>
+        <div class="card-body d-flex flex-wrap gap-2">
+            <a href="{% url 'manage_administrators' %}" class="btn btn-primary"><i class="fas fa-user-shield me-2"></i>Manage Administrators</a>
+            <a href="{% url 'manage_bursars' %}" class="btn btn-success"><i class="fas fa-user-tie me-2"></i>Manage Bursars</a>
+            <a href="{% url 'system_logs' %}" class="btn btn-info"><i class="fas fa-clipboard-list me-2"></i>View System Logs</a>
+            <form method="post" action="{% url 'backup_database' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning"><i class="fas fa-database me-2"></i>Backup Database</button>
+            </form>
+        </div>
     </div>
 </div>
-<script>
-    function toggleNotesField(select) {
-        const notesField = document.querySelector('#id_notes').parentElement;
-        if (select.value == '2') {  // If rejected
-            notesField.style.display = 'block';
-        } else {
-            notesField.style.display = 'none';
-        }
-    }
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        const statusSelect = document.querySelector('#id_status');
-        if (statusSelect) toggleNotesField(statusSelect);
-    });
-</script>
 {% endblock %}

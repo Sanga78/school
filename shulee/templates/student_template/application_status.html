@@ -36,8 +36,8 @@
             </p>
 
             <div class="application-meta">
-                <p class="mb-2"><strong>Application reference:</strong> {{ application.pk }}</p>
-                <p class="mb-2"><strong>Submitted:</strong> {{ application.submitted_at|date:"d M Y" }}</p>
+                <p class="mb-2"><strong>Confirmation ID:</strong> <span style="font-family: 'Courier New', monospace; font-weight: 700; color: #1a4731;">{{ application.confirmation_id }}</span></p>
+                <p class="mb-2"><strong>Submitted:</strong> {{ application.submitted_at|date:"d M Y \a\t H:i" }}</p>
                 <p class="mb-0"><strong>Parent/guardian contact:</strong> {{ student.parent_email }}</p>
             </div>
 
@@ -55,6 +55,7 @@
                 <div class="alert alert-info" role="status">{{ application.review_notes|linebreaksbr }}</div>
             {% endif %}
             <div class="d-flex flex-wrap gap-2 mt-4">
+                <a class="btn btn-primary" href="{% url 'student_confirmation_letter' %}"><i class="fas fa-file-pdf mr-1" aria-hidden="true"></i> View confirmation letter</a>
                 <a class="btn btn-success" href="{% url 'student_application_status' %}"><i class="fas fa-rotate-right mr-1" aria-hidden="true"></i> Refresh status</a>
                 <a class="btn btn-outline-secondary" href="{% url 'logout' %}">Sign out</a>
             </div>

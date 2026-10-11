@@ -60,6 +60,8 @@ SECURE_SSL_REDIRECT = os.environ.get(
 ).lower() in {'1', 'true', 'yes'}
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS') else []
 SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', '0'))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = os.environ.get(
     'DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS',
@@ -69,6 +71,17 @@ SECURE_HSTS_PRELOAD = os.environ.get(
     'DJANGO_SECURE_HSTS_PRELOAD',
     'false',
 ).lower() in {'1', 'true', 'yes'}
+
+# Session timeout configuration (30 minutes of inactivity)
+SESSION_COOKIE_AGE = 1800  # 30 minutes in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Additional security headers
+X_FRAME_OPTIONS = 'DENY'
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'sandbox')
 MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY', '')
@@ -100,6 +113,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'index.middleware.AcademicYearRolloverMiddleware',
 ]
 
 ROOT_URLCONF = 'shulee.urls'
@@ -115,6 +129,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'index.context_processors.notifications',
             ],
         },
     },
@@ -190,6 +205,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = "index.CustomUser"
+LOGIN_URL = 'show_login'
 
 EMAIL_FILE_PATH=os.path.join(BASE_DIR,"sent_mails")
 

@@ -61,7 +61,7 @@
             <tr>
                 <td>{{ record.attendance_date }}</td>
                 <td>{{ record.class_obj.name }}</td>
-                <td>{{ record.subject.name }}</td>
+                <td>{{ record.subject.name|default:"Daily class register" }}</td>
                 <td>{{ record.attendancereport_set.filter(status='P').count() }}</td>
                 <td>{{ record.attendancereport_set.filter(status='A').count() }}</td>
             </tr>

@@ -305,7 +305,7 @@
     <section class="dashboard-intro" aria-labelledby="dashboard-welcome">
         <div class="intro-tag">AIC Laboret Girls Boarding Primary School</div>
         <h2 id="dashboard-welcome">Your learning, all in one place</h2>
-        <p>Review your academic progress, keep track of school fees, and stay connected with your class teacher.</p>
+        <p>Review your academic progress, keep track of school fees, and stay connected with the school.</p>
     </section>
 
     <section class="dashboard-grid" aria-label="Student summary">
@@ -319,10 +319,25 @@
             <span class="summary-value">{{ result_count }}</span>
             <span class="summary-detail">Across your subjects</span>
         </article>
+        <article class="dashboard-card summary-card">
+            <span class="summary-label">Admission number</span>
+            <span class="summary-value">{% if student.admission_number %}{{ student.admission_number }}{% else %}Pending{% endif %}</span>
+            <span class="summary-detail">{% if student.admission_number %}Assigned{% else %}Upon admission{% endif %}</span>
+        </article>
         <article class="dashboard-card summary-card balance">
             <span class="summary-label">Fee balance</span>
             <span class="summary-value">Ksh {{ fee_balance|floatformat:2 }}</span>
             <span class="summary-detail">Your current outstanding balance</span>
+        </article>
+        <article class="dashboard-card summary-card balance">
+            <span class="summary-label">Food owed</span>
+            <span class="summary-value">Ksh {{ food_balance|floatformat:2 }}</span>
+            <span class="summary-detail">{% for row in food_status %}{% if row.owed_kg > 0 %}{{ row.requirement.get_item_display }} {{ row.owed_kg }}kg{% if not forloop.last %}, {% endif %}{% endif %}{% empty %}No food requirement set{% endfor %}</span>
+        </article>
+        <article class="dashboard-card summary-card balance">
+            <span class="summary-label">Total owed</span>
+            <span class="summary-value">Ksh {{ total_owed|floatformat:2 }}</span>
+            <span class="summary-detail"><a href="{% url 'student_invoice' %}" target="_blank">View / print invoice</a></span>
         </article>
         <article class="dashboard-card summary-card">
             <span class="summary-label">Fees paid</span>
@@ -356,7 +371,6 @@
         <article class="dashboard-card">
             <div class="section-heading">
                 <h2>Class teacher</h2>
-                <a class="section-link" href="{% url 'student_feedback' %}">Contact</a>
             </div>
             {% if teacher %}
                 <p class="teacher-name">{{ teacher.user.get_full_name|default:teacher.user.username }}</p>
@@ -401,7 +415,7 @@
         <a class="action-link" href="{% url 'student_view_result' %}"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i><span>Academic results</span></a>
         <a class="action-link" href="{% url 'student_fee_statement' %}"><i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i><span>Fee statement</span></a>
         <a class="action-link" href="{% url 'make_fee_payment' %}"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Pay school fees</span></a>
-        <a class="action-link" href="{% url 'student_feedback' %}"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Contact class teacher</span></a>
+        <a class="action-link" href="{% url 'student_feedback' %}"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Contact administration</span></a>
     </nav>
 </div>
 {% endblock %}

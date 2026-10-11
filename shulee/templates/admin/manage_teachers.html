@@ -30,8 +30,12 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Phone</th>
+                            <th>Role</th>
+                            <th>Employment</th>
+                            <th>Monthly salary</th>
                             <th>Qualification</th>
                             <th>Date Joined</th>
+                            <th>Subject assignments</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -50,8 +54,16 @@
                             <td>{{ teacher.user.get_full_name }}</td>
                             <td>{{ teacher.user.email }}</td>
                             <td>{{ teacher.user.phone|default:"-" }}</td>
+                            <td>{{ teacher.get_role_display }}</td>
+                            <td><span class="badge {% if teacher.is_bom %}text-bg-info{% else %}text-bg-secondary{% endif %}">{{ teacher.employment_type }}</span></td>
+                            <td>{% if teacher.is_bom %}Ksh {{ teacher.monthly_salary|floatformat:2 }}{% else %}-{% endif %}</td>
                             <td>{{ teacher.qualification|default:"-" }}</td>
                             <td>{{ teacher.date_of_joining|date:"Y-m-d" }}</td>
+                            <td>
+                                <a href="{% url 'teacher_subjects' teacher.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-book me-1"></i> Manage subjects
+                                </a>
+                            </td>
                             <td class="text-end">
                                 <a href="{% url 'edit_teacher' teacher.id %}" class="btn btn-sm btn-outline-primary" aria-label="Edit {{ teacher.user.username }}"><i class="fas fa-edit"></i></a>
                                 <form method="post" action="{% url 'delete_teacher' teacher.id %}" class="d-inline" onsubmit="return confirm('Permanently delete this teacher account?');">
@@ -61,7 +73,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center">No teachers found</td>
+                            <td colspan="11" class="text-center">No teachers found</td>
                         </tr>
                         {% endfor %}
                     </tbody>

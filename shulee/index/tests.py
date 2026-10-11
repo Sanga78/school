@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+﻿from datetime import date, timedelta
 from io import BytesIO
 import json
 import re
@@ -16,7 +16,6 @@ from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
 
-from .forms import StudentSignupForm
 from .models import (
     AcademicYear,
     Attendance,
@@ -31,6 +30,7 @@ from .models import (
     LeaveRequest,
     MpesaPayment,
     Notification,
+    SchoolProfile,
     SchoolEvent,
     ResultPublication,
     Staff,
@@ -79,11 +79,53 @@ class SchoolCalendarTests(TestCase):
         self.assertContains(response, 'Reading Day')
         self.assertContains(response, 'School library')
 
-    def test_calendar_event_details_are_hidden_from_anonymous_visitors(self):
+    def test_public_events_are_visible_to_anonymous_visitors(self):
         response = self.client.get(reverse('events'))
 
-        self.assertNotContains(response, 'Reading Day')
-        self.assertContains(response, 'Student login')
+        self.assertContains(response, 'Reading Day')
+
+    def test_targeted_class_events_reach_only_intended_students(self):
+        year = AcademicYear.objects.filter(is_current=True).first() or AcademicYear.objects.create(
+            name='2026', start_date=timezone.localdate(), end_date=timezone.localdate() + timedelta(days=300),
+            is_current=True,
+        )
+        teacher = User.objects.create_user(username='ct', password='test-password', user_type=2)
+        klass = StudentClass.objects.create(name='Events Class', academic_year=year, class_teacher=teacher.staff_profile)
+        other = User.objects.create_user(username='s2', password='test-password', user_type=3)
+        third = User.objects.create_user(username='s3', password='test-password', user_type=3)
+        for u in (self.student_user, other, third):
+            p = u.student_profile
+            p.gender = 'F'
+            p.current_class = klass
+            p.academic_year = year
+            p.save()
+        url = reverse('class_teacher_events', args=[klass.pk])
+        payload = {
+            'title': 'Parents Evening', 'description': 'Parents meet', 'starts_at': '2099-01-01T10:00',
+            'location': 'Hall', 'send_to': 'selected', 'recipients': [other.student_profile.pk],
+        }
+        self.client.force_login(teacher)
+        self.assertRedirects(self.client.post(url, payload), url)
+        self.assertEqual(SchoolEvent.objects.get(title='Parents Evening').recipients.count(), 1)
+        payload.update(title='Whole class', send_to='all', recipients=[])
+        self.client.post(url, payload)
+
+        self.client.force_login(other)
+        page = self.client.get(reverse('events'))
+        self.assertContains(page, 'Parents Evening')
+        self.assertContains(page, 'Whole class')
+        self.client.force_login(third)
+        page = self.client.get(reverse('events'))
+        self.assertNotContains(page, 'Parents Evening')
+        self.assertContains(page, 'Whole class')
+        self.client.logout()
+        page = self.client.get(reverse('events'))
+        self.assertNotContains(page, 'Parents Evening')
+        self.assertNotContains(page, 'Whole class')
+        self.assertContains(page, 'Reading Day')
+
+        self.client.force_login(self.student_user)
+        self.assertEqual(self.client.get(url).status_code, 403)
 
     def test_about_page_links_students_to_the_calendar(self):
         response = self.client.get(reverse('about'))
@@ -304,53 +346,40 @@ class SignupSecurityTests(TestCase):
             'academic_year': str(self.year.pk),
             'current_class': str(self.class_obj.pk),
             'gender': 'F',
+            'date_of_birth': str(date.today().replace(year=date.today().year - 8, day=1)),
             'password': 'unique-long-password-8472',
         }
 
-    def test_public_admin_signup_is_blocked_and_admin_signup_requires_admin_role(self):
-        response = self.client.post(reverse('admin_signup'), {
-            'username': 'attacker-admin',
-            'email': 'attacker@example.com',
-            'password': 'valid-strong-password-9382',
-        })
+    def test_application_rejects_underage_future_and_missing_birth_dates(self):
+        today = date.today()
+        for value in (str(today), str(today.replace(year=today.year - 3, day=1)),
+                      str(today + timedelta(days=30)), str(today.replace(year=today.year - 30, day=1)), ''):
+            with self.subTest(dob=value):
+                response = self.client.post(
+                    reverse('submit_application'), {**self.student_signup_data(), 'date_of_birth': value})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn('date_of_birth', response.context['form'].errors)
+        self.assertFalse(User.objects.filter(username='new-student').exists())
 
+    def test_apply_page_renders_single_functional_form(self):
+        response = self.client.get(reverse('apply'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'base.html')
+        self.assertContains(response, reverse('submit_application'))
+        self.assertContains(response, 'name="first_name"')
+
+    def test_application_without_username_gets_temporary_login_and_confirmation(self):
+        data = self.student_signup_data()
+        data.pop('username')
+        response = self.client.post(reverse('submit_application'), data)
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(User.objects.filter(username='attacker-admin').exists())
-
-        student = User.objects.create_user(
-            username='signup-student',
-            password='test-password',
-            user_type=3,
-        )
-        self.client.force_login(student)
-        response = self.client.post(reverse('admin_signup'), {
-            'username': 'unauthorized-admin',
-            'email': 'unauthorized@example.com',
-            'password': 'valid-strong-password-9382',
-        })
-
-        self.assertEqual(response.status_code, 403)
-        self.assertFalse(User.objects.filter(username='unauthorized-admin').exists())
-
-    def test_existing_admin_can_create_an_admin_using_the_protected_signup(self):
-        self.client.force_login(self.admin)
-
-        response = self.client.post(reverse('admin_signup'), {
-            'username': 'second-admin',
-            'email': 'second-admin@example.com',
-            'password': 'different-strong-password-4827',
-        })
-
-        self.assertRedirects(response, reverse('manage_administrators'))
-        created_user = User.objects.get(username='second-admin')
-        self.assertEqual(created_user.user_type, 1)
-        self.assertTrue(created_user.check_password('different-strong-password-4827'))
+        self.assertTrue(User.objects.filter(username__startswith='APP').exists())
 
     def test_student_signup_rejects_non_image_upload_without_saving_file_or_user(self):
         with TemporaryDirectory() as media_root:
             with override_settings(MEDIA_ROOT=media_root):
                 response = self.client.post(
-                    reverse('student_signup'),
+                    reverse('submit_application'),
                     {
                         **self.student_signup_data(),
                         'profile_pic': SimpleUploadedFile(
@@ -371,7 +400,7 @@ class SignupSecurityTests(TestCase):
         with TemporaryDirectory() as media_root:
             with override_settings(MEDIA_ROOT=media_root):
                 response = self.client.post(
-                    reverse('student_signup'),
+                    reverse('submit_application'),
                     {
                         **self.student_signup_data(),
                         'profile_pic': SimpleUploadedFile(
@@ -399,14 +428,14 @@ class SignupSecurityTests(TestCase):
         data = self.student_signup_data()
         data.pop('parent_email')
 
-        response = self.client.post(reverse('student_signup'), data)
+        response = self.client.post(reverse('submit_application'), data)
 
         self.assertEqual(response.status_code, 400)
         self.assertFalse(User.objects.filter(username='new-student').exists())
 
     def test_headteacher_can_schedule_interview_and_approve_applicant(self):
-        response = self.client.post(reverse('student_signup'), self.student_signup_data())
-        self.assertRedirects(response, reverse('show_login'))
+        response = self.client.post(reverse('submit_application'), self.student_signup_data())
+        self.assertEqual(response.status_code, 302)
         student_user = User.objects.get(username='new-student')
         application = StudentApplication.objects.get(student=student_user.student_profile)
 
@@ -441,6 +470,9 @@ class SignupSecurityTests(TestCase):
         student_user.student_profile.refresh_from_db()
         self.assertEqual(application.status, 'APPROVED')
         self.assertTrue(student_user.student_profile.active)
+        student_user.refresh_from_db()
+        self.assertEqual(student_user.username, student_user.student_profile.admission_number)
+        self.assertRegex(student_user.username, r'^\d{4}')
         self.assertEqual(student_user.student_profile.get_fee_balance(), Decimal('0.00'))
         self.assertFalse(FeeTransaction.objects.filter(student=student_user.student_profile).exists())
 
@@ -450,7 +482,7 @@ class SignupSecurityTests(TestCase):
         self.assertEqual(dashboard.context['fee_balance'], Decimal('0.00'))
 
     def test_applicant_can_track_status_but_cannot_open_student_portal_until_approved(self):
-        self.client.post(reverse('student_signup'), self.student_signup_data())
+        self.client.post(reverse('submit_application'), self.student_signup_data())
         student_user = User.objects.get(username='new-student')
         self.client.post(reverse('do_login'), {
             'email': 'new-student',
@@ -776,6 +808,8 @@ class BursarAccountingTests(TestCase):
             'class_obj': str(self.student_class.pk),
             'academic_year': str(self.academic_year.pk),
             'due_date': '2026-03-01',
+            'category': 'BOARDING',
+            'applies_to': 'BOARDER',
             'is_active': 'on',
         })
 
@@ -796,32 +830,15 @@ class BursarAccountingTests(TestCase):
         expense = Expense.objects.get(receipt_number='EXP-001')
         self.assertEqual(expense.recorded_by_bursar, self.bursar_user.bursar_profile)
 
-    def test_admin_can_add_and_edit_bursar_accounts(self):
+    def test_admin_can_edit_bursar_accounts_but_not_create_them(self):
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse('add_bursar'), {
-            'first_name': 'New',
-            'last_name': 'Accountant',
-            'email': 'new-accountant@example.com',
-            'username': 'new-accountant',
-            'password': 'test-password',
-            'gender': 'F',
-            'qualification': 'Accounting',
-            'date_of_joining': '',
-            'phone': '',
-            'address': '',
-            'profile_pic': '',
-        })
-
-        self.assertRedirects(response, reverse('manage_bursars'))
-        new_bursar = Bursar.objects.get(user__username='new-accountant')
-        self.assertEqual(new_bursar.gender, 'F')
-        self.assertIsNotNone(new_bursar.date_of_joining)
+        new_bursar = self.bursar_user.bursar_profile
 
         response = self.client.post(reverse('edit_bursar', args=[new_bursar.pk]), {
             'first_name': 'Edited',
             'last_name': 'Accountant',
-            'email': 'new-accountant@example.com',
-            'username': 'new-accountant',
+            'email': 'accountant@example.com',
+            'username': 'accountant',
             'password': '',
             'gender': 'O',
             'qualification': 'Senior Accountant',
@@ -956,7 +973,7 @@ class StudentPortalTests(TestCase):
         self.assertEqual(dashboard.status_code, 200)
         self.assertEqual(dashboard.context['fee_balance'], Decimal('1000.00'))
         self.assertEqual(dashboard.context['term_scores'], [75.0])
-        self.assertContains(dashboard, 'Contact class teacher')
+        self.assertContains(dashboard, 'Contact administration')
         self.assertTemplateUsed(dashboard, 'student_template/base.html')
         self.assertContains(dashboard, 'Student Portal')
         self.assertContains(dashboard, 'Results &amp; progress')
@@ -1206,25 +1223,26 @@ class StudentPortalTests(TestCase):
         self.assertEqual(payment.result_description, 'Request cancelled by user.')
         self.assertEqual(self.student.get_available_fee_balance(), Decimal('1000.00'))
 
-    def test_student_can_message_class_teacher_and_teacher_can_reply(self):
+    def test_student_feedback_goes_only_to_admin(self):
+        admin = User.objects.create_user(username='fb-admin', password='x', user_type=1)
         self.client.force_login(self.student_user)
         sent = self.client.post(reverse('student_feedback_save'), {
             'feedback_msg': 'Could I ask about my Science result?',
         })
         self.assertRedirects(sent, reverse('student_feedback'))
         feedback = Feedback.objects.get()
-        self.assertEqual(feedback.recipient_staff, self.teacher_user.staff_profile)
         self.assertEqual(feedback.user, self.student_user)
+        self.assertTrue(Notification.objects.filter(recipients=admin, title__icontains='feedback').exists())
+        self.assertFalse(Notification.objects.filter(recipients=self.teacher_user).exists())
 
-        self.client.force_login(self.teacher_user)
-        inbox = self.client.get(reverse('student_contact_inbox'))
-        self.assertContains(inbox, 'Could I ask about my Science result?')
-        replied = self.client.post(reverse('student_contact_reply', args=[feedback.pk]), {
+        self.client.force_login(admin)
+        replied = self.client.post(reverse('respond_feedback', args=[feedback.pk]), {
             'reply': 'Please see me after class.',
         })
-        self.assertRedirects(replied, reverse('student_contact_inbox'))
+        self.assertEqual(replied.status_code, 302)
         feedback.refresh_from_db()
         self.assertEqual(feedback.reply, 'Please see me after class.')
+        self.assertTrue(Notification.objects.filter(recipients=self.student_user).exists())
 
         self.client.force_login(self.other_student_user)
         hidden = self.client.get(reverse('student_feedback'))
@@ -1271,11 +1289,56 @@ class TeacherPortalTests(TestCase):
         )
         self.assignment.classes.add(self.class_obj)
 
-    def attendance_payload(self, status=1):
-        return json.dumps([{
-            'id': self.student_user.student_profile.pk,
-            'status': status,
-        }])
+    def test_class_teacher_records_attendance_once_per_day(self):
+        profile = self.student_user.student_profile
+        self.client.force_login(self.teacher)
+        url = reverse('class_teacher_attendance', args=[self.class_obj.pk])
+        today = timezone.localdate().isoformat()
+
+        self.assertContains(self.client.get(url), 'portal-student')
+        self.client.post(url, {'date': today, f'status_{profile.pk}': 'L'})
+        report = AttendanceReport.objects.get(student=profile)
+        self.assertEqual(report.status, 'L')
+        self.assertIsNone(report.attendance.subject)
+
+        self.client.post(url, {'date': today, f'status_{profile.pk}': 'P'})
+        self.assertEqual(Attendance.objects.filter(subject__isnull=True).count(), 1)
+        report.refresh_from_db()
+        self.assertEqual(report.status, 'L')
+
+        self.client.force_login(self.other_teacher)
+        self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_class_teacher_sees_weekly_attendance_and_print_view(self):
+        profile = self.student_user.student_profile
+        self.client.force_login(self.teacher)
+        url = reverse('class_teacher_attendance', args=[self.class_obj.pk])
+        monday = date(2026, 3, 2)
+        for offset, status in enumerate(['P', 'A', 'L']):
+            self.client.post(url, {'date': (monday + timedelta(days=offset)).isoformat(), f'status_{profile.pk}': status})
+
+        weekly = reverse('class_teacher_weekly_attendance', args=[self.class_obj.pk])
+        response = self.client.get(weekly, {'week': '2026-03-04'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['week_start'], monday)
+        row = response.context['rows'][0]
+        self.assertEqual(row['cells'][:4], ['P', 'A', 'L', None])
+        self.assertEqual((row['present'], row['absent']), (2, 1))
+        self.assertEqual(len(response.context['weeks']), 1)
+
+        printed = self.client.get(weekly, {'week': '2026-03-02', 'print': '1'})
+        self.assertTemplateUsed(printed, 'teacher/class_attendance_print.html')
+
+        self.client.force_login(self.other_teacher)
+        self.assertEqual(self.client.get(weekly).status_code, 404)
+
+    def test_student_admission_number_matches_username(self):
+        profile = self.student_user.student_profile
+        self.assertEqual(profile.admission_number, 'portal-student')
+        self.student_user.username = '2028G00001'
+        self.student_user.save()
+        profile.refresh_from_db()
+        self.assertEqual(profile.admission_number, '2028G00001')
 
     def test_teacher_routes_require_a_teacher_role(self):
         for route, args in (
@@ -1501,120 +1564,12 @@ class TeacherPortalTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    def test_attendance_page_uses_only_current_assigned_classes(self):
-        self.client.force_login(self.teacher)
-
-        response = self.client.get(reverse('staff_take_attendance'))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, self.subject.name)
-        self.assertContains(response, self.class_obj.name)
-        self.assertContains(response, reverse('get_students'))
-
-        invalid_response = self.client.post(reverse('get_students'), {
-            'assignment_id': 'not-an-id',
-            'class_id': self.class_obj.pk,
-        })
-        self.assertEqual(invalid_response.status_code, 404)
-
-        self.client.force_login(self.other_teacher)
-        response = self.client.post(reverse('get_students'), {
-            'assignment_id': self.assignment.pk,
-            'class_id': self.class_obj.pk,
-        })
-        self.assertEqual(response.status_code, 404)
-
-    def test_attendance_requires_complete_student_data_and_rejects_duplicate_dates(self):
-        self.client.force_login(self.teacher)
-        extra_student = User.objects.create_user(
-            username='second-attendance-student',
-            password='test-password',
-            user_type=3,
-        )
-        extra_student.student_profile.gender = 'F'
-        extra_student.student_profile.current_class = self.class_obj
-        extra_student.student_profile.academic_year = self.year
-        extra_student.student_profile.save()
-        url = reverse('save_attendance_data')
-        post_data = {
-            'assignment_id': self.assignment.pk,
-            'class_id': self.class_obj.pk,
-            'attendance_date': '2028-04-15',
-            'student_ids': self.attendance_payload(),
-        }
-
-        incomplete_response = self.client.post(url, post_data)
-        self.assertEqual(incomplete_response.status_code, 400)
-        self.assertFalse(Attendance.objects.exists())
-
-        post_data['student_ids'] = json.dumps([
-            {'id': self.student_user.student_profile.pk, 'status': True},
-            {'id': extra_student.student_profile.pk, 'status': False},
-        ])
-        saved_response = self.client.post(url, post_data)
-        self.assertEqual(saved_response.status_code, 200)
-        self.assertEqual(AttendanceReport.objects.filter(status='P').count(), 1)
-        self.assertEqual(AttendanceReport.objects.filter(status='A').count(), 1)
-
-        duplicate_response = self.client.post(url, post_data)
-        self.assertEqual(duplicate_response.status_code, 409)
-        self.assertEqual(Attendance.objects.count(), 1)
-
-    def test_attendance_updates_are_limited_to_the_teacher_assignment(self):
-        self.client.force_login(self.teacher)
-        attendance = Attendance.objects.create(
-            subject=self.subject,
-            class_obj=self.class_obj,
-            academic_year=self.year,
-            attendance_date=date(2028, 4, 15),
-            created_by=self.teacher.staff_profile,
-        )
-        report = AttendanceReport.objects.create(
-            attendance=attendance,
-            student=self.student_user.student_profile,
-            status='P',
-        )
-        request_data = {
-            'assignment_id': self.assignment.pk,
-            'class_id': self.class_obj.pk,
-            'attendance_id': attendance.pk,
-        }
-
-        dates_response = self.client.post(reverse('get_attendance_dates'), request_data)
-        self.assertEqual(dates_response.status_code, 200)
-        self.assertEqual(dates_response.json()['attendance'][0]['id'], attendance.pk)
-
-        detail_response = self.client.post(reverse('get_attendance_student'), request_data)
-        self.assertEqual(detail_response.status_code, 200)
-        self.assertTrue(detail_response.json()['students'][0]['status'])
-
-        request_data['student_ids'] = self.attendance_payload(status=0)
-        update_response = self.client.post(reverse('save_updateattendance_data'), request_data)
-        self.assertEqual(update_response.status_code, 200)
-        report.refresh_from_db()
-        self.assertEqual(report.status, 'A')
-
-        self.client.force_login(self.other_teacher)
-        denied_response = self.client.post(reverse('save_updateattendance_data'), request_data)
-        self.assertEqual(denied_response.status_code, 404)
-
-    def test_attendance_api_requires_csrf(self):
-        csrf_client = self.client_class(enforce_csrf_checks=True)
-        csrf_client.force_login(self.teacher)
-
-        response = csrf_client.post(reverse('get_students'), {
-            'assignment_id': self.assignment.pk,
-            'class_id': self.class_obj.pk,
-        })
-
-        self.assertEqual(response.status_code, 403)
-
     def test_teacher_leave_requests_use_current_fields_and_validate_dates(self):
         self.client.force_login(self.teacher)
         leave_url = reverse('staff_apply_leave_save')
 
         invalid_response = self.client.post(leave_url, {
-            'leave_type': 'Annual',
+            'leave_type': 'Annual Leave',
             'start_date': '2028-06-12',
             'end_date': '2028-06-10',
             'reason': 'Family commitment',
@@ -1622,21 +1577,37 @@ class TeacherPortalTests(TestCase):
         self.assertRedirects(invalid_response, reverse('staff_apply_leave'))
         self.assertFalse(LeaveRequest.objects.exists())
 
+        admin = User.objects.create_user(username='leave-admin', password='x', user_type=1)
         response = self.client.post(leave_url, {
-            'leave_type': 'Annual',
+            'leave_type': 'Annual Leave',
             'start_date': '2028-06-10',
             'end_date': '2028-06-12',
             'reason': 'Family commitment',
+            'cover_teacher': self.other_teacher.staff_profile.pk,
+            'handover_notes': 'Notes for cover',
         })
         self.assertRedirects(response, reverse('staff_apply_leave'))
         leave = LeaveRequest.objects.get()
         self.assertEqual(leave.applicant, self.teacher)
         self.assertEqual(leave.start_date, date(2028, 6, 10))
         self.assertEqual(leave.end_date, date(2028, 6, 12))
+        self.assertEqual(leave.total_days, 3)
+        self.assertEqual(leave.cover_teacher, self.other_teacher.staff_profile)
+        self.assertTrue(Notification.objects.filter(recipients=admin, title__icontains='leave').exists())
+
+        self.client.force_login(admin)
+        decision = self.client.post(reverse('respond_leave', args=[leave.pk]), {
+            'status': 1, 'review_notes': 'Enjoy',
+        })
+        self.assertEqual(decision.status_code, 302)
+        leave.refresh_from_db()
+        self.assertEqual(leave.review_notes, 'Enjoy')
+        self.assertTrue(Notification.objects.filter(recipients=self.teacher).exists())
+        self.client.force_login(self.teacher)
 
         history_response = self.client.get(reverse('staff_apply_leave'))
         self.assertContains(history_response, 'Family commitment')
-        self.assertContains(history_response, 'Pending')
+        self.assertContains(history_response, 'Approved')
 
     def test_teacher_feedback_uses_current_fields_and_is_private_to_the_sender(self):
         self.client.force_login(self.teacher)
@@ -1657,20 +1628,6 @@ class TeacherPortalTests(TestCase):
         history_response = self.client.get(reverse('staff_feedback'))
         self.assertContains(history_response, 'Please review the timetable.')
         self.assertNotContains(history_response, 'Private feedback from another teacher.')
-
-    def test_legacy_result_pages_redirect_to_the_current_results_workflow(self):
-        self.client.force_login(self.teacher)
-        dashboard_url = reverse('teacher_dashboard')
-
-        for route in ('staff_add_result', 'edit_student_result'):
-            with self.subTest(route=route):
-                response = self.client.get(reverse(route))
-                self.assertRedirects(response, dashboard_url)
-
-        response = self.client.post(reverse('save_student_result'), {})
-        self.assertRedirects(response, dashboard_url)
-        response = self.client.post(reverse('fetch_student_result'), {})
-        self.assertRedirects(response, dashboard_url)
 
 
 class AdminManagementTests(TestCase):
@@ -1770,30 +1727,76 @@ class AdminManagementTests(TestCase):
         self.assertNotContains(response, 'Total Teachers')
         self.assertNotContains(response, 'Create Class')
 
-    def test_academic_year_creation_prepopulates_standard_classes_for_applications(self):
-        self.client.force_login(self.admin)
+    def test_academic_year_rolls_over_automatically_with_standard_classes(self):
+        from .services import ensure_current_academic_year
+        old = AcademicYear.objects.get(is_current=True)
+        new_year = old.end_date.year + 1
 
-        response = self.client.post(reverse('add_academic_year'), {
-            'name': '2029',
-            'start_date': '2029-01-01',
-            'end_date': '2029-12-31',
-        })
+        year = ensure_current_academic_year(date(new_year, 1, 15))
 
-        self.assertRedirects(response, reverse('manage_academic_years'))
-        year = AcademicYear.objects.get(name='2029')
+        self.assertEqual(year.name, str(new_year))
+        self.assertTrue(year.is_current)
+        old.refresh_from_db()
+        self.assertFalse(old.is_current)
         self.assertEqual(
             set(StudentClass.objects.filter(academic_year=year).values_list('name', flat=True)),
             set(STANDARD_CLASS_NAMES),
         )
-        AcademicYear.objects.update(is_current=False)
-        year.is_current = True
-        year.save(update_fields=['is_current'])
-        class_choices = dict(StudentSignupForm().fields['current_class'].choices)
-        for class_name in STANDARD_CLASS_NAMES:
-            self.assertTrue(any(
-                label.startswith(f'{class_name} (')
-                for label in class_choices.values()
-            ))
+        self.assertEqual(AcademicYear.objects.filter(is_current=True).count(), 1)
+        self.assertTrue(Notification.objects.filter(
+            title__contains='has started', recipients=self.admin).exists())
+        self.assertEqual(ensure_current_academic_year(date(new_year, 2, 1)).pk, year.pk)
+
+    def test_academic_year_manual_routes_are_removed(self):
+        from django.urls import NoReverseMatch
+        for name in ('add_academic_year', 'edit_academic_year', 'delete_academic_year'):
+            with self.assertRaises(NoReverseMatch):
+                reverse(name)
+        self.client.force_login(self.admin)
+        self.assertEqual(self.client.get(reverse('manage_academic_years')).status_code, 200)
+
+    def test_settings_page_saves_school_profile_and_term_dates(self):
+        self.client.force_login(self.admin)
+        page = self.client.get(reverse('settings'))
+        self.assertEqual(page.status_code, 200)
+        response = self.client.post(reverse('settings'), {
+            'school_name': 'Renamed School',
+            'address': 'P.O. Box 1',
+            'contact_email': 'info@example.com',
+            'contact_phone': '0700000000',
+            'website': '',
+            'applications_open': 'on',
+            'term_1_start': '2026-01-05',
+            'term_1_end': '2026-04-03',
+            'term_2_start': '2026-05-04',
+            'term_2_end': '2026-08-07',
+            'term_3_start': '2026-08-31',
+            'term_3_end': '2026-10-30',
+        })
+        self.assertRedirects(response, reverse('settings'))
+        profile = SchoolProfile.get()
+        self.assertEqual(profile.school_name, 'Renamed School')
+        self.assertEqual(profile.term_2_start, date(2026, 5, 4))
+        self.assertTrue(profile.applications_open)
+
+    def test_notification_inbox_marks_read_and_blocks_external_redirects(self):
+        from .services import notify
+        note = notify([self.admin], 'Hello', 'Body', link='https://evil.example/x')
+        self.client.force_login(self.admin)
+        inbox = self.client.get(reverse('notifications'))
+        self.assertContains(inbox, 'Hello')
+        response = self.client.get(reverse('open_notification', args=[note.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn('evil.example', response['Location'])
+        self.assertTrue(note.read_statuses.filter(user=self.admin).exists())
+
+    def test_create_bursar_command_and_admin_cannot_add_bursar(self):
+        from django.core.management import call_command
+        call_command('create_bursar', 'cmd-bursar', '--email', 'cmd@example.com', '--password', 'Pass@123')
+        self.assertEqual(User.objects.get(username='cmd-bursar').user_type, 4)
+        from django.urls import NoReverseMatch
+        with self.assertRaises(NoReverseMatch):
+            reverse('add_bursar')
 
     def test_admin_student_search_uses_user_username_and_ignores_invalid_class(self):
         self.client.force_login(self.admin)
@@ -1806,6 +1809,62 @@ class AdminManagementTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'student-user')
         self.assertContains(response, 'Grade 6')
+
+    def test_headteacher_can_search_attendance_by_student_full_name(self):
+        teacher = User.objects.create_user(username='reg-teacher', password='x', user_type=2)
+        student_user = User.objects.create_user(
+            username='2026G09999', password='x', user_type=3,
+            first_name='Faith', last_name='Chepkoech',
+        )
+        year = AcademicYear.objects.filter(is_current=True).first() or AcademicYear.objects.first()
+        class_obj = StudentClass.objects.create(name='Search Class', academic_year=year)
+        attendance = Attendance.objects.create(
+            subject=None, class_obj=class_obj, academic_year=year,
+            attendance_date=date(2026, 3, 2), created_by=teacher.staff_profile,
+        )
+        AttendanceReport.objects.create(attendance=attendance, student=student_user.student_profile, status='P')
+        self.client.force_login(self.admin)
+
+        found = self.client.get(reverse('manage_attendance'), {'search': 'faith chepkoech'})
+        self.assertEqual(found.status_code, 200)
+        self.assertEqual(list(found.context['attendance_list']), [attendance])
+        missing = self.client.get(reverse('manage_attendance'), {'search': 'faith nobody'})
+        self.assertEqual(list(missing.context['attendance_list']), [])
+
+    def test_headteacher_can_assign_a_subject_to_a_teacher_and_classes(self):
+        self.client.force_login(self.admin)
+
+        teacher_list = self.client.get(reverse('manage_teachers'))
+        self.assertContains(
+            teacher_list,
+            reverse('teacher_subjects', args=[self.teacher_user.staff_profile.pk]),
+        )
+        self.assertContains(teacher_list, 'Manage subjects')
+
+        assignment_url = reverse(
+            'assign_subjects',
+            args=[self.teacher_user.staff_profile.pk],
+        )
+        form_page = self.client.get(assignment_url)
+        self.assertEqual(form_page.status_code, 200)
+        self.assertContains(form_page, 'Academic year')
+
+        response = self.client.post(assignment_url, {
+            'subject': str(self.subject.pk),
+            'classes': [str(self.student_class.pk)],
+            'academic_year': str(self.academic_year.pk),
+        })
+
+        assignment = StaffSubjectAssignment.objects.get(
+            staff=self.teacher_user.staff_profile,
+            subject=self.subject,
+            academic_year=self.academic_year,
+        )
+        self.assertRedirects(
+            response,
+            reverse('teacher_subjects', args=[self.teacher_user.staff_profile.pk]),
+        )
+        self.assertEqual(list(assignment.classes.all()), [self.student_class])
 
     def test_subjects_are_seeded_and_admin_management_is_not_exposed(self):
         self.client.force_login(self.admin)

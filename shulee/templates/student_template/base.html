@@ -506,8 +506,11 @@
                 </a>
 
                 <div class="student-nav-label">Stay connected</div>
+                <a class="student-nav-link{% if request.resolver_match.url_name == 'notifications' %} active{% endif %}" href="{% url 'notifications' %}">
+                    <i class="fa-regular fa-bell" aria-hidden="true"></i><span>Notifications{% if unread_notification_count %} ({{ unread_notification_count }}){% endif %}</span>
+                </a>
                 <a class="student-nav-link{% if request.resolver_match.url_name == 'student_feedback' %} active{% endif %}" href="{% url 'student_feedback' %}">
-                    <i class="fa-regular fa-comments" aria-hidden="true"></i><span>Contact class teacher</span>
+                    <i class="fa-regular fa-comments" aria-hidden="true"></i><span>Contact administration</span>
                 </a>
                 <a class="student-nav-link{% if request.resolver_match.url_name == 'student_profile' %} active{% endif %}" href="{% url 'student_profile' %}">
                     <i class="fa-regular fa-user" aria-hidden="true"></i><span>My profile</span>

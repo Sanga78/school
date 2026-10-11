@@ -1,73 +1,432 @@
 {% extends 'student_template/base.html' %}
-{% block page_title %}
-Edit Profile
-{% endblock page_title %}
+{% block page_title %}My Profile{% endblock %}
 {% load static %}
 {% block main_content %}
 
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <!-- general form elements -->
-                <div class="card card-primary">
-                  <div class="card-header">
-                    <h3 class="card-title">Edit Profile</h3>
-                  </div>
-                  <!-- /.card-header -->
-                  <!-- form start -->
-                  <form role="form" action="{% url 'student_profile_save' %}" method="post">
-                    {% csrf_token %}
-                    <div class="card-body">
-                      <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" class="form-control" name="username" value="{{user.username}}" disabled="disabled">
-                      </div>
-                      <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" class="form-control" name="email" value="{{user.email}}" disabled="disabled">
-                      </div>
-                      <div class="form-group">
-                        <label>First Name</label>
-                        <input type="text" class="form-control" name="first_name" value="{{user.first_name}}">
-                      </div>
-                      <div class="form-group">
-                        <label>Last Name</label>
-                        <input type="text" class="form-control" name="last_name" value="{{user.last_name}}">
-                      </div>
-                      <div class="form-group">
-                        <label>Address</label>
-                        <input type="text" class="form-control" name="address" value="{{student.address}}">
-                      </div>
-                      <div class="form-group">
-                        <label>Change Password</label>
-                        <input type="password" class="form-control" name="password" placeholder="Fill Only If You Want to Change Password">
-                      </div>
-                     
-                      <div class="form-group">
-                        {% if messages %}
-                          {% for message in messages %}
-                          {% if message.tags == 'error' %}
-                          <div class="alert alert-danger" style="margin-top: 10px;">{{ message }}</div>
-                          {% endif %}
-                          {% if message.tags == 'success' %}
-                          <div class="alert alert-success" style="margin-top: 10px;">{{ message }}</div>
-                          {% endif %}
-                          {% endfor %}
-                        {% endif %}
-                      </div>
-                    </div>
-                    <!-- /.card-body -->
-    
-                    <div class="card-footer">
-                      <button type="submit" class="btn btn-primary btn-block">Save Profile</button>
-                    </div>
-                  </form>
+<style>
+    .student-profile {
+        --prof-maroon: #7b1e2b;
+        --prof-green: #176b4d;
+        --prof-gold: #d5a642;
+        --prof-ink: #252a28;
+        --prof-muted: #68716d;
+    }
+
+    .student-profile .profile-header {
+        background: linear-gradient(135deg, #6b0f1a 0%, #7b1e2b 50%, #176b4d 100%);
+        border-radius: 16px;
+        color: #fff;
+        margin-bottom: 2rem;
+        overflow: hidden;
+        padding: 2.5rem;
+        position: relative;
+    }
+
+    .student-profile .profile-header::after {
+        border: 1px solid rgba(213, 166, 66, .2);
+        border-radius: 50%;
+        content: "";
+        height: 180px;
+        position: absolute;
+        right: -40px;
+        top: -60px;
+        width: 180px;
+    }
+
+    .student-profile .profile-avatar {
+        align-items: center;
+        background: rgba(255, 255, 255, .15);
+        border: 3px solid rgba(213, 166, 66, .4);
+        border-radius: 50%;
+        display: flex;
+        flex: 0 0 100px;
+        font-size: 2.5rem;
+        height: 100px;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .student-profile .profile-intro {
+        display: flex;
+        gap: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .student-profile .profile-name {
+        flex: 1;
+    }
+
+    .student-profile .profile-name h1 {
+        font: 700 clamp(1.8rem, 4vw, 2.5rem)/1.2 "Playfair Display", Georgia, serif;
+        margin: 0 0 .3rem;
+    }
+
+    .student-profile .profile-meta {
+        color: rgba(255, 255, 255, .8);
+        display: flex;
+        gap: 1.5rem;
+        font-size: .95rem;
+        margin-top: .8rem;
+    }
+
+    .student-profile .profile-meta span {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .student-profile .profile-section {
+        background: #fff;
+        border: 1px solid #ebe6dd;
+        border-radius: 14px;
+        box-shadow: 0 5px 18px rgba(44, 38, 30, .045);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .student-profile .section-header {
+        background: #fafaf8;
+        border-bottom: 1px solid #ebe6dd;
+        padding: 1.5rem 1.8rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .student-profile .section-header h2 {
+        color: var(--prof-maroon);
+        font: 700 1.2rem "Playfair Display", Georgia, serif;
+        margin: 0;
+    }
+
+    .student-profile .section-header i {
+        color: var(--prof-green);
+        font-size: 1.3rem;
+    }
+
+    .student-profile .section-content {
+        padding: 1.8rem;
+    }
+
+    .student-profile .profile-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .student-profile .profile-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .student-profile .field-label {
+        color: var(--prof-muted);
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        margin-bottom: .6rem;
+        text-transform: uppercase;
+    }
+
+    .student-profile .field-value {
+        color: var(--prof-ink);
+        font: 500 1.05rem "DM Sans", sans-serif;
+        word-break: break-word;
+    }
+
+    .student-profile .field-value.empty {
+        color: var(--prof-muted);
+        font-style: italic;
+    }
+
+    .student-profile .field-value.badge {
+        background: var(--prof-green);
+        color: #fff;
+        display: inline-flex;
+        padding: .5rem 1rem;
+        border-radius: 20px;
+        font-size: .9rem;
+        width: fit-content;
+    }
+
+    .student-profile .field-value.badge.pending {
+        background: #f59e0b;
+    }
+
+    .student-profile .divider {
+        border: none;
+        border-top: 1px solid #ebe6dd;
+        margin: 1.5rem 0;
+    }
+
+    .student-profile .info-box {
+        background: #e8f5e9;
+        border-left: 4px solid var(--prof-green);
+        border-radius: 8px;
+        color: #1b5e20;
+        font-size: .95rem;
+        line-height: 1.6;
+        margin-top: 1.5rem;
+        padding: 1.2rem;
+    }
+
+    .student-profile .info-box i {
+        color: var(--prof-green);
+        margin-right: .5rem;
+    }
+
+    .student-profile .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .student-profile .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .student-profile .btn-home {
+        background: var(--prof-green);
+        color: #fff;
+    }
+
+    .student-profile .btn-home:hover {
+        background: #0f4a38;
+        box-shadow: 0 4px 12px rgba(23, 107, 77, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .student-profile .profile-intro {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .student-profile .profile-avatar {
+            margin: 0 auto;
+        }
+
+        .student-profile .profile-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .student-profile .profile-meta {
+            justify-content: center;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .student-profile .profile-header {
+            padding: 1.5rem 1rem;
+        }
+
+        .student-profile .profile-avatar {
+            flex: 0 0 80px;
+            height: 80px;
+            font-size: 2rem;
+        }
+
+        .student-profile .profile-name h1 {
+            font-size: 1.5rem;
+        }
+
+        .student-profile .section-header {
+            padding: 1.2rem 1rem;
+        }
+
+        .student-profile .section-content {
+            padding: 1.2rem 1rem;
+        }
+    }
+</style>
+
+<div class="student-profile">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-intro">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-name">
+                <h1>{{ user.get_full_name }}</h1>
+                <div class="profile-meta">
+                    <span><i class="fas fa-user-circle"></i> {{ user.username }}</span>
+                    <span><i class="fas fa-id-card"></i> {{ student.admission_number|default:"Pending" }}</span>
                 </div>
-                <!-- /.card -->         
             </div>
         </div>
-    </div><!-- /.container-fluid -->
-  </section>
-  <!-- /.content -->
-  {% endblock main_content %}
+    </div>
+
+    <!-- Personal Information Section -->
+    <div class="profile-section">
+        <div class="section-header">
+            <i class="fas fa-id-card"></i>
+            <h2>Personal Information</h2>
+        </div>
+        <div class="section-content">
+            <div class="profile-grid">
+                <div class="profile-field">
+                    <span class="field-label">First Name</span>
+                    <span class="field-value">{{ user.first_name|default:"Not provided" }}</span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Last Name</span>
+                    <span class="field-value">{{ user.last_name|default:"Not provided" }}</span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Gender</span>
+                    <span class="field-value">
+                        {% if student.gender %}
+                            {{ student.get_gender_display }}
+                        {% else %}
+                            <span class="empty">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Date of Birth</span>
+                    <span class="field-value">
+                        {% if student.date_of_birth %}
+                            {{ student.date_of_birth|date:"d M Y" }}
+                        {% else %}
+                            <span class="empty">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            <hr class="divider">
+            <div class="profile-grid">
+                <div class="profile-field">
+                    <span class="field-label">Address</span>
+                    <span class="field-value">
+                        {% if student.address %}
+                            {{ student.address }}
+                        {% else %}
+                            <span class="empty">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Email</span>
+                    <span class="field-value">
+                        {% if user.email %}
+                            {{ user.email }}
+                        {% else %}
+                            <span class="empty">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic Information Section -->
+    <div class="profile-section">
+        <div class="section-header">
+            <i class="fas fa-book"></i>
+            <h2>Academic Information</h2>
+        </div>
+        <div class="section-content">
+            <div class="profile-grid">
+                <div class="profile-field">
+                    <span class="field-label">Current Class</span>
+                    <span class="field-value">
+                        {% if student.current_class %}
+                            {{ student.current_class.name }}
+                        {% else %}
+                            <span class="empty">Not assigned</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Academic Year</span>
+                    <span class="field-value">
+                        {% if student.academic_year %}
+                            {{ student.academic_year.name }}
+                        {% else %}
+                            <span class="empty">Not assigned</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Admission Number</span>
+                    <span class="field-value">
+                        {% if student.admission_number %}
+                            <span class="badge">{{ student.admission_number }}</span>
+                        {% else %}
+                            <span class="badge pending">Pending</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Account Status</span>
+                    <span class="field-value">
+                        {% if student.active %}
+                            <span class="badge">Active</span>
+                        {% else %}
+                            <span class="badge pending">Inactive</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Parent/Guardian Information Section -->
+    <div class="profile-section">
+        <div class="section-header">
+            <i class="fas fa-users"></i>
+            <h2>Parent/Guardian Information</h2>
+        </div>
+        <div class="section-content">
+            <div class="profile-grid">
+                <div class="profile-field">
+                    <span class="field-label">Parent/Guardian Name</span>
+                    <span class="field-value">
+                        {% if student.father_name or student.mother_name %}
+                            {{ student.father_name }}{% if student.father_name and student.mother_name %} / {% endif %}{{ student.mother_name }}
+                        {% else %}
+                            <span class="empty">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Contact Email</span>
+                    <span class="field-value">
+                        {% if student.parent_email %}
+                            {{ student.parent_email }}
+                        {% else %}
+                            <span class="empty">Not provided</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Info Box -->
+    <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        <strong>Profile Information:</strong> Your profile contains important information used by the school for administrative and academic purposes. If you need to update any information, please contact the school office.
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'student_home' %}" class="btn btn-home">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+{% endblock main_content %}

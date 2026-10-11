@@ -42,6 +42,19 @@
                             </div>
                         </div>
 
+                        <section class="mb-4">
+                            <h2 class="h5">Food contribution (cereals &amp; beans)</h2>
+                            <p class="text-muted mb-2">Bring the food in kind or pay the cash equivalent to the bursar. <a href="{% url 'student_invoice' %}" target="_blank">View / print invoice</a></p>
+                            <div class="table-responsive"><table class="table table-bordered">
+                                <thead><tr><th>Item</th><th>Required (kg)</th><th>Received (kg)</th><th>Owed (kg)</th><th>Cash equivalent owed (Ksh)</th></tr></thead>
+                                <tbody>
+                                    {% for row in food_status %}<tr><td>{{ row.requirement.get_item_display }}</td><td>{{ row.requirement.quantity_kg }}</td><td>{{ row.credited_kg }}</td><td>{{ row.owed_kg }}</td><td>{{ row.owed_value }}</td></tr>
+                                    {% empty %}<tr><td colspan="5" class="text-muted">No food requirement for your class.</td></tr>{% endfor %}
+                                    <tr class="table-light"><th colspan="4">Total owed (fees + food)</th><th>Ksh {{ total_owed }}</th></tr>
+                                </tbody>
+                            </table></div>
+                        </section>
+
                         {% if fee_structures %}
                         <section class="mb-4">
                             <h2 class="h5">Fees for your class</h2>

@@ -1,10 +1,7 @@
-from django.utils import timezone
-from typing import Any
+﻿from django.utils import timezone
 from django import forms
 from django.forms import ChoiceField
-from .models import AcademicYear, Bursar, CustomUser, Expense, FeePayment, FeeStructure, LeaveRequest, Notification, SchoolEvent,SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,StudentClass
-from django.apps import apps
-from django.core.validators import FileExtensionValidator
+from .models import next_admission_number, AcademicYear, Bursar, CustomUser, Expense, FeePayment, FeeStructure, FoodContribution, FoodRequirement, GovernmentGrant, LeaveRequest, Notification, SchoolEvent, SchoolProfile, UniformItem, SessionYearModel, Staff, StaffSubjectAssignment, Student, Subject,SubjectResult,StudentClass
 from django.contrib.auth import get_user_model, password_validation
 from django.core.exceptions import ValidationError
 from django.forms import PasswordInput 
@@ -13,6 +10,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 from uuid import uuid4
+from .validators import validate_kenyan_birth_certificate
 
 User = get_user_model()
 
@@ -39,8 +37,7 @@ class StudentSignupForm(forms.Form):
     MAX_PROFILE_IMAGE_DIMENSION = 4096
     first_name = forms.CharField(max_length=150)
     last_name = forms.CharField(max_length=150)
-    username = forms.CharField(max_length=150)
-    email = forms.EmailField(required=False)
+    username = forms.CharField(max_length=150, required=False)
     parent_email = forms.EmailField()
     address = forms.CharField(required=False, max_length=500)
     academic_year = forms.ModelChoiceField(
@@ -50,14 +47,37 @@ class StudentSignupForm(forms.Form):
         queryset=StudentClass.objects.filter(academic_year__is_current=True),
     )
     gender = forms.ChoiceField(choices=Student.GENDER_CHOICES)
+    MIN_AGE = 5
+    MAX_AGE = 18
+    date_of_birth = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    birth_certificate_number = forms.CharField(
+        max_length=50,
+        required=False,
+        validators=[validate_kenyan_birth_certificate],
+        help_text="Kenyan birth certificate format: XXXXX-XXXXX-XXXXX"
+    )
     password = forms.CharField(strip=False, widget=forms.PasswordInput)
     profile_pic = forms.ImageField(required=False)
 
     def clean_username(self):
         username = self.cleaned_data['username']
+        if not username:
+            return username
         if CustomUser.objects.filter(username__iexact=username).exists():
             raise ValidationError('A user with that username already exists.')
         return username
+
+    def clean_date_of_birth(self):
+        born = self.cleaned_data['date_of_birth']
+        today = timezone.localdate()
+        age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        if born > today:
+            raise ValidationError('Date of birth cannot be in the future.')
+        if age < self.MIN_AGE:
+            raise ValidationError(f'The applicant is too young. The minimum age is {self.MIN_AGE} years.')
+        if age > self.MAX_AGE:
+            raise ValidationError(f'The applicant is too old. The maximum age is {self.MAX_AGE} years.')
+        return born
 
     def clean_password(self):
         password = self.cleaned_data['password']
@@ -186,9 +206,9 @@ class StudentForm(forms.ModelForm):
         help_text="Required contact email for the student's parent or guardian.")
     username = forms.CharField(
         max_length=150, 
-        required=True, 
+        required=False, 
         widget=forms.TextInput(attrs={'class': 'form-control'}),
-        help_text="Unique for each student",
+        help_text="Leave blank for new students: the next sequential admission number (1001, 1002, ...) is assigned automatically.",
         label="Admission Number")
     password = forms.CharField(
         widget=PasswordInput(attrs={'class': 'form-control'}),
@@ -208,9 +228,10 @@ class StudentForm(forms.ModelForm):
         model = Student
         fields = [
             'gender', 'date_of_birth', 'current_class',
-            'academic_year', 'father_name', 'mother_name', 'parent_email', 'active'
+            'academic_year', 'father_name', 'mother_name', 'parent_email', 'is_boarder', 'active'
         ]
         widgets = {
+            'is_boarder': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'gender': forms.Select(attrs={'class': 'form-control'}),
             'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}), 
             'current_class': forms.Select(attrs={'class': 'form-control'}),
@@ -231,11 +252,15 @@ class StudentForm(forms.ModelForm):
             self.fields['confirm_password'].required = True
 
     def clean_username(self):
-        username = self.cleaned_data.get('username')
+        username = (self.cleaned_data.get('username') or '').strip()
         if self.instance and self.instance.pk:
+            if not username:
+                raise ValidationError("Admission number is required.")
             if Student.objects.filter(user__username=username).exclude(pk=self.instance.pk).exists():
                 raise ValidationError("This username is already taken.")
         else:
+            if not username:
+                return next_admission_number()
             if CustomUser.objects.filter(username=username).exists():
                 raise ValidationError("This username is already taken.")
         return username
@@ -334,8 +359,11 @@ class FeePaymentForm(forms.ModelForm):
 class FeeStructureForm(forms.ModelForm):
     class Meta:
         model = FeeStructure
-        fields = ['name', 'description', 'amount', 'class_obj', 'academic_year', 'due_date', 'is_active']
+        fields = ['name', 'description', 'amount', 'class_obj', 'academic_year', 'category', 'term', 'applies_to', 'due_date', 'is_active']
         widgets = {
+            'category': forms.Select(attrs={'class': 'form-select'}),
+            'term': forms.Select(attrs={'class': 'form-select'}),
+            'applies_to': forms.Select(attrs={'class': 'form-select'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'amount': forms.NumberInput(attrs={'class': 'form-control', 'min': '0.01', 'step': '0.01'}),
@@ -344,6 +372,99 @@ class FeeStructureForm(forms.ModelForm):
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+class FoodRequirementForm(forms.ModelForm):
+    class Meta:
+        model = FoodRequirement
+        fields = ['class_obj', 'academic_year', 'item', 'quantity_kg', 'cash_per_kg']
+        widgets = {
+            'class_obj': forms.Select(attrs={'class': 'form-select'}),
+            'academic_year': forms.Select(attrs={'class': 'form-select'}),
+            'item': forms.Select(attrs={'class': 'form-select'}),
+            'quantity_kg': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'cash_per_kg': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        class_obj, year = cleaned.get('class_obj'), cleaned.get('academic_year')
+        if class_obj and year and class_obj.academic_year_id != year.pk:
+            self.add_error('academic_year', 'The class does not belong to this academic year.')
+        return cleaned
+
+
+class FoodContributionForm(forms.Form):
+    requirement = forms.ModelChoiceField(
+        queryset=FoodRequirement.objects.none(),
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    method = forms.ChoiceField(
+        choices=FoodContribution.METHOD_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    quantity_kg = forms.DecimalField(
+        required=False, min_value=0, max_digits=8, decimal_places=2,
+        label='Quantity brought (kg)',
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+    )
+    amount = forms.DecimalField(
+        required=False, min_value=0, max_digits=10, decimal_places=2,
+        label='Cash paid (Ksh)',
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+    )
+    date = forms.DateField(initial=timezone.localdate, widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}))
+    notes = forms.CharField(required=False, max_length=200, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    def __init__(self, *args, student=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if student is not None:
+            self.fields['requirement'].queryset = student.get_food_requirements()
+
+    def clean(self):
+        cleaned = super().clean()
+        method = cleaned.get('method')
+        if method == 'IN_KIND' and not cleaned.get('quantity_kg'):
+            self.add_error('quantity_kg', 'Enter the quantity of food brought, in kg.')
+        if method == 'CASH' and not cleaned.get('amount'):
+            self.add_error('amount', 'Enter the cash amount paid.')
+        return cleaned
+
+
+class GovernmentGrantForm(forms.ModelForm):
+    class Meta:
+        model = GovernmentGrant
+        fields = ['source', 'description', 'amount', 'date', 'reference']
+        widgets = {
+            'source': forms.Select(attrs={'class': 'form-select'}),
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'reference': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class SchoolProfileForm(forms.ModelForm):
+    class Meta:
+        model = SchoolProfile
+        fields = ['school_name', 'school_code', 'uniform_description']
+        widgets = {
+            'school_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'school_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'uniform_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
+
+
+class UniformItemForm(forms.ModelForm):
+    class Meta:
+        model = UniformItem
+        fields = ['name', 'description', 'image', 'order']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
 
 class ResultUploadForm(forms.Form):
     term = forms.ChoiceField(
@@ -405,95 +526,72 @@ class ClassForm(forms.ModelForm):
         ).select_related('user')
         self.fields['class_teacher'].empty_label = 'Select Class Teacher'
 
-class SystemSettingsForm(forms.Form):
-    school_name = forms.CharField(
-        max_length=255,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter school name'
-        }),
-        label="School Name",
-        required=True
-    )
-    
-    logo = forms.ImageField(
-        widget=forms.FileInput(attrs={
-            'class': 'form-control',
-            'accept': 'image/*'
-        }),
-        label="School Logo",
-        required=False,
-        validators=[FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'gif'])]
-    )
-    
-    address = forms.CharField(
-        widget=forms.Textarea(attrs={
-            'class': 'form-control',
-            'rows': 3,
-            'placeholder': 'Enter school physical address'
-        }),
-        label="School Address",
-        required=False
-    )
-    
-    contact_email = forms.EmailField(
-        widget=forms.EmailInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter official school email'
-        }),
-        label="Contact Email",
-        required=False
-    )
-    
-    contact_phone = forms.CharField(
-        max_length=20,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter school phone number'
-        }),
-        label="Contact Phone",
-        required=False
-    )
-    
-    website = forms.URLField(
-        widget=forms.URLInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Enter school website URL'
-        }),
-        label="Website",
-        required=False
-    )
-    
+class SystemSettingsForm(forms.ModelForm):
+    class Meta:
+        model = SchoolProfile
+        fields = [
+            'school_name', 'logo', 'address', 'contact_email', 'contact_phone', 'website',
+            'applications_open',
+            'term_1_start', 'term_1_end', 'term_2_start', 'term_2_end', 'term_3_start', 'term_3_end',
+        ]
+        widgets = {
+            'school_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'logo': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'contact_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'website': forms.URLInput(attrs={'class': 'form-control'}),
+            'applications_open': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            **{
+                f'term_{n}_{edge}': forms.DateInput(
+                    attrs={'type': 'date', 'class': 'form-control'}, format='%Y-%m-%d',
+                )
+                for n in (1, 2, 3) for edge in ('start', 'end')
+            },
+        }
+        labels = {
+            'school_name': 'School name',
+            'logo': 'School logo',
+            'contact_email': 'Contact email',
+            'contact_phone': 'Contact phone',
+            'applications_open': 'Accept online applications',
+        }
+
     def clean_logo(self):
         logo = self.cleaned_data.get('logo')
-        if logo and logo.size > 2*1024*1024: 
-            raise forms.ValidationError("Logo image too large (max 2MB)")
+        if logo and hasattr(logo, 'size'):
+            if logo.size > 2 * 1024 * 1024:
+                raise forms.ValidationError("Logo image too large (max 2MB)")
+            name = logo.name.lower()
+            if not name.endswith(('.jpg', '.jpeg', '.png', '.gif')):
+                raise forms.ValidationError("Upload a JPG, PNG or GIF image.")
         return logo
 
+    def clean(self):
+        cleaned = super().clean()
+        for n in (1, 2, 3):
+            start, end = cleaned.get(f'term_{n}_start'), cleaned.get(f'term_{n}_end')
+            if start and end and end < start:
+                self.add_error(f'term_{n}_end', 'End date cannot be before the start date.')
+        return cleaned
+
 class LeaveResponseForm(forms.ModelForm):
-    notes = forms.CharField(
-        widget=forms.Textarea(attrs={
-            'class': 'form-control',
-            'rows': 3,
-            'placeholder': 'Enter any additional notes for the applicant'
-        }),
-        required=False,
-        label="Response Notes"
-    )
-    
     class Meta:
         model = LeaveRequest
-        fields = ['status', 'notes']
+        fields = ['status', 'review_notes']
         widgets = {
-            'status': forms.Select(attrs={
-                'class': 'form-select',
-                'onchange': 'toggleNotesField(this)'
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'review_notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Enter any additional notes for the applicant',
             }),
         }
         labels = {
-            'status': 'Decision'
+            'status': 'Decision',
+            'review_notes': 'Response Notes',
         }
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['status'].choices = [
@@ -501,18 +599,16 @@ class LeaveResponseForm(forms.ModelForm):
             (1, 'Approve'),
             (2, 'Reject')
         ]
-        
-        if self.instance and self.instance.status:
-            self.fields['status'].initial = self.instance.status
-    
+        self.fields['review_notes'].required = False
+
     def clean(self):
         cleaned_data = super().clean()
         status = cleaned_data.get('status')
-        notes = cleaned_data.get('notes')
-        
-        if status == 2 and not notes:  # If rejected, require notes
-            self.add_error('notes', 'Please provide a reason for rejection')
-        
+        notes = cleaned_data.get('review_notes')
+
+        if status == 2 and not notes:
+            self.add_error('review_notes', 'Please provide a reason for rejection')
+
         return cleaned_data
 
 # Teacher Management Forms
@@ -522,13 +618,38 @@ class StaffForm(forms.ModelForm):
         required=False,
         label="Password"
     )
-    
+
+    role = forms.ChoiceField(
+        choices=Staff.ROLE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
+    employment_type = forms.ChoiceField(
+        choices=Staff.EMPLOYMENT_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        help_text='BOM staff are paid through school payroll; TSC staff are tracked for records only.',
+    )
+    monthly_salary = forms.DecimalField(
+        required=False, min_value=0, max_digits=10, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        help_text='Required for BOM staff.',
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('employment_type') == 'BOM':
+            salary = cleaned.get('monthly_salary')
+            if not salary or salary <= 0:
+                self.add_error('monthly_salary', 'Enter the agreed monthly salary for BOM staff.')
+        elif cleaned.get('employment_type') == 'TSC':
+            cleaned['monthly_salary'] = None
+        return cleaned
+
     qualification = forms.CharField(
-        max_length=100, 
+        max_length=100,
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
-    
+
     date_of_joining = forms.DateField(
         widget=DateInput(attrs={'class': 'form-control'}),
         required=False
@@ -561,7 +682,10 @@ class StaffForm(forms.ModelForm):
             user.save()
             staff, created = Staff.objects.get_or_create(user=user)
             staff.qualification = self.cleaned_data.get('qualification', '')
-            staff.date_of_joining = self.cleaned_data.get('date_of_joining')
+            staff.date_of_joining = self.cleaned_data.get('date_of_joining') or staff.date_of_joining or timezone.localdate()
+            staff.role = self.cleaned_data['role']
+            staff.employment_type = self.cleaned_data['employment_type']
+            staff.monthly_salary = self.cleaned_data.get('monthly_salary')
             staff.save()
         return user
 
@@ -712,6 +836,63 @@ class NotificationForm(forms.ModelForm):
                 'class': 'form-select'
             }),
         }
+
+
+class ClassEventForm(forms.ModelForm):
+    """Class teacher's targeted event: the whole class or chosen students."""
+    send_to = forms.ChoiceField(
+        choices=[('all', 'All students in the class'), ('selected', 'Only the students I select')],
+        initial='all',
+        widget=forms.RadioSelect,
+    )
+    recipients = forms.ModelMultipleChoiceField(
+        queryset=Student.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    class Meta:
+        model = SchoolEvent
+        fields = ['title', 'description', 'starts_at', 'ends_at', 'location']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 200}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'starts_at': forms.DateTimeInput(
+                format='%Y-%m-%dT%H:%M', attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'ends_at': forms.DateTimeInput(
+                format='%Y-%m-%dT%H:%M', attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'location': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 200}),
+        }
+
+    def __init__(self, *args, class_obj, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.class_obj = class_obj
+        self.fields['recipients'].queryset = Student.objects.filter(
+            current_class=class_obj, active=True,
+        ).select_related('user').order_by('user__last_name', 'user__first_name')
+        self.fields['recipients'].label_from_instance = (
+            lambda s: f'{s.user.get_full_name() or s.user.username} ({s.admission_number})'
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        starts_at, ends_at = cleaned.get('starts_at'), cleaned.get('ends_at')
+        if starts_at and ends_at and ends_at < starts_at:
+            self.add_error('ends_at', 'The end time must be after the start time.')
+        if cleaned.get('send_to') == 'selected' and not cleaned.get('recipients'):
+            self.add_error('recipients', 'Select at least one student.')
+        return cleaned
+
+    def save(self, commit=True):
+        event = super().save(commit=False)
+        event.audience_class = self.class_obj
+        event.is_published = True
+        if commit:
+            event.save()
+            event.recipients.set(
+                self.cleaned_data['recipients'] if self.cleaned_data['send_to'] == 'selected' else []
+            )
+        return event
 
 
 class SchoolEventForm(forms.ModelForm):

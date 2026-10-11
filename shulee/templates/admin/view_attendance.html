@@ -6,7 +6,7 @@
         <div class="col-md-12">
             <h2>Attendance Details</h2>
             <p class="lead">
-                {{ attendance.class_obj }} - {{ attendance.subject }} on {{ attendance.attendance_date }}
+                {{ attendance.class_obj }} - {{ attendance.subject|default:"Daily class register" }} on {{ attendance.attendance_date }}
             </p>
         </div>
     </div>

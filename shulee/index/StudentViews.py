@@ -1,4 +1,4 @@
-import json
+﻿import json
 import re
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from functools import wraps
@@ -9,15 +9,16 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db import models
 from django.db.models import Exists, OuterRef, Sum
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .forms import StudentProfileForm
+from .services import admins, notify
 from .models import (
-    AcademicYear,
     CashPaymentApproval,
     FeePayment,
     FeeTransaction,
@@ -69,6 +70,25 @@ def student_application_status(request):
     return render(request, 'student_template/application_status.html', {
         'student': student,
         'application': application,
+    })
+
+
+@login_required(login_url='show_login')
+def student_confirmation_letter(request):
+    if request.user.user_type != 3:
+        raise PermissionDenied
+    application = get_object_or_404(
+        StudentApplication.objects.select_related(
+            'student__user',
+            'student__current_class',
+            'student__academic_year',
+        ),
+        student__user_id=request.user.pk,
+    )
+    student = application.student
+    return render(request, 'confirmation_letter.html', {
+        'application': application,
+        'student': student,
     })
 
 
@@ -127,7 +147,7 @@ def student_home(request):
         progress_by_term.setdefault(key, []).append(
             (result.exam_score + result.assignment_score) / Decimal('2')
         )
-    term_labels = [f'{year} · {term.replace("_", " ").title()}' for year, term in progress_by_term]
+    term_labels = [f'{year} Â· {term.replace("_", " ").title()}' for year, term in progress_by_term]
     term_scores = [
         round(float(sum(scores) / len(scores)), 2)
         for scores in progress_by_term.values()
@@ -150,6 +170,9 @@ def student_home(request):
         'term_scores': term_scores,
         'term_progress': term_progress,
         'fee_balance': _fee_balance(student),
+        'food_status': student.get_food_status(),
+        'food_balance': student.get_food_balance(),
+        'total_owed': student.get_total_owed(),
         'total_paid': fee_total['payments'] or Decimal('0.00'),
         'teacher': student.current_class.class_teacher if student.current_class else None,
         'result_notifications': _unread_result_notifications(request.user),
@@ -163,10 +186,8 @@ def student_home(request):
 @student_required
 def student_feedback(request):
     student = _student_for_user(request.user)
-    teacher = student.current_class.class_teacher if student.current_class else None
     return render(request, 'student_template/student_feedback.html', {
-        'feedback_data': Feedback.objects.filter(user=request.user).select_related('recipient_staff__user'),
-        'class_teacher': teacher,
+        'feedback_data': Feedback.objects.filter(user=request.user),
         'student': student,
     })
 
@@ -174,20 +195,15 @@ def student_feedback(request):
 @student_required
 @require_POST
 def student_feedback_save(request):
-    student = _student_for_user(request.user)
-    teacher = student.current_class.class_teacher if student.current_class else None
     message = request.POST.get('feedback_msg', '').strip()
-    if teacher is None:
-        messages.error(request, 'Your class does not currently have an assigned teacher.')
-    elif not message:
-        messages.error(request, 'Enter a message before sending it to your class teacher.')
+    if not message:
+        messages.error(request, 'Enter a message before sending it to the administration.')
     else:
-        Feedback.objects.create(
-            user=request.user,
-            recipient_staff=teacher,
-            message=message,
-        )
-        messages.success(request, 'Your message was sent to your class teacher.')
+        feedback = Feedback.objects.create(user=request.user, message=message[:5000])
+        notify(admins(), 'New feedback from a student',
+               f'{request.user.get_full_name() or request.user.username} sent a message to the administration.',
+               sender=request.user, link=reverse('respond_feedback', args=[feedback.pk]))
+        messages.success(request, 'Your message was sent to the administration.')
     return redirect('student_feedback')
 
 
@@ -246,6 +262,9 @@ def student_fee_statement(request):
         'fee_transactions': fee_transactions,
         'fee_structures': student.get_applicable_fee_structures(),
         'fee_balance': student.get_fee_balance(),
+        'food_status': student.get_food_status(),
+        'food_balance': student.get_food_balance(),
+        'total_owed': student.get_total_owed(),
         'total_invoices': student.get_total_invoiced_fees(),
         'total_payments': student.get_total_paid_fees(),
         'current_date': timezone.localdate(),

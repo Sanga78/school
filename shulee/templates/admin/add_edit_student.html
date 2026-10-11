@@ -104,7 +104,7 @@
                         {% endif %}
                     </div>
                     <div class="form-group">
-                        <label for="{{ form.username.id_for_label }}">{{ form.username.label }}<span class="text-danger">*</span></label>
+                        <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
                         {{ form.username }}
                         {% if form.username.help_text %}
                             <small class="form-text text-muted">{{ form.username.help_text }}</small>
@@ -250,6 +250,10 @@
                             {% endif %}
                         </div>
                     {% endif %}
+                    <div class="form-group form-check mt-3">
+                        {{ form.is_boarder }}
+                        <label class="form-check-label" for="{{ form.is_boarder.id_for_label }}">Boarder (charged boarding fees)</label>
+                    </div>
                 </div>
             </div>
 

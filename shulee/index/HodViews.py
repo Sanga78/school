@@ -1,32 +1,37 @@
-import json
-from functools import wraps
+﻿from functools import wraps
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.paginator import Paginator
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse,HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse
 from django.contrib import messages
 from django.urls import reverse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.db.models import Q, Count, Sum
+from django.db.models import Q, Count
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from .validators import validate_admission_number
 from django.template.loader import render_to_string
 from django.utils import timezone
+import re
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 from django.db import IntegrityError, transaction # For atomic operations
 import csv
-import os
+import sqlite3
+from pathlib import Path
+from django.conf import settings
 from xhtml2pdf import pisa
 from datetime import datetime
+from .services import notify
 
 from .models import (
-    Bursar, CashPaymentApproval, StudentApplication, StudentClass,CustomUser, Expense, FeePayment, FeeTransaction, Notification, Subject, Staff, Student, STANDARD_CLASS_NAMES,
+    next_admission_number,
+    Bursar, CashPaymentApproval, StudentApplication, StudentClass, FeePayment, FeeTransaction, Notification, Staff, Student,
     Attendance, AttendanceReport, 
-    LeaveRequest, Feedback,SessionYearModel,
+    LeaveRequest, Feedback, SchoolProfile,
     AcademicYear,StaffSubjectAssignment, SystemLog, ResultPublication,
     SubjectResult, SubjectResultSubmission,
 )
@@ -35,7 +40,7 @@ from .forms import (
     EditBursarForm,
     SystemSettingsForm,
     LeaveResponseForm, 
-    AddAdministratorForm, AddBursarForm,
+    AddAdministratorForm,
     NotificationForm, StaffForm,
     StaffSubjectAssignmentForm, ClassTeacherAssignmentForm, ClassForm,
     StudentApplicationReviewForm,
@@ -166,280 +171,6 @@ def admin_home(request):
 
 @login_required
 @user_passes_test(is_admin)
-def add_staff(request):
-    return render(request,"hod_templates/add_staff.html")
-
-@login_required
-@user_passes_test(is_admin)
-def add_staff_save(request):
-    if request.method != "POST":
-        return HttpResponse("Method Not Allowed")
-    else:
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        username = request.POST.get("username")
-        email = request.POST.get("email") 
-        password = request.POST.get("password")
-        address = request.POST.get("address")
-        try:
-            user=CustomUser.objects.create_user(username=username,password=password,email=email,last_name=last_name,first_name=first_name,user_type=2)
-            user.staffs.address = address
-            user.save()
-            messages.success(request,"Successfully added staff")
-            return HttpResponseRedirect(reverse("add_staff"))
-        except:
-            messages.error(request,"Failed to Add staff")
-            return HttpResponseRedirect(reverse("add_staff"))
-    
-@login_required
-@user_passes_test(is_admin)
-def manage_staff(request):
-    staffs=Staff.objects.all()
-    return render(request,"hod_templates/manage_staff.html",{"staffs":staffs})
-
-# def manage_student(request):
-#     students=Student.objects.all()
-#     return render(request,"hod_templates/manage_student.html",{"students":students})
-
-
-@login_required
-@user_passes_test(is_admin)
-def edit_staff(request,staff_id):
-    staff=Staff.objects.get(admin=staff_id)
-    return render(request,"hod_templates/edit_staff.html",{"staff":staff,"id":staff_id})
-
-@login_required
-@user_passes_test(is_admin)
-def edit_staff_save(request):
-    if request.method != "POST":
-        return HttpResponse("<h2>Method Not Allowed</h2>")
-    else:
-        staff_id = request.POST.get("staff_id")
-        first_name = request.POST.get("first_name")
-        last_name = request.POST.get("last_name")
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        address = request.POST.get("address")
-        try:
-            user=CustomUser.objects.get(id=staff_id)
-            user.first_name = first_name
-            user.last_name = last_name
-            user.username = username
-            user.email = email
-            user.save()
-
-            staff_model = Staff.objects.get(admin=staff_id)
-            staff_model.address=address
-            staff_model.save() 
-            messages.success(request,"Successfully Edited Staff")
-            return HttpResponseRedirect(reverse("edit_staff",kwargs={"staff_id":staff_id}))
-        except:
-            messages.error(request,"Failed to Edit Staff")
-            return HttpResponseRedirect(reverse("edit_staff",kwargs={"staff_id":staff_id}))
-
-@login_required
-@user_passes_test(is_admin)
-def manage_session(request):
-   return render(request,"hod_templates/manage_session.html")
-
-@login_required
-@user_passes_test(is_admin)
-def add_session_save(request):
-    if request.method != 'POST':
-        return HttpResponseRedirect(reverse("manage_session"))
-    else:
-        session_start_year = request.POST.get("session_start")
-        session_end_year = request.POST.get("session_end")
-
-        try:
-            sessionyear = SessionYearModel(session_start_year=session_start_year,session_end_year=session_end_year)
-            sessionyear.save()
-            messages.success(request,"Successfully Added Session")
-            return HttpResponseRedirect(reverse("manage_session"))
-        except:
-            messages.error(request,"Failed to Add session")
-            return HttpResponseRedirect(reverse("manage_session"))
-
-@login_required
-@user_passes_test(is_admin)
-@csrf_exempt
-def check_email_exist(request):
-    email=request.POST.get("email")
-    user_obj=CustomUser.objects.filter(email=email).exists()
-    if user_obj:
-        return HttpResponse(True)
-    else:
-        return HttpResponse(False)
-    
-@login_required
-@user_passes_test(is_admin)
-@csrf_exempt
-def check_username_exist(request):
-    username=request.POST.get("username")
-    user_obj=CustomUser.objects.filter(username=username).exists()
-    if user_obj:
-        return HttpResponse(True)
-    else:
-        return HttpResponse(False)
-    
-@login_required
-@user_passes_test(is_admin)
-def staff_feedback_message(request):
-    feedbacks=Feedback.objects.all()
-    return render(request,"hod_templates/staff_feedback.html",{"feedbacks":feedbacks})
-
-@login_required
-@user_passes_test(is_admin)
-@csrf_exempt
-def staff_feedback_message_replied(request):
-    feedback_id = request.POST.get("id")
-    feedback_message = request.POST.get("message")
-    
-    try:
-        feedback = Feedback.objects.get(id=feedback_id)
-        feedback.feedback_reply = feedback_message
-        feedback.save()
-        return HttpResponse("True")
-    except:
-        return HttpResponse("False")
-    
-@login_required
-@user_passes_test(is_admin)
-def student_feedback_message(request):
-    feedbacks=Feedback.objects.all()
-    return render(request,"hod_templates/student_feedback.html",{"feedbacks":feedbacks})
-
-@login_required
-@user_passes_test(is_admin)
-@csrf_exempt
-def student_feedback_message_replied(request):
-    feedback_id = request.POST.get("id")
-    feedback_message = request.POST.get("message")
-    
-    try:
-        feedback = Feedback.objects.get(id=feedback_id)
-        feedback.feedback_reply = feedback_message
-        feedback.save()
-        return HttpResponse("True")
-    except:
-        return HttpResponse("False")
-    
-@login_required
-@user_passes_test(is_admin)
-def student_leave_view(request):
-    leaves =  LeaveRequest.objects.all()
-    return render(request,"hod_templates/student_leave_view.html",{"leaves":leaves})
-
-@login_required
-@user_passes_test(is_admin)
-def student_approve_leave(request,leave_id):
-    leave= LeaveRequest.objects.get(id=leave_id)
-    leave.leave_status=1
-    leave.save()
-    return HttpResponseRedirect(reverse("student_leave_view"))
-
-@login_required
-@user_passes_test(is_admin)
-def student_disapprove_leave(request,leave_id):
-    leave= LeaveRequest.objects.get(id=leave_id)
-    leave.leave_status=2
-    leave.save()
-    return HttpResponseRedirect(reverse("student_leave_view"))
-
-@login_required
-@user_passes_test(is_admin)
-def staff_leave_view(request):
-    leaves =  LeaveRequest.objects.all()
-    return render(request,"hod_templates/staff_leave_view.html",{"leaves":leaves})
-
-@login_required
-@user_passes_test(is_admin)
-def staff_approve_leave(request,leave_id):
-    leave= LeaveRequest.objects.get(id=leave_id)
-    leave.leave_status=1
-    leave.save()
-    return HttpResponseRedirect(reverse("staff_leave_view"))
-
-@login_required
-@user_passes_test(is_admin)
-def staff_disapprove_leave(request,leave_id):
-    leave= LeaveRequest.objects.get(id=leave_id)
-    leave.leave_status=2
-    leave.save()    
-    return HttpResponseRedirect(reverse("staff_leave_view"))
-
-@login_required
-@user_passes_test(is_admin)
-def admin_view_atendance(request):
-    subjects = Subject.objects.all()
-    session_year_id = SessionYearModel.object.all()
-    return render(request,"hod_templates/admin_view_attendance.html",{"subjects":subjects,"session_year_id":session_year_id})
-
-
-@login_required
-@user_passes_test(is_admin)
-@csrf_exempt
-def admin_get_attendance_dates(request):
-    subject = request.POST.get("subject")
-    session_year_id = request.POST.get("session_year_id")
-    subject_obj = Subject.objects.get(id=subject)
-    session_year_obj = SessionYearModel.object.get(id=session_year_id)
-    attendance = Attendance.objects.filter(subject_id=subject_obj,session_year_id=session_year_obj)
-    attendance_obj=[]
-    for attendance_single in attendance:
-        data={"id":attendance_single.id,"attendance_date":str(attendance_single.attendance_date),"session_year_id":attendance_single.session_year_id.id}
-        attendance_obj.append(data)
-
-    return JsonResponse(json.dumps(attendance_obj),safe=False)
-
-@login_required
-@user_passes_test(is_admin)
-@csrf_exempt
-def admin_get_attendance_student(request):
-    attendance_date = request.POST.get("attendance_date")
-    attendace = Attendance.objects.get(id=attendance_date)
-
-    attendance_data = AttendanceReport.objects.filter(attendance_id=attendace)
-
-    list_data=[]
-
-    for student in attendance_data:
-        data_small = {"id":student.student_id.admin.id,"name":student.student_id.admin.first_name+" "+student.student_id.admin.last_name,"status":student.status}
-        list_data.append(data_small)
-    return JsonResponse(json.dumps(list_data),content_type="application/json",safe=False)
-
-@login_required
-@user_passes_test(is_admin)
-def admin_profile(request):
-    user = CustomUser.objects.get(id=request.user.id)
-    return render(request,"hod_templates/admin_profile.html",{"user":user})
-
-@login_required
-@user_passes_test(is_admin)
-def admin_profile_save(request):
-    if request.method != "POST":
-        return HttpResponseRedirect(reverse("admin_profile"))
-    else:
-        first_name=request.POST.get("first_name")
-        last_name=request.POST.get("last_name")
-        password=request.POST.get("password")
-        try:
-            customuser=CustomUser.objects.get(id=request.user.id)
-            customuser.first_name=first_name
-            customuser.last_name=last_name
-            if password!=None and password!="":
-                customuser.set_password(password)
-            customuser.save()
-            messages.success(request,"Successfully Updated Profile")
-            return HttpResponseRedirect(reverse("admin_profile"))
-        except:
-            messages.error(request,"Failed to Update Profile")
-            return HttpResponseRedirect(reverse("admin_profile"))
-
-
-
-@login_required
-@user_passes_test(is_admin)
 def manage_classes(request):
     classes = StudentClass.objects.select_related(
         'academic_year', 'class_teacher__user',
@@ -487,6 +218,7 @@ def manage_attendance(request):
     classes = StudentClass.objects.all()
     attendance_list = []
     search_query = ""
+    filters_applied = False
     
     if request.method == 'GET':
         class_id = request.GET.get('class_id')
@@ -499,7 +231,7 @@ def manage_attendance(request):
         if class_id:
             filters &= Q(class_obj_id=class_id)
         if student_id:
-            filters &= Q(attendancereport__student_id=student_id)
+            filters &= Q(reports__student_id=student_id)
         if date_from and date_to:
             filters &= Q(attendance_date__range=[date_from, date_to])
         
@@ -509,12 +241,22 @@ def manage_attendance(request):
         
         if 'search' in request.GET:
             search_query = request.GET.get('search', '').strip()
-            attendance_list = attendance_list.filter(
-                Q(class_obj__name__icontains=search_query) |
-                Q(subject__name__icontains=search_query) |
-                Q(attendancereport__student__user__first_name__icontains=search_query) |
-                Q(attendancereport__student__user__last_name__icontains=search_query)
-            ).distinct()
+            # Every word must match a name part, so "faith chepkoech" finds the full name.
+            for term in search_query.split():
+                attendance_list = attendance_list.filter(
+                    Q(class_obj__name__icontains=term) |
+                    Q(subject__name__icontains=term) |
+                    Q(reports__student__user__first_name__icontains=term) |
+                    Q(reports__student__user__last_name__icontains=term) |
+                    Q(reports__student__user__username__icontains=term)
+                )
+            attendance_list = attendance_list.distinct()
+
+        filters_applied = bool(
+            class_id or student_id or (date_from and date_to) or search_query
+        )
+        if not filters_applied:
+            attendance_list = Attendance.objects.none()
     
     students = Student.objects.all() if not request.GET.get('class_id') else Student.objects.filter(
         current_class_id=request.GET.get('class_id'))
@@ -524,6 +266,7 @@ def manage_attendance(request):
         'students': students,
         'attendance_list': attendance_list,
         'search_query': search_query,
+        'filters_applied': filters_applied,
     }
     return render(request, 'admin/manage_attendance.html', context)
 
@@ -603,9 +346,13 @@ def respond_feedback(request, feedback_id):
     feedback = get_object_or_404(Feedback, id=feedback_id)
     
     if request.method == 'POST':
-        reply = request.POST.get('reply')
-        feedback.reply = reply
+        feedback.reply = request.POST.get('reply', '').strip()
         feedback.save()
+        if feedback.reply:
+            notify([feedback.user], 'Reply to your message',
+                   'The administration has replied to your message.',
+                   sender=request.user,
+                   link=reverse('student_feedback' if feedback.user.user_type == 3 else 'staff_feedback'))
         messages.success(request, 'Reply sent successfully!')
         return redirect('manage_feedback')
     
@@ -617,31 +364,21 @@ def respond_feedback(request, feedback_id):
 # Settings
 @login_required
 @user_passes_test(is_admin)
-def settings(request):
-    academic_years = AcademicYear.objects.all()
-    
+def settings_view(request):
+    profile = SchoolProfile.get()
     if request.method == 'POST':
-        if 'set_current_year' in request.POST:
-            year_id = request.POST.get('academic_year')
-            AcademicYear.objects.update(is_current=False)
-            year = AcademicYear.objects.get(id=year_id)
-            year.is_current = True
-            year.save()
-            messages.success(request, f'{year.name} set as current academic year!')
-            return redirect('settings')
-        
-        form = SystemSettingsForm(request.POST, request.FILES)
+        form = SystemSettingsForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
+            form.save()
             messages.success(request, 'Settings updated successfully!')
             return redirect('settings')
     else:
-        form = SystemSettingsForm()
-    
-    context = {
-        'academic_years': academic_years,
-        'form': form
-    }
-    return render(request, 'admin/settings.html', context)
+        form = SystemSettingsForm(instance=profile)
+
+    return render(request, 'admin/settings.html', {
+        'form': form,
+        'current_year': AcademicYear.objects.filter(is_current=True).first(),
+    })
 
 @login_required
 @user_passes_test(is_admin)
@@ -819,7 +556,22 @@ def review_student_application(request, application_id):
         elif action == 'approve':
             application.status = 'APPROVED'
             application.student.active = True
-            application.student.save(update_fields=['active'])
+            try:
+                validate_admission_number(application.student.admission_number)
+                needs_admission_number = (
+                    not application.student.admission_number
+                    or application.student.admission_number.isdigit()
+                    or not re.match(r'^\d{4}[A-Z]\d{5}$', application.student.admission_number)
+                )
+            except ValidationError:
+                needs_admission_number = True
+            if needs_admission_number:
+                # Strictly incremental admission numbers: 1001, 1002, 1003, ...
+                admission_number = next_admission_number()
+                # The username is the admission number, so the student logs in with it.
+                application.student.user.username = admission_number
+                application.student.user.save(update_fields=['username'])
+            application.student.save(update_fields=['active', 'admission_number'])
             success_message = 'Application approved. The student portal is now available to the applicant.'
         else:
             application.status = 'REJECTED'
@@ -1093,48 +845,26 @@ def manage_bursars(request):
     context = {'bursars': bursars}
     return render(request, 'admin/manage_bursars.html', context)
 
-@login_required
-@user_passes_test(is_admin)
-def add_bursar(request):
-    if request.method == 'POST':
-        form = AddBursarForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Bursar added successfully!')
-            return redirect('manage_bursars')
-    else:
-        form = AddBursarForm()
-    return render(request, 'admin/add_bursar.html', {'form': form})
-
 # Database Backup
 @login_required
 @user_passes_test(is_admin)
 def backup_database(request):
-    if request.method == 'POST':
-        try:
-            from django.db import connections
-            from django.conf import settings
-            import subprocess
-            
-            db_name = settings.DATABASES['default']['NAME']
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            backup_file = f"backup_{timestamp}.sql"
-            backup_path = os.path.join(settings.MEDIA_ROOT, 'backups', backup_file)
-            
-            # Create backups directory if not exists
-            os.makedirs(os.path.dirname(backup_path), exist_ok=True)
-            
-            # Using mysqldump for MySQL (adjust for your database)
-            command = f"mysqldump -u {settings.DATABASES['default']['USER']} -p{settings.DATABASES['default']['PASSWORD']} {db_name} > {backup_path}"
-            subprocess.run(command, shell=True, check=True)
-            
-            messages.success(request, f'Database backup created successfully: {backup_file}')
-            return redirect('settings')
-            
-        except Exception as e:
-            messages.error(request, f'Backup failed: {str(e)}')
-            return redirect('settings')
-    
+    if request.method != 'POST':
+        return redirect('settings')
+    try:
+        db_path = Path(settings.DATABASES['default']['NAME'])
+        backup_dir = Path(settings.MEDIA_ROOT) / 'backups'
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        backup_file = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.sqlite3"
+        source = sqlite3.connect(db_path)
+        target = sqlite3.connect(backup_dir / backup_file)
+        with target:
+            source.backup(target)
+        target.close()
+        source.close()
+        messages.success(request, f'Database backup created: {backup_file}')
+    except Exception as e:
+        messages.error(request, f'Backup failed: {e}')
     return redirect('settings')
 
 # System Logs
@@ -1344,83 +1074,6 @@ def manage_academic_years(request):
 
 @login_required
 @user_passes_test(is_admin)
-def add_academic_year(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        
-        try:
-            with transaction.atomic():
-                academic_year = AcademicYear.objects.create(
-                    name=name,
-                    start_date=start_date,
-                    end_date=end_date
-                )
-                StudentClass.objects.bulk_create([
-                    StudentClass(name=class_name, academic_year=academic_year)
-                    for class_name in STANDARD_CLASS_NAMES
-                ])
-            messages.success(request, 'Academic year and standard classes added successfully!')
-            return redirect('manage_academic_years')
-        except Exception as e:
-            messages.error(request, f'Error adding academic year: {str(e)}')
-    
-    return render(request, 'admin/add_edit_academic_year.html')
-
-@login_required
-@user_passes_test(is_admin)
-def edit_academic_year(request, year_id):
-    academic_year = get_object_or_404(AcademicYear, id=year_id)
-    
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        is_current = request.POST.get('is_current') == 'on'
-        
-        try:
-            academic_year.name = name
-            academic_year.start_date = start_date
-            academic_year.end_date = end_date
-            
-            # If setting as current, update all others to not current
-            if is_current:
-                AcademicYear.objects.exclude(id=year_id).update(is_current=False)
-                academic_year.is_current = True
-            
-            academic_year.save()
-            messages.success(request, 'Academic year updated successfully!')
-            return redirect('manage_academic_years')
-        except Exception as e:
-            messages.error(request, f'Error updating academic year: {str(e)}')
-    
-    context = {
-        'academic_year': academic_year
-    }
-    return render(request, 'admin/add_edit_academic_year.html', context)
-
-@login_required
-@user_passes_test(is_admin)
-def delete_academic_year(request, year_id):
-    academic_year = get_object_or_404(AcademicYear, id=year_id)
-    
-    if request.method == 'POST':
-        try:
-            academic_year.delete()
-            messages.success(request, 'Academic year deleted successfully!')
-        except Exception as e:
-            messages.error(request, f'Error deleting academic year: {str(e)}')
-        
-        return redirect('manage_academic_years')
-    
-    context = {
-        'academic_year': academic_year
-    }
-    return render(request, 'admin/confirm_delete.html', context)
-
-@login_required
-@user_passes_test(is_admin)
 def edit_bursar(request, bursar_id):
     bursar = get_object_or_404(Bursar, id=bursar_id)
     if request.method == 'POST':
@@ -1444,36 +1097,6 @@ def deactivate_bursar(request, bursar_id):
     state = 'activated' if user.is_active else 'deactivated'
     messages.success(request, f'Bursar account {state}.')
     return redirect('manage_bursars')
-@login_required
-@user_passes_test(is_admin)
-def set_current_academic_year(request):
-    if request.method == 'POST':
-        year_id = request.POST.get('academic_year')
-        
-        try:
-            # First set all years to inactive
-            AcademicYear.objects.update(is_current=False)
-            
-            # Then set the selected year as current
-            selected_year = AcademicYear.objects.get(id=year_id)
-            selected_year.is_current = True
-            selected_year.save()
-            
-            # Log this action
-            SystemLog.create_log(
-                action='CONFIG',
-                details=f'Changed current academic year to {selected_year.name}',
-                user=request.user,
-                affected_model='AcademicYear',
-                object_id=selected_year.id
-            )
-            
-            messages.success(request, f'{selected_year.name} set as current academic year!')
-        except Exception as e:
-            messages.error(request, f'Error setting academic year: {str(e)}')
-        
-        return redirect('settings')
-    return redirect('settings')
 
 
 @login_required
@@ -1489,7 +1112,10 @@ def edit_teacher(request, teacher_id):
     else:
         form = StaffForm(instance=teacher.user, initial={
             'qualification': teacher.qualification,
-            'date_of_joining': teacher.date_of_joining
+            'date_of_joining': teacher.date_of_joining,
+            'role': teacher.role,
+            'employment_type': teacher.employment_type,
+            'monthly_salary': teacher.monthly_salary,
         })
     return render(request, 'admin/add_edit_teacher.html', {'form': form, 'teacher': teacher})
 
